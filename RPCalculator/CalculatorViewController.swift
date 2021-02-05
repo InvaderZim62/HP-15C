@@ -23,26 +23,31 @@ class CalculatorViewController: UIViewController {
     @IBAction func digitPressed(_ sender: UIButton) {
         var digit = sender.currentTitle!
         
-        // only allow one decimal point per number
-        if digit == "·" {  // "MIDDLE DOT"
-            if decimalWasAlreadyEntered {
-                fIsPending = false
-                gIsPending = false
-                return
-            } else {
-                digit = "."  // replace with period
-                decimalWasAlreadyEntered = true
-            }
-        }
+        if digit == "·" { digit = "." } // replace "MIDDLE DOT" with period
         
         if userIsStillTypingDigits {
-            // append entered digit to display
-            display.text! += digit
+            if display.text == "0" {
+                if digit == "." {
+                    display.text! += digit  // append decimal to leading zero
+                } else if digit != "0" {
+                    display.text = digit  // replace leading zero with digit
+                }
+            } else {
+                if !(digit == "." && decimalWasAlreadyEntered) {  // only allow one decimal point per number
+                    display.text! += digit  // append entered digit to display
+                }
+            }
         } else {
             // start clean display with digit
-            display.text = digit
+            if digit == "." {
+                display.text = "0."  // precede leading decimal point with a zero
+            } else {
+                display.text = digit
+            }
             userIsStillTypingDigits = true
         }
+        
+        if digit == "." { decimalWasAlreadyEntered = true }
 
         fIsPending = false
         gIsPending = false
