@@ -9,6 +9,8 @@ import UIKit
 
 class CalculatorViewController: UIViewController {
     
+    var brain = CalculatorBrain()
+    
     var userIsStillTypingDigits = false
     var decimalWasAlreadyEntered = false
     var fIsPending = false
@@ -18,6 +20,12 @@ class CalculatorViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        display.text = "0.00000"
+    }
+    
+    private func runAndUpdateInterface() {
+        let result = CalculatorBrain.runProgram(brain.program)
+        display.text = String(format: "%g", result)
     }
 
     @IBAction func digitPressed(_ sender: UIButton) {
@@ -52,13 +60,24 @@ class CalculatorViewController: UIViewController {
         fIsPending = false
         gIsPending = false
     }
-    
+
+    // push digits from display onto stack when enter key is pressed
     @IBAction func enterPressed(_ sender: UIButton) {
+        if let number = Double(display.text!) {
+            brain.pushOperand(number)
+        }
+        userIsStillTypingDigits = false
+        decimalWasAlreadyEntered = false
         fIsPending = false
         gIsPending = false
     }
     
-    @IBAction func opperationPressed(_ sender: UIButton) {
+    // perform operation pressed (button title), and display results
+    @IBAction func operationPressed(_ sender: UIButton) {
+        if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
+        brain.pushOperation(sender.currentTitle!)
+        runAndUpdateInterface()
+        
         fIsPending = false
         gIsPending = false
     }
@@ -76,6 +95,7 @@ class CalculatorViewController: UIViewController {
     @IBAction func backArrowPressed(_ sender: UIButton) {
         if gIsPending {  // clear all
             display.text = "0.00000"
+            brain.clearStack()
             userIsStillTypingDigits = false
             decimalWasAlreadyEntered = false
         } else if userIsStillTypingDigits {
