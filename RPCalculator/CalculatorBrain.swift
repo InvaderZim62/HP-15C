@@ -44,39 +44,64 @@ class CalculatorBrain {
             if topOfStack is Double {
                 return topOfStack as! Double
             } else if topOfStack is String {
-                let operation = topOfStack as! String
+                let alternatePlusOperation = topOfStack as! String
+                let alternateFunction = alternatePlusOperation.first
+                let operation = alternatePlusOperation.dropFirst()
                 
-                switch operation {
-                case "÷":
-                    let divisor = popOperandOffStack(&stack)
-                    if divisor != 0 {
-                        result = popOperandOffStack(&stack) / divisor
+                if alternateFunction == "n" {  // none (primary button functions)
+                    switch operation {
+                    case "÷":
+                        let divisor = popOperandOffStack(&stack)
+                        if divisor != 0 {
+                            result = popOperandOffStack(&stack) / divisor
+                        }
+                    case "×":
+                        result = popOperandOffStack(&stack) * popOperandOffStack(&stack)
+                    case "–":
+                        result = -popOperandOffStack(&stack) + popOperandOffStack(&stack)
+                    case "+":
+                        result = popOperandOffStack(&stack) + popOperandOffStack(&stack)
+                    case "SIN":
+                        result = sin(popOperandOffStack(&stack) * Constants.D2R)
+                    case "COS":
+                        result = cos(popOperandOffStack(&stack) * Constants.D2R)
+                    case "TAN":
+                        result = tan(popOperandOffStack(&stack) * Constants.D2R)
+                    case "√x":
+                        result = sqrt(popOperandOffStack(&stack))
+                    case "ex":
+                        result = exp(popOperandOffStack(&stack))
+                    case "10x":
+                        result = pow(10, popOperandOffStack(&stack))
+                    case "yx":
+                        let power = popOperandOffStack(&stack)
+                        result = pow(popOperandOffStack(&stack), power)
+                    case "1/x":
+                        result = 1 / popOperandOffStack(&stack)
+                    case "CHS":
+                        result = -popOperandOffStack(&stack)
+                    default:
+                        break
                     }
-                case "×":
-                    result = popOperandOffStack(&stack) * popOperandOffStack(&stack)
-                case "–":
-                    result = -popOperandOffStack(&stack) + popOperandOffStack(&stack)
-                case "+":
-                    result = popOperandOffStack(&stack) + popOperandOffStack(&stack)
-                case "SIN":
-                    result = sin(popOperandOffStack(&stack) * Constants.D2R)
-                case "COS":
-                    result = cos(popOperandOffStack(&stack) * Constants.D2R)
-                case "√x":
-                    result = sqrt(popOperandOffStack(&stack))
-                case "ex":
-                    result = exp(popOperandOffStack(&stack))
-                case "10x":
-                    result = pow(10, popOperandOffStack(&stack))
-                case "yx":
-                    let power = popOperandOffStack(&stack)
-                    result = pow(popOperandOffStack(&stack), power)
-                case "1/x":
-                    result = 1 / popOperandOffStack(&stack)
-                case "CHS":
-                    result = -popOperandOffStack(&stack)
-                default:
-                    break
+                } else if alternateFunction == "g" {  // functions below button (blue)
+                    switch operation {
+                    case "SIN":
+                        result = asin(popOperandOffStack(&stack)) / Constants.D2R
+                    case "COS":
+                        result = acos(popOperandOffStack(&stack)) / Constants.D2R
+                    case "TAN":
+                        result = atan(popOperandOffStack(&stack)) / Constants.D2R
+                    case "√x":
+                        result = pow(popOperandOffStack(&stack), 2)
+                    case "ex":
+                        result = log(popOperandOffStack(&stack))  // natural log
+                    case "10x":
+                        result = log10(popOperandOffStack(&stack))
+                    case "CHS":
+                        result = abs(popOperandOffStack(&stack))
+                    default:
+                        break
+                    }
                 }
             }
         }

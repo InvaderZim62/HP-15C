@@ -7,14 +7,19 @@
 
 import UIKit
 
+enum AlternateFunction: String {  // must all be one character
+    case n  // none (primary button function)
+    case f  // function above button (orange)
+    case g  // function below button (blue)
+}
+
 class CalculatorViewController: UIViewController {
     
     var brain = CalculatorBrain()
     
     var userIsStillTypingDigits = false
     var decimalWasAlreadyEntered = false
-    var fIsPending = false
-    var gIsPending = false
+    var alternateFunction = AlternateFunction.n
 
     @IBOutlet weak var display: UILabel!
     
@@ -57,8 +62,7 @@ class CalculatorViewController: UIViewController {
         
         if digit == "." { decimalWasAlreadyEntered = true }
 
-        fIsPending = false
-        gIsPending = false
+        alternateFunction = .n
     }
 
     // push digits from display onto stack when enter key is pressed
@@ -68,32 +72,29 @@ class CalculatorViewController: UIViewController {
         }
         userIsStillTypingDigits = false
         decimalWasAlreadyEntered = false
-        fIsPending = false
-        gIsPending = false
+        alternateFunction = .n
     }
     
     // perform operation pressed (button title), and display results
     @IBAction func operationPressed(_ sender: UIButton) {
+        let alternatePlusOperation = alternateFunction.rawValue + sender.currentTitle!  // capture before clearing alternateFunction in enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
-        brain.pushOperation(sender.currentTitle!)
+        brain.pushOperation(alternatePlusOperation)
         runAndUpdateInterface()
         
-        fIsPending = false
-        gIsPending = false
+        alternateFunction = .n
     }
     
     @IBAction func fPressed(_ sender: UIButton) {
-        fIsPending = true
-        gIsPending = false
+        alternateFunction = .f
     }
     
     @IBAction func gPressed(_ sender: UIButton) {
-        fIsPending = false
-        gIsPending = true
+        alternateFunction = .g
     }
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
-        if gIsPending {  // clear all
+        if alternateFunction == .g {  // clear all
             display.text = "0.00000"
             brain.clearStack()
             userIsStillTypingDigits = false
@@ -110,8 +111,7 @@ class CalculatorViewController: UIViewController {
                 display.text = String(display.text!.dropLast())
             }
         }
-        fIsPending = false
-        gIsPending = false
+        alternateFunction = .n
     }
 }
 
