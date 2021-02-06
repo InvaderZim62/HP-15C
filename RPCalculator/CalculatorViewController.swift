@@ -94,12 +94,12 @@ class CalculatorViewController: UIViewController {
     }
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
-        if alternateFunction == .g {  // clear all
+        if alternateFunction == .g || !userIsStillTypingDigits {  // clear all
             display.text = "0.00000"
             brain.clearStack()
             userIsStillTypingDigits = false
             decimalWasAlreadyEntered = false
-        } else if userIsStillTypingDigits {
+        } else {
             if display.text?.count == 1 {
                 display.text = "0.00000"
                 userIsStillTypingDigits = false
