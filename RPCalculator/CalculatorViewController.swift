@@ -20,12 +20,77 @@ class CalculatorViewController: UIViewController {
     var userIsStillTypingDigits = false
     var decimalWasAlreadyEntered = false
     var alternateFunction = AlternateFunction.n
+    
+    var buttonText = [  // [nText: (fText, gText)]
+        "√x": ("A", "x²"),
+        "ex": ("B", "LN"),
+        "10x": ("C", "LOG"),
+        "yx": ("D", "%"),
+        "1/x": ("E", "𝝙%"),
+        "CHS": ("MATRIX", "ABS"),
+        "7": ("FIX", "DEG"),
+        "8": ("SCI", "RAD"),
+        "9": ("ENG", "GRD"),
+        "÷": ("SOLVE", "x≤y"),
+        "SST": ("LBL", "BST"),
+        "GTO": ("HYP", "HYP-1"),
+        "SIN": ("DIM", "SIN-1"),
+        "COS": ("(i)", "COS-1"),
+        "TAN": ("I", "TAN-1"),
+        "EEX": ("RESULT", "π"),  // pi is option p
+        "4": ("x≷", "SF"),
+        "5": ("DSE", "CF"),
+        "6": ("ISG", "F?"),
+        "×": ("∫xy", "x=0"),
+        "R/S": ("PSE", "P/R"),
+        "GSB": ("∑", "RTN"),
+        "R↓": ("PRGM", "R↑"),
+        "x≷y": ("REG", "RND"),
+        "←": ("PREFIX", "CLx"),
+        "1": ("→R", "→P"),
+        "2": ("→H.MS", "→H"),
+        "3": ("→RAD", "→DEG"),
+        "–": ("Re≷Im", "TEST"),
+        "STO": ("FRAC", "INT"),
+        "RCL": ("USER", "MEM"),
+        "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
+        "·": ("y\u{0302},r", "s"),  // \u{0302} puts ^ above y
+        "Σ+": ("L.R.", "Σ-"),
+        "+": ("Py,x", "Cy,x")
+    ]
 
     @IBOutlet weak var display: UILabel!
+    @IBOutlet var buttons: [UIButton]!  // don't include ENTER button // pws: maybe use fixed alternateHeight in ButtonCoverView, and give remainder to primary
     
     override func viewDidLoad() {
         super.viewDidLoad()
         display.text = "0.00000"
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        for button in buttons {
+            if let nText = button.currentTitle, let (fText, gText) = buttonText[nText] {
+                createCoverForButton(button, fText: fText, nText: nText, gText: gText)
+            }
+        }
+    }
+    
+    private func createCoverForButton(_ button: UIButton, fText: String, nText: String, gText: String) {
+        button.setTitleColor(.clear, for: .normal)
+        let buttonCoverView = ButtonCoverView(buttonFrame: button.frame)
+        buttonCoverView.orangeLabel.text = fText
+        buttonCoverView.whiteLabel.text = nText
+        buttonCoverView.blueLabel.text = gText
+        // increase font size for special cases
+        switch nText {
+        case "÷", "×", "–", "+":
+            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(22)
+        case "·":
+            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(30)
+        default:
+            break
+        }
+        button.superview?.addSubview(buttonCoverView)
     }
     
     private func runAndUpdateInterface() {
