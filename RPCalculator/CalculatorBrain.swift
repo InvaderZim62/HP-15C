@@ -7,10 +7,6 @@
 
 import Foundation
 
-struct Constants {
-    static let D2R = Double.pi / 180
-}
-
 class CalculatorBrain {
     
     var program: [Any] {
