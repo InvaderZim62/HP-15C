@@ -21,6 +21,8 @@ class CalculatorViewController: UIViewController {
     var decimalWasAlreadyEntered = false
     var alternateFunction = AlternateFunction.n
     
+    // dictionary of button labels going from left to right, top to bottom
+    // dictionary key is the primary button label (must agree with storyboard)
     var buttonText = [  // [nText: (fText, gText)]
         "√x": ("A", "x²"),
         "ex": ("B", "LN"),
