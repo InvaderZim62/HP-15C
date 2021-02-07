@@ -48,9 +48,7 @@ class CalculatorBrain {
                     switch operation {
                     case "÷":
                         let divisor = popOperandOffStack(&stack)
-                        if divisor != 0 {
-                            result = popOperandOffStack(&stack) / divisor
-                        }
+                        result = popOperandOffStack(&stack) / divisor  // let DisplayView hanndle divide by zero (result = "inf")
                     case "×":
                         result = popOperandOffStack(&stack) * popOperandOffStack(&stack)
                     case "–":

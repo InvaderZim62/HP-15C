@@ -4,14 +4,15 @@
 //
 //  Created by Phil Stern on 2/6/21.
 //
-//  Display "cells" can be energized to create any digit, sign, decimal, or comma
+//  Select display segments can be drawn to create any digit, sign, or decimal point, and limited letters.
 //
-//        --     --     --
-//       |  |   |  |   |  |
-//  ---   --     --     --    ...10 digits
-//       |  |   |  |   |  |
-//        --  .  --  .  --  .
-//            '      '      '
+//      --    --    --
+//     |  |  |  |  |  |
+//      --    --    --    ...11 digits (first is sign)
+//     |  |  |  |  |  |
+//      -- .  -- .  -- .
+//
+//  Decimal point is drawn with prior digit.
 //
 
 import UIKit
@@ -33,7 +34,7 @@ class DisplayView: UIView {
     func createDigitViews() {
         digitViews.forEach { $0.removeFromSuperview() }  // remove any past views and start over
         digitViews.removeAll()
-        let leftInset: CGFloat = 35
+        let leftInset: CGFloat = 10
         let rightInset: CGFloat = 15
         let topInset: CGFloat = 10
         let bottomInset: CGFloat = 0.3 * bounds.height
@@ -47,24 +48,34 @@ class DisplayView: UIView {
         }
     }
     
+    private func clearDisplay() {
+        digitViews.forEach { $0.clear() }
+    }
+    
     private func updateDigits() {
-        var digitNumber = 0
-        for index in 0..<numberOfDigits {
-            if index < numberString.count {
-                let stringIndex = numberString.index(numberString.startIndex, offsetBy: index)
-                let character = numberString[stringIndex]
+        clearDisplay()
+        print(numberString)
+        var displayString = numberString
+        if numberString == "nan" || numberString == "inf" {
+            displayString = "Error"
+        } else if numberString.first != "-" {
+            displayString = " " + numberString  // leave first digit blank, if number is positive
+        }
+        var displayIndex = 0
+        var stringIndex = 0
+        while displayIndex < numberOfDigits {
+            if stringIndex < displayString.count {
+                let index = displayString.index(displayString.startIndex, offsetBy: stringIndex)
+                let character = displayString[index]
                 if character == "." {
-                    digitNumber -= 1
-                    digitViews[digitNumber].trailingDecimal = true
+                    displayIndex -= 1  // add decimal point to prior digitView
+                    digitViews[displayIndex].trailingDecimal = true
                 } else {
-                    digitViews[digitNumber].digit = character
-                    digitViews[digitNumber].trailingDecimal = false
+                    digitViews[displayIndex].digit = character
                 }
-            } else {
-                digitViews[digitNumber].digit = " "
-                digitViews[digitNumber].trailingDecimal = false
             }
-            digitNumber += 1
+            displayIndex += 1
+            stringIndex += 1
         }
     }
 }

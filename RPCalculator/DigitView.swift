@@ -23,7 +23,7 @@ struct DigitConst {
 
 class DigitView: UIView {
     
-    var digit: Character = "0" { didSet { setNeedsDisplay() } }
+    var digit: Character = " " { didSet { setNeedsDisplay() } }
     var trailingDecimal = false
     
     enum Segment {
@@ -34,6 +34,11 @@ class DigitView: UIView {
         case upperRight
         case lowerLeft
         case lowerRight
+    }
+    
+    func clear() {
+        digit = " "
+        trailingDecimal = false
     }
     
     private let allSegments: [Character: [Segment]] = [
@@ -48,7 +53,11 @@ class DigitView: UIView {
         "7": [.upperCross, .upperRight, .lowerRight],
         "8": [.upperCross, .upperLeft, .upperRight, .middleCross, .lowerLeft, .lowerRight, .lowerCross],
         "9": [.upperCross, .upperLeft, .upperRight, .middleCross, .lowerRight, .lowerCross],
-        "-": [.middleCross]
+        "-": [.middleCross],
+        "E": [.upperCross, .upperLeft, .middleCross, .lowerLeft, .lowerCross],
+        "e": [.upperCross, .upperLeft, .middleCross, .lowerLeft, .lowerCross],  // swift uses "e" for exponent (ex. 1.234e-02)
+        "r": [.middleCross, .lowerLeft],
+        "o": [.middleCross, .lowerLeft, .lowerRight, .lowerCross]
     ]
 
     override func draw(_ rect: CGRect) {

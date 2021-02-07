@@ -72,13 +72,14 @@ class CalculatorViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        display.text = "0.00000"
+        display.text = "0.0000"
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        displayView.frame = display.frame  // pws: temp
+        displayView.frame = display.frame  // pws: align with display for now
         displayView.backgroundColor = Constants.displayColor
-        displayView.numberOfDigits = 10
+        displayView.numberOfDigits = 11  // one digit for sign
+        displayView.numberString = display.text!  // pws: see comment below
         display.superview?.addSubview(displayView)  // pws: temp
         
         for button in buttons {
@@ -178,7 +179,7 @@ class CalculatorViewController: UIViewController {
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
         if alternateFunction == .g || !userIsStillTypingDigits {  // clear all
-            display.text = "0.00000"
+            display.text = "0.0000"
             brain.clearStack()
             userIsStillTypingDigits = false
             decimalWasAlreadyEntered = false
