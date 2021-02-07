@@ -148,7 +148,7 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="46" height="38.666666666666664"/>
                                                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         <state key="normal" title="yx">
-                                                            <color key="titleColor" red="0.52917242050000002" green="0.55795955659999996" blue="0.49410915370000003" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                            <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
                                                             <action selector="operationPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Y2k-fQ-OVt"/>
@@ -463,22 +463,6 @@ R</string>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qMl-bI-Ow8">
                                         <rect key="frame" x="0.0" y="0.0" width="667" height="100"/>
                                         <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Qua-bh-4gs">
-                                                <rect key="frame" x="110" y="20" width="319" height="60"/>
-                                                <color key="backgroundColor" red="0.67024187449120964" green="0.69638933778917933" blue="0.62125642490189181" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="60" id="umO-rH-Qam"/>
-                                                </constraints>
-                                                <attributedString key="attributedText">
-                                                    <fragment content="3.141592654">
-                                                        <attributes>
-                                                            <font key="NSFont" size="35" name="Courier"/>
-                                                            <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="natural" firstLineHeadIndent="20" tighteningFactorForTruncation="0.0"/>
-                                                        </attributes>
-                                                    </fragment>
-                                                </attributedString>
-                                                <nil key="highlightedColor"/>
-                                            </label>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="obK-CZ-IpM" userLabel="Logo Container View">
                                                 <rect key="frame" x="597.66666666666674" y="20" width="50" height="50"/>
                                                 <subviews>
@@ -546,12 +530,19 @@ R</string>
                                                     <constraint firstAttribute="trailing" secondItem="D7p-Rg-TqJ" secondAttribute="trailing" constant="4" id="lXk-JP-DOE"/>
                                                 </constraints>
                                             </view>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rnD-ga-Zt7" customClass="DisplayView" customModule="RPCalculator" customModuleProvider="target">
+                                                <rect key="frame" x="110" y="20" width="319" height="60"/>
+                                                <color key="backgroundColor" red="0.66242671009999998" green="0.69947242740000004" blue="0.61567509170000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="60" id="ruW-xt-GtG"/>
+                                                </constraints>
+                                            </view>
                                         </subviews>
                                         <color key="backgroundColor" red="0.83741801979999997" green="0.83743780850000005" blue="0.83742713930000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <constraints>
-                                            <constraint firstItem="obK-CZ-IpM" firstAttribute="top" secondItem="Qua-bh-4gs" secondAttribute="top" id="Fpq-4c-d3E"/>
-                                            <constraint firstItem="Qua-bh-4gs" firstAttribute="centerY" secondItem="qMl-bI-Ow8" secondAttribute="centerY" id="eJp-8W-PUm"/>
+                                            <constraint firstItem="rnD-ga-Zt7" firstAttribute="centerY" secondItem="qMl-bI-Ow8" secondAttribute="centerY" id="F96-a5-RBT"/>
                                             <constraint firstAttribute="height" constant="100" id="smK-vp-1r1"/>
+                                            <constraint firstItem="rnD-ga-Zt7" firstAttribute="top" secondItem="obK-CZ-IpM" secondAttribute="top" id="xud-Wi-mjm"/>
                                         </constraints>
                                     </view>
                                 </subviews>
@@ -561,11 +552,11 @@ R</string>
                                     <constraint firstAttribute="trailing" secondItem="qMl-bI-Ow8" secondAttribute="trailing" id="Egu-br-nNC"/>
                                     <constraint firstItem="DsF-Y8-fDc" firstAttribute="centerX" secondItem="0rb-hT-Hnj" secondAttribute="centerX" id="HkM-jR-fWh"/>
                                     <constraint firstItem="obK-CZ-IpM" firstAttribute="leading" secondItem="ssy-4E-iZw" secondAttribute="leading" id="P6B-Mw-ceq"/>
-                                    <constraint firstItem="Qua-bh-4gs" firstAttribute="leading" secondItem="MBj-zg-ytI" secondAttribute="centerX" id="Txx-oD-azr"/>
                                     <constraint firstAttribute="width" constant="667" id="bzx-Ck-Deh"/>
-                                    <constraint firstItem="Qua-bh-4gs" firstAttribute="trailing" secondItem="LEw-Jv-C9W" secondAttribute="centerX" id="fDj-lp-nNm"/>
+                                    <constraint firstItem="rnD-ga-Zt7" firstAttribute="leading" secondItem="MBj-zg-ytI" secondAttribute="centerX" id="dv3-7W-nWx"/>
                                     <constraint firstItem="qMl-bI-Ow8" firstAttribute="top" secondItem="0rb-hT-Hnj" secondAttribute="top" id="j55-bl-cGC"/>
                                     <constraint firstAttribute="bottom" secondItem="DsF-Y8-fDc" secondAttribute="bottom" constant="20" id="uH7-xt-cax"/>
+                                    <constraint firstItem="rnD-ga-Zt7" firstAttribute="trailing" secondItem="LEw-Jv-C9W" secondAttribute="centerX" id="ukB-Xy-Pb0"/>
                                     <constraint firstAttribute="height" constant="375" id="uol-SK-w3F"/>
                                 </constraints>
                             </view>
@@ -578,7 +569,7 @@ R</string>
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="display" destination="Qua-bh-4gs" id="vus-QR-S8X"/>
+                        <outlet property="displayView" destination="rnD-ga-Zt7" id="tkM-On-xMm"/>
                         <outletCollection property="buttons" destination="5DD-Xr-32d" collectionClass="NSMutableArray" id="H1J-hq-AsX"/>
                         <outletCollection property="buttons" destination="M4w-zs-LRC" collectionClass="NSMutableArray" id="cRn-4p-DGF"/>
                         <outletCollection property="buttons" destination="4lX-F1-GIh" collectionClass="NSMutableArray" id="0po-PY-ANG"/>

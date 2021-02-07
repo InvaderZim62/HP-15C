@@ -14,15 +14,13 @@ enum AlternateFunction: String {  // must all be one character
 }
 
 struct Constants {
-    static let displayColor = #colorLiteral(red: 135/255, green: 142/255, blue: 126/255, alpha: 1)
     static let D2R = Double.pi / 180
 }
 
 class CalculatorViewController: UIViewController {
     
     var brain = CalculatorBrain()
-    var displayView = DisplayView()
-    
+    var displayString = "" { didSet { displayView.numberString = displayString } }
     var userIsStillTypingDigits = false
     var decimalWasAlreadyEntered = false
     var alternateFunction = AlternateFunction.n
@@ -67,21 +65,17 @@ class CalculatorViewController: UIViewController {
         "+": ("Py,x", "Cy,x")
     ]
 
-    @IBOutlet weak var display: UILabel!
+    @IBOutlet weak var displayView: DisplayView!
     @IBOutlet var buttons: [UIButton]!  // don't include ENTER button // pws: maybe use fixed alternateHeight in ButtonCoverView, and give remainder to primary
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        display.text = "0.0000"
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        displayView.frame = display.frame  // pws: align with display for now
-        displayView.backgroundColor = Constants.displayColor
         displayView.numberOfDigits = 11  // one digit for sign
-        displayView.numberString = display.text!  // pws: see comment below
-        display.superview?.addSubview(displayView)  // pws: temp
-        
+        displayString = "0.0000"
+
         for button in buttons {
             if let nText = button.currentTitle, let (fText, gText) = buttonText[nText] {
                 createCoverForButton(button, fText: fText, nText: nText, gText: gText)
@@ -109,8 +103,7 @@ class CalculatorViewController: UIViewController {
     
     private func runAndUpdateInterface() {
         let result = CalculatorBrain.runProgram(brain.program)
-        display.text = String(format: "%g", result)
-        displayView.numberString = display.text!  // pws: see comment below
+        displayString = String(format: "%g", result)
     }
 
     @IBAction func digitPressed(_ sender: UIButton) {
@@ -119,30 +112,26 @@ class CalculatorViewController: UIViewController {
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" with period
         
         if userIsStillTypingDigits {
-            if display.text == "0" {
+            if displayString == "0" {
                 if digit == "." {
-                    display.text! += digit  // append decimal to leading zero
+                    displayString += digit  // append decimal to leading zero
                 } else if digit != "0" {
-                    display.text = digit  // replace leading zero with digit
+                    displayString = digit  // replace leading zero with digit
                 }
             } else {
                 if !(digit == "." && decimalWasAlreadyEntered) {  // only allow one decimal point per number
-                    display.text! += digit  // append entered digit to display
+                    displayString += digit  // append entered digit to display
                 }
             }
         } else {
             // start clean display with digit
             if digit == "." {
-                display.text = "0."  // precede leading decimal point with a zero
+                displayString = "0."  // precede leading decimal point with a zero
             } else {
-                display.text = digit
+                displayString = digit
             }
             userIsStillTypingDigits = true
         }
-        // pws: after deleting the display UILabel, replace it with...
-        // var display = "" { didSet { displayView.numberString = display } }
-        // and delete the next line
-        displayView.numberString = display.text!
         
         if digit == "." { decimalWasAlreadyEntered = true }
 
@@ -151,7 +140,7 @@ class CalculatorViewController: UIViewController {
 
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterPressed(_ sender: UIButton) {
-        if let number = Double(display.text!) {
+        if let number = Double(displayString) {
             brain.pushOperand(number)
         }
         userIsStillTypingDigits = false
@@ -179,23 +168,22 @@ class CalculatorViewController: UIViewController {
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
         if alternateFunction == .g || !userIsStillTypingDigits {  // clear all
-            display.text = "0.0000"
+            displayString = "0.0000"
             brain.clearStack()
             userIsStillTypingDigits = false
             decimalWasAlreadyEntered = false
         } else {
-            if display.text?.count == 1 {
-                display.text = "0.0000"
+            if displayString.count == 1 {
+                displayString = "0.0000"
                 userIsStillTypingDigits = false
                 decimalWasAlreadyEntered = false
             } else {
-                if display.text!.hasSuffix(".") {
+                if displayString.hasSuffix(".") {
                     decimalWasAlreadyEntered = false
                 }
-                display.text = String(display.text!.dropLast())
+                displayString = String(displayString.dropLast())
             }
         }
-        displayView.numberString = display.text!  // pws: see comment above
         alternateFunction = .n
     }
 }
