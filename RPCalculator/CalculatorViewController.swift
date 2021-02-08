@@ -30,7 +30,7 @@ class CalculatorViewController: UIViewController {
     var buttonText = [  // [nText: (fText, gText)]
         "√x": ("A", "x²"),
         "ex": ("B", "LN"),
-        "10x": ("C", "LOG"),
+        "10x": ("C", "LOG"),  // superscripting 10^x occurs in superscriptLastNCharactersOf, below
         "yx": ("D", "%"),
         "1/x": ("E", "𝝙%"),
         "CHS": ("MATRIX", "ABS"),
@@ -91,7 +91,12 @@ class CalculatorViewController: UIViewController {
         buttonCoverView.blueLabel.text = gText
         // increase font size for special cases
         switch nText {
+        case "ex", "10x", "yx":
+            buttonCoverView.whiteLabel.attributedText = superscriptLastNCharactersOf(nText, n: 1, font: buttonCoverView.whiteLabel.font)
+        case "GTO", "SIN", "COS", "TAN":  // gText: HYP-1, SIN-1, COS-1, TAN-1
+            buttonCoverView.blueLabel.attributedText = superscriptLastNCharactersOf(gText, n: 2, font: buttonCoverView.blueLabel.font)
         case "÷", "×", "–", "+":
+            // override font size 17 (set in ButtonCoverView)
             buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(22)
         case "·":
             buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(30)
@@ -99,6 +104,15 @@ class CalculatorViewController: UIViewController {
             break
         }
         button.superview?.addSubview(buttonCoverView)
+    }
+    
+    private func superscriptLastNCharactersOf(_ string: String, n: Int, font: UIFont) -> NSMutableAttributedString {
+        let fontSize = font.pointSize
+        let regularFont = font.withSize(fontSize)
+        let superscriptFont = font.withSize(fontSize - 2)
+        let attributedString = NSMutableAttributedString(string: string, attributes: [.font: regularFont])
+        attributedString.setAttributes([.font: superscriptFont, .baselineOffset: 4], range: NSRange(location: string.count - n, length: n))
+        return attributedString
     }
     
     private func runAndUpdateInterface() {
