@@ -89,11 +89,13 @@ class CalculatorViewController: UIViewController {
         buttonCoverView.orangeLabel.text = fText
         buttonCoverView.whiteLabel.text = nText
         buttonCoverView.blueLabel.text = gText
-        // increase font size for special cases
+        // handle special button labels
         switch nText {
         case "ex", "10x", "yx":
+            // superscript x
             buttonCoverView.whiteLabel.attributedText = superscriptLastNCharactersOf(nText, n: 1, font: buttonCoverView.whiteLabel.font)
         case "GTO", "SIN", "COS", "TAN":  // gText: HYP-1, SIN-1, COS-1, TAN-1
+            // superscript -1
             buttonCoverView.blueLabel.attributedText = superscriptLastNCharactersOf(gText, n: 2, font: buttonCoverView.blueLabel.font)
         case "÷", "×", "–", "+":
             // override font size 17 (set in ButtonCoverView)
@@ -107,9 +109,9 @@ class CalculatorViewController: UIViewController {
     }
     
     private func superscriptLastNCharactersOf(_ string: String, n: Int, font: UIFont) -> NSMutableAttributedString {
-        let fontSize = font.pointSize
-        let regularFont = font.withSize(fontSize)
-        let superscriptFont = font.withSize(fontSize - 2)
+        let regularFontSize = font.pointSize
+        let regularFont = font.withSize(regularFontSize)
+        let superscriptFont = font.withSize(regularFontSize - 2)
         let attributedString = NSMutableAttributedString(string: string, attributes: [.font: regularFont])
         attributedString.setAttributes([.font: superscriptFont, .baselineOffset: 4], range: NSRange(location: string.count - n, length: n))
         return attributedString
