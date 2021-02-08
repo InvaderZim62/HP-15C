@@ -124,6 +124,14 @@ class CalculatorViewController: UIViewController {
         var digit = sender.currentTitle!
         
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" with period
+        if digit == "EEX" {
+            if alternateFunction == .g {
+                displayString = ""  // lose any un-entered digits // pws: or should this save the digits (call enterPressed) first?
+                digit = "3.141592654"
+            } else {
+                return  // pws: implement EEX
+            }
+        }
         
         if userIsStillTypingDigits {
             if displayString == "0" {
