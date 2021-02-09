@@ -4,8 +4,12 @@
 //
 //  Created by Phil Stern on 2/4/21.
 //
+//  click.wav obtained from: https://fresound.org/people/kwahmah_02/sounds/256116
+//  file is in the public domain (CC0 1.0 Universal)
+//
 
 import UIKit
+import AVFoundation  // needed for AVAudioPlayer
 
 enum AlternateFunction: String {  // must all be one character
     case n  // none (primary button function)
@@ -20,6 +24,7 @@ struct Constants {
 class CalculatorViewController: UIViewController {
     
     var brain = CalculatorBrain()
+    var player: AVAudioPlayer?
     var displayString = "" { didSet { displayView.numberString = displayString } }
     var userIsStillTypingDigits = false
     var decimalWasAlreadyEntered = false
@@ -123,6 +128,7 @@ class CalculatorViewController: UIViewController {
     }
 
     @IBAction func digitPressed(_ sender: UIButton) {
+        playClickSound()
         var digit = sender.currentTitle!
         
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" with period
@@ -164,6 +170,7 @@ class CalculatorViewController: UIViewController {
 
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterPressed(_ sender: UIButton) {
+        playClickSound()
         if let number = Double(displayString) {
             brain.pushOperand(number)
         }
@@ -174,6 +181,7 @@ class CalculatorViewController: UIViewController {
     
     // perform operation pressed (button title), and display results
     @IBAction func operationPressed(_ sender: UIButton) {
+        playClickSound()
         let alternatePlusOperation = alternateFunction.rawValue + sender.currentTitle!  // capture before clearing alternateFunction in enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
         brain.pushOperation(alternatePlusOperation)
@@ -183,14 +191,17 @@ class CalculatorViewController: UIViewController {
     }
     
     @IBAction func fPressed(_ sender: UIButton) {
+        playClickSound()
         alternateFunction = .f
     }
     
     @IBAction func gPressed(_ sender: UIButton) {
+        playClickSound()
         alternateFunction = .g
     }
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
+        playClickSound()
         if alternateFunction == .g || !userIsStillTypingDigits {  // clear all
             displayString = "0.0000"
             brain.clearStack()
@@ -210,5 +221,19 @@ class CalculatorViewController: UIViewController {
         }
         alternateFunction = .n
     }
-}
 
+    func playClickSound() {
+        guard let url = Bundle.main.url(forResource: "click", withExtension: "wav") else { return }
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.wav.rawValue)
+            guard let player = player else { return }
+            player.play()
+            
+        } catch let error {
+            print(error.localizedDescription)
+        }
+    }
+}
