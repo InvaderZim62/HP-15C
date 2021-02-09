@@ -37,7 +37,7 @@ enum DisplayFormat {
 class DisplayView: UIView {
     
     var numberOfDigits = 0 { didSet { createDigitViews() } }
-    var displayString = "0.0000" { didSet { updateDisplay() } }
+    var displayString = "" { didSet { updateDisplay() } }
     var format = DisplayFormat.fixed(4)  // pws: consider moving this up to CalculatorViewController
 
     private var digitViews = [DigitView]()
