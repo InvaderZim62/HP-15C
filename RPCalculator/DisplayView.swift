@@ -21,16 +21,29 @@ enum DisplayFormat {
     case fixed(Int)  // (decimal places)
     case scientific(Int)  // (decimal places)
     case engineering(Int)  // (display digits) similar to scientific, except exponent is always a multiple of three
+    
+    var string: String {
+        switch self {
+        case .fixed(let decimalPlaces):
+            return "%.\(decimalPlaces)f"
+        case .scientific(let decimalPlaces):
+            return "%.\(decimalPlaces)e"
+        default:
+            return "%g"
+        }
+    }
 }
 
 class DisplayView: UIView {
     
     var numberOfDigits = 0 { didSet { createDigitViews() } }
     var numberString = "0.0000" { didSet { updateDigits() } }
-    var format = DisplayFormat.fixed(4)
+    var format = DisplayFormat.fixed(4)  // pws: consider moving this up to CalculatorViewController
 
     private var digitViews = [DigitView]()
     
+    // create numberOfDigits equally sized digitViews and add them to this DisplayView
+    // leave the specified boarder (inset) around the digitViews
     func createDigitViews() {
         digitViews.forEach { $0.removeFromSuperview() }  // remove any past views and start over
         digitViews.removeAll()
@@ -52,9 +65,10 @@ class DisplayView: UIView {
         digitViews.forEach { $0.clear() }
     }
     
+    // set the digit character for each of the digitViews, based on numberString
+    // set the trailingDecimal boolean to true for the digitView preceding the decimal point
     private func updateDigits() {
         clearDisplay()
-        print(numberString)
         var displayString = numberString
         if numberString == "nan" || numberString == "inf" {
             displayString = "Error"

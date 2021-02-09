@@ -7,14 +7,22 @@
 //  click.wav obtained from: https://fresound.org/people/kwahmah_02/sounds/256116
 //  file is in the public domain (CC0 1.0 Universal)
 //
+//  I changed all button control events from Touch Up Inside to Touch Down, by doing the following...
+//  First, control drag all buttons to their appropriate IBAction in the code (defaults to Touch
+//  Up Inside).  Then Right-click (two-finger-touch) each button in Interface Builder to bring up
+//  the connections menu.  Control-drag from the little circle to the right of Touch Down (under
+//  Send Events) to the appropriate IBAction.  Cancel (click on x) the event for Touch Up Inside.
+//
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
 
-enum AlternateFunction: String {  // must all be one character
-    case n  // none (primary button function)
+enum PrefixKey: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
+    case FIX
+    case SCI
+    case ENG
 }
 
 struct Constants {
@@ -28,7 +36,7 @@ class CalculatorViewController: UIViewController {
     var displayString = "" { didSet { displayView.numberString = displayString } }
     var userIsStillTypingDigits = false
     var decimalWasAlreadyEntered = false
-    var alternateFunction = AlternateFunction.n
+    var prefixKey: PrefixKey?
     
     // dictionary of button labels going from left to right, top to bottom
     // dictionary key is the primary button label (must agree with storyboard)
@@ -124,23 +132,59 @@ class CalculatorViewController: UIViewController {
     
     private func runAndUpdateInterface() {
         let result = CalculatorBrain.runProgram(brain.program)
-        displayString = String(format: "%g", result)
+        displayString = String(format: displayView.format.string, result)
+        print("result: \(result), displayString: \(displayString)")
     }
 
+    // numbers 0-9, period, EEX (pi)
     @IBAction func digitPressed(_ sender: UIButton) {
         playClickSound()
         var digit = sender.currentTitle!
+        if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
-        if digit == "·" { digit = "." } // replace "MIDDLE DOT" with period
-        if digit == "EEX" {
-            if alternateFunction == .g {
-                displayString = ""  // lose any un-entered digits // pws: or should this save the digits (call enterPressed) first?
-                digit = "3.141592654"
-            } else {
-                return  // pws: implement EEX
+        switch prefixKey {
+        case .f:
+            if digit == "7" {
+                // FIX pressed
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                prefixKey = .FIX  // wait for next digit
+            } else if digit == "8" {
+                // SCI pressed
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                prefixKey = .SCI  // wait for next digit
             }
+            return
+        case .g:
+            if digit == "EEX" {
+                // pi pressed
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                displayString = "3.141592654"
+                enterPressed(UIButton())
+                runAndUpdateInterface()
+            }
+            prefixKey = nil
+            return
+        case .FIX:
+            if let decimalPlaces = Int(digit) {
+                // number after FIX pressed
+                displayView.format = .fixed(decimalPlaces)
+                runAndUpdateInterface()
+            }
+            prefixKey = nil
+            return
+        case .SCI:
+            if let decimalPlaces = Int(digit) {
+                // number after FIX pressed
+                displayView.format = .scientific(decimalPlaces)
+                runAndUpdateInterface()
+            }
+            prefixKey = nil
+            return
+        default:
+            break
         }
         
+        // add digit to display
         if userIsStillTypingDigits {
             if displayString == "0" {
                 if digit == "." {
@@ -165,7 +209,7 @@ class CalculatorViewController: UIViewController {
         
         if digit == "." { decimalWasAlreadyEntered = true }
 
-        alternateFunction = .n
+        prefixKey = nil
     }
 
     // push digits from display onto stack when enter key is pressed
@@ -176,33 +220,36 @@ class CalculatorViewController: UIViewController {
         }
         userIsStillTypingDigits = false
         decimalWasAlreadyEntered = false
-        alternateFunction = .n
+        prefixKey = nil
     }
     
     // perform operation pressed (button title), and display results
     @IBAction func operationPressed(_ sender: UIButton) {
         playClickSound()
-        let alternatePlusOperation = alternateFunction.rawValue + sender.currentTitle!  // capture before clearing alternateFunction in enterPressed
+        // pws: For now, I assumed an operation is only preceded by no prefix key, or by f, or g
+        // if this is not the case, prefixPlusOperation (below) and prefixKey (in CalculatorBrain.popOperationOffStack) must change
+        precondition((prefixKey?.rawValue ?? "n").count == 1, "Operation selected with prefix key other than f or g")
+        let prefixPlusOperation = prefixKey?.rawValue ?? "n" + sender.currentTitle!  // capture before clearing prefixKey in enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
-        brain.pushOperation(alternatePlusOperation)
+        brain.pushOperation(prefixPlusOperation)
         runAndUpdateInterface()
         
-        alternateFunction = .n
+        prefixKey = nil
     }
     
     @IBAction func fPressed(_ sender: UIButton) {
         playClickSound()
-        alternateFunction = .f
+        prefixKey = .f
     }
     
     @IBAction func gPressed(_ sender: UIButton) {
         playClickSound()
-        alternateFunction = .g
+        prefixKey = .g
     }
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
         playClickSound()
-        if alternateFunction == .g || !userIsStillTypingDigits {  // clear all
+        if prefixKey == .g || !userIsStillTypingDigits {  // clear all
             displayString = "0.0000"
             brain.clearStack()
             userIsStillTypingDigits = false
@@ -219,7 +266,7 @@ class CalculatorViewController: UIViewController {
                 displayString = String(displayString.dropLast())
             }
         }
-        alternateFunction = .n
+        prefixKey = nil
     }
 
     func playClickSound() {

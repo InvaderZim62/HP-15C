@@ -41,10 +41,10 @@ class CalculatorBrain {
                 return topOfStack as! Double
             } else if topOfStack is String {
                 let alternatePlusOperation = topOfStack as! String
-                let alternateFunction = alternatePlusOperation.first
+                let prefixKey = alternatePlusOperation.first
                 let operation = alternatePlusOperation.dropFirst()
                 
-                if alternateFunction == "n" {  // none (primary button functions)
+                if prefixKey == "n" {  // none (primary button functions)
                     switch operation {
                     case "÷":
                         let divisor = popOperandOffStack(&stack)
@@ -77,7 +77,7 @@ class CalculatorBrain {
                     default:
                         break
                     }
-                } else if alternateFunction == "g" {  // functions below button (blue)
+                } else if prefixKey == "g" {  // functions below button (blue)
                     switch operation {
                     case "SIN":
                         result = asin(popOperandOffStack(&stack)) / Constants.D2R
