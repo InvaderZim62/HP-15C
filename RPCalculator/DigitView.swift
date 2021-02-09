@@ -42,7 +42,6 @@ class DigitView: UIView {
     }
     
     private let allSegments: [Character: [Segment]] = [
-        " ": [],
         "0": [.upperCross, .upperLeft, .upperRight, .lowerLeft, .lowerRight, .lowerCross],
         "1": [.upperRight, .lowerRight],
         "2": [.upperCross, .upperRight, .middleCross, .lowerLeft, .lowerCross],
@@ -58,6 +57,7 @@ class DigitView: UIView {
         "e": [.upperCross, .upperLeft, .middleCross, .lowerLeft, .lowerCross],  // swift uses "e" for exponent (ex. 1.234e-02)
         "r": [.middleCross, .lowerLeft],
         "o": [.middleCross, .lowerLeft, .lowerRight, .lowerCross]
+        // unlisted characters will appear as blanks
     ]
 
     override func draw(_ rect: CGRect) {

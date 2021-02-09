@@ -33,7 +33,7 @@ class CalculatorViewController: UIViewController {
     
     var brain = CalculatorBrain()
     var player: AVAudioPlayer?
-    var displayString = "" { didSet { displayView.numberString = displayString } }
+    var displayString = "" { didSet { displayView.displayString = displayString } }
     var userIsStillTypingDigits = false
     var decimalWasAlreadyEntered = false
     var prefixKey: PrefixKey?
@@ -175,7 +175,7 @@ class CalculatorViewController: UIViewController {
         case .SCI:
             if let decimalPlaces = Int(digit) {
                 // number after FIX pressed
-                displayView.format = .scientific(decimalPlaces)
+                displayView.format = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantisa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             }
             prefixKey = nil

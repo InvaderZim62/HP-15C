@@ -37,13 +37,14 @@ enum DisplayFormat {
 class DisplayView: UIView {
     
     var numberOfDigits = 0 { didSet { createDigitViews() } }
-    var numberString = "0.0000" { didSet { updateDigits() } }
+    var displayString = "0.0000" { didSet { updateDisplay() } }
     var format = DisplayFormat.fixed(4)  // pws: consider moving this up to CalculatorViewController
 
     private var digitViews = [DigitView]()
+    private var exponentWasFound = false
     
-    // create numberOfDigits equally sized digitViews and add them to this DisplayView
-    // leave the specified boarder (inset) around the digitViews
+    // create equally sized digitViews and add them to this DisplayView, leaving the specified
+    // boarder (inset) around the digitViews
     func createDigitViews() {
         digitViews.forEach { $0.removeFromSuperview() }  // remove any past views and start over
         digitViews.removeAll()
@@ -65,26 +66,30 @@ class DisplayView: UIView {
         digitViews.forEach { $0.clear() }
     }
     
-    // set the digit character for each of the digitViews, based on numberString
+    // set the digit character for each of the digitViews, drawn from numberString
     // set the trailingDecimal boolean to true for the digitView preceding the decimal point
-    private func updateDigits() {
-        clearDisplay()
-        var displayString = numberString
-        if numberString == "nan" || numberString == "inf" {
-            displayString = "Error"
-        } else if numberString.first != "-" {
-            displayString = " " + numberString  // leave first digit blank, if number is positive
+    private func updateDisplay() {
+        clearDisplay()  // start with all blank digits
+        var modifiedDisplayString = displayString
+        if displayString == "nan" || displayString == "inf" {
+            modifiedDisplayString = "Error"
+        } else if displayString.first != "-" {
+            modifiedDisplayString = " " + displayString  // leave first digit blank, if number is positive
         }
         var displayIndex = 0
         var stringIndex = 0
         while displayIndex < numberOfDigits {
-            if stringIndex < displayString.count {
-                let index = displayString.index(displayString.startIndex, offsetBy: stringIndex)
-                let character = displayString[index]
+            if stringIndex < modifiedDisplayString.count {
+                let index = modifiedDisplayString.index(modifiedDisplayString.startIndex, offsetBy: stringIndex)
+                let character = modifiedDisplayString[index]
                 if character == "." {
                     displayIndex -= 1  // add decimal point to prior digitView
                     digitViews[displayIndex].trailingDecimal = true
+                } else if character == "e" {
+                    exponentWasFound = true
+                    displayIndex = 7  // will increment to 8, below
                 } else {
+                    // display this digit
                     digitViews[displayIndex].digit = character
                 }
             }
