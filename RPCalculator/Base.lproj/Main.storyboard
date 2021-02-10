@@ -535,8 +535,65 @@ R</string>
                                             </view>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rnD-ga-Zt7" customClass="DisplayView" customModule="RPCalculator" customModuleProvider="target">
                                                 <rect key="frame" x="110" y="20" width="319" height="60"/>
+                                                <subviews>
+                                                    <stackView opaque="NO" contentMode="scaleToFill" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="sWc-ai-Iuj">
+                                                        <rect key="frame" x="33.666666666666686" y="43.000000000000007" width="271.66666666666669" height="14.333333333333336"/>
+                                                        <subviews>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="USER" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dEA-4x-ZyI">
+                                                                <rect key="frame" x="0.0" y="0.0" width="31.666666666666668" height="14.333333333333334"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="f" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ayy-ES-Kg8">
+                                                                <rect key="frame" x="43.666666666666657" y="0.0" width="4.6666666666666643" height="14.333333333333334"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="g" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="w6W-Ci-oNU">
+                                                                <rect key="frame" x="60.333333333333314" y="0.0" width="7.3333333333333286" height="14.333333333333334"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="BEGIN" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KG0-Z0-9YV">
+                                                                <rect key="frame" x="79.666666666666657" y="0.0" width="36.333333333333343" height="14.333333333333334"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="GRAD" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OlI-qv-BUW">
+                                                                <rect key="frame" x="127.99999999999999" y="0.0" width="33.666666666666671" height="14.333333333333334"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="D.MY" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="C1d-Ys-nnQ">
+                                                                <rect key="frame" x="173.66666666666666" y="0.0" width="30.333333333333343" height="14.333333333333334"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="C" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Plz-XI-dPr">
+                                                                <rect key="frame" x="215.99999999999997" y="0.0" width="8.6666666666666572" height="14.333333333333334"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="PRGM" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="NFg-E3-NCP">
+                                                                <rect key="frame" x="236.66666666666666" y="0.0" width="34.999999999999972" height="14.333333333333334"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                        </subviews>
+                                                    </stackView>
+                                                </subviews>
                                                 <color key="backgroundColor" red="0.66242671009999998" green="0.69947242740000004" blue="0.61567509170000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                 <constraints>
+                                                    <constraint firstAttribute="bottom" secondItem="sWc-ai-Iuj" secondAttribute="bottom" constant="2.6666666666666927" id="d41-gM-OpX"/>
+                                                    <constraint firstItem="sWc-ai-Iuj" firstAttribute="centerX" secondItem="rnD-ga-Zt7" secondAttribute="centerX" constant="10" id="di6-Fq-a6T"/>
                                                     <constraint firstAttribute="height" constant="60" id="ruW-xt-GtG"/>
                                                 </constraints>
                                             </view>
@@ -572,7 +629,15 @@ R</string>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="beginLabel" destination="KG0-Z0-9YV" id="QxF-Sg-FyP"/>
+                        <outlet property="cLabel" destination="Plz-XI-dPr" id="Z4w-Fj-to3"/>
                         <outlet property="displayView" destination="rnD-ga-Zt7" id="tkM-On-xMm"/>
+                        <outlet property="dmyLabel" destination="C1d-Ys-nnQ" id="1ch-me-DVD"/>
+                        <outlet property="fLabel" destination="ayy-ES-Kg8" id="uwX-OC-Yfe"/>
+                        <outlet property="gLabel" destination="w6W-Ci-oNU" id="3a4-5C-I4C"/>
+                        <outlet property="gradLabel" destination="OlI-qv-BUW" id="hIM-l5-qhN"/>
+                        <outlet property="prgmLabel" destination="NFg-E3-NCP" id="mo6-OM-xsZ"/>
+                        <outlet property="userLabel" destination="dEA-4x-ZyI" id="T61-c8-3FB"/>
                         <outletCollection property="buttons" destination="5DD-Xr-32d" collectionClass="NSMutableArray" id="H1J-hq-AsX"/>
                         <outletCollection property="buttons" destination="M4w-zs-LRC" collectionClass="NSMutableArray" id="cRn-4p-DGF"/>
                         <outletCollection property="buttons" destination="4lX-F1-GIh" collectionClass="NSMutableArray" id="0po-PY-ANG"/>

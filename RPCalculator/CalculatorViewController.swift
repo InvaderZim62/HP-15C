@@ -36,7 +36,19 @@ class CalculatorViewController: UIViewController {
     var displayString = "" { didSet { displayView.displayString = displayString } }
     var userIsStillTypingDigits = false
     var decimalWasAlreadyEntered = false
-    var prefixKey: PrefixKey?
+    
+    var prefixKey: PrefixKey? { didSet {
+        fLabel.alpha = 0
+        gLabel.alpha = 0
+        switch prefixKey {
+        case .f:
+            fLabel.alpha = 1
+        case .g:
+            gLabel.alpha = 1
+        default:
+            break
+        }
+    } }
     
     // dictionary of button labels going from left to right, top to bottom
     // dictionary key is the primary button label (must agree with storyboard)
@@ -80,6 +92,14 @@ class CalculatorViewController: UIViewController {
 
     @IBOutlet weak var displayView: DisplayView!
     @IBOutlet var buttons: [UIButton]!  // don't include ENTER button // pws: maybe use fixed alternateHeight in ButtonCoverView, and give remainder to primary
+    @IBOutlet weak var userLabel: UILabel!
+    @IBOutlet weak var fLabel: UILabel!
+    @IBOutlet weak var gLabel: UILabel!
+    @IBOutlet weak var beginLabel: UILabel!
+    @IBOutlet weak var gradLabel: UILabel!
+    @IBOutlet weak var dmyLabel: UILabel!
+    @IBOutlet weak var cLabel: UILabel!
+    @IBOutlet weak var prgmLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -88,7 +108,15 @@ class CalculatorViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         displayView.numberOfDigits = 11  // one digit for sign
         displayString = "0.0000"
-
+        userLabel.alpha = 0  // don't hide, or stackView layout changes
+        fLabel.alpha = 0
+        gLabel.alpha = 0
+        beginLabel.alpha = 0
+        gradLabel.alpha = 0
+        dmyLabel.alpha = 0
+        cLabel.alpha = 0
+        prgmLabel.alpha = 0
+        // create all text for the buttons
         for button in buttons {
             if let nText = button.currentTitle, let (fText, gText) = buttonText[nText] {
                 createCoverForButton(button, fText: fText, nText: nText, gText: gText)
