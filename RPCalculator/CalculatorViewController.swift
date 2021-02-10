@@ -238,7 +238,7 @@ class CalculatorViewController: UIViewController {
         // pws: For now, I assumed an operation is only preceded by no prefix key, or by f, or g
         // if this is not the case, prefixPlusOperation (below) and prefixKey (in CalculatorBrain.popOperationOffStack) must change
         precondition((prefixKey?.rawValue ?? "n").count == 1, "Operation selected with prefix key other than f or g")
-        let prefixPlusOperation = prefixKey?.rawValue ?? "n" + sender.currentTitle!  // capture before clearing prefixKey in enterPressed
+        let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + sender.currentTitle!  // capture before clearing prefixKey in enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
         brain.pushOperation(prefixPlusOperation)
         runAndUpdateInterface()
