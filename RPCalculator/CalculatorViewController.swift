@@ -25,8 +25,10 @@ enum PrefixKey: String {
     case ENG
 }
 
-struct Constants {
-    static let D2R = Double.pi / 180
+enum TrigMode: String {
+    case DEG = "D"  // default
+    case RAD = "R"
+    case GRAD = "G"  // 90 degrees = 100 gradians
 }
 
 class CalculatorViewController: UIViewController {
@@ -47,6 +49,19 @@ class CalculatorViewController: UIViewController {
             gLabel.alpha = 1
         default:
             break
+        }
+    } }
+    
+    var trigMode = TrigMode.DEG { didSet {
+        switch trigMode {
+        case .DEG:
+            gradLabel.alpha = 0  // no display label for DEG
+        case .RAD:
+            gradLabel.alpha = 1
+            gradLabel.text = "RAD"
+        case .GRAD:
+            gradLabel.alpha = 1
+            gradLabel.text = "GRAD"
         }
     } }
     
@@ -116,7 +131,7 @@ class CalculatorViewController: UIViewController {
         dmyLabel.alpha = 0
         cLabel.alpha = 0
         prgmLabel.alpha = 0
-        // create all text for the buttons
+        // create all text for the buttons using ButtonCoverViews
         for button in buttons {
             if let nText = button.currentTitle, let (fText, gText) = buttonText[nText] {
                 createCoverForButton(button, fText: fText, nText: nText, gText: gText)
@@ -205,6 +220,12 @@ class CalculatorViewController: UIViewController {
                 let tempButton = UIButton()
                 tempButton.setTitle("3", for: .normal)
                 operationPressed(tempButton)  // better handled as operation
+            case "7":
+                trigMode = .DEG
+            case "8":
+                trigMode = .RAD
+            case "9":
+                trigMode = .GRAD
             case "EEX":
                 // pi pressed
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
@@ -279,10 +300,14 @@ class CalculatorViewController: UIViewController {
     // perform operation pressed (button title), and display results
     @IBAction func operationPressed(_ sender: UIButton) {
         playClickSound()
+        var keyName = sender.currentTitle!
+        if keyName == "SIN" || keyName == "COS" || keyName == "TAN" {
+            keyName += trigMode.rawValue  // DEG adds D (ex. COSD), RAD adds nothing (ex. COS)
+        }
         // pws: For now, I assumed an operation is only preceded by no prefix key, or by f, or g
         // if this is not the case, prefixPlusOperation (below) and prefixKey (in CalculatorBrain.popOperationOffStack) must change
         precondition((prefixKey?.rawValue ?? "n").count == 1, "Operation selected with prefix key other than f or g")
-        let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + sender.currentTitle!  // capture before clearing prefixKey in enterPressed
+        let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + keyName  // capture before clearing prefixKey in enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
         brain.pushOperation(prefixPlusOperation)
         runAndUpdateInterface()

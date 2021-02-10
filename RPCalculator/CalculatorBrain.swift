@@ -7,6 +7,11 @@
 
 import Foundation
 
+struct Constants {
+    static let D2R = Double.pi / 180
+    static let G2R = Double.pi / 200  // gradians to radians
+}
+
 class CalculatorBrain {
     
     var program: [Any] {
@@ -55,12 +60,24 @@ class CalculatorBrain {
                         result = -popOperandOffStack(&stack) + popOperandOffStack(&stack)
                     case "+":
                         result = popOperandOffStack(&stack) + popOperandOffStack(&stack)
-                    case "SIN":
+                    case "SIND":
                         result = sin(popOperandOffStack(&stack) * Constants.D2R)
-                    case "COS":
+                    case "COSD":
                         result = cos(popOperandOffStack(&stack) * Constants.D2R)
-                    case "TAN":
+                    case "TAND":
                         result = tan(popOperandOffStack(&stack) * Constants.D2R)
+                    case "SINR":
+                        result = sin(popOperandOffStack(&stack))
+                    case "COSR":
+                        result = cos(popOperandOffStack(&stack))
+                    case "TANR":
+                        result = tan(popOperandOffStack(&stack))
+                    case "SING":
+                        result = sin(popOperandOffStack(&stack) * Constants.G2R)
+                    case "COSG":
+                        result = cos(popOperandOffStack(&stack) * Constants.G2R)
+                    case "TANG":
+                        result = tan(popOperandOffStack(&stack) * Constants.G2R)
                     case "√x":
                         result = sqrt(popOperandOffStack(&stack))
                     case "ex":
@@ -86,12 +103,24 @@ class CalculatorBrain {
                     }
                 } else if prefixKey == "g" {  // functions below button (blue)
                     switch operation {
-                    case "SIN":
+                    case "SIND":
                         result = asin(popOperandOffStack(&stack)) / Constants.D2R
-                    case "COS":
+                    case "COSD":
                         result = acos(popOperandOffStack(&stack)) / Constants.D2R
-                    case "TAN":
+                    case "TAND":
                         result = atan(popOperandOffStack(&stack)) / Constants.D2R
+                    case "SINR":
+                        result = asin(popOperandOffStack(&stack))
+                    case "COSR":
+                        result = acos(popOperandOffStack(&stack))
+                    case "TANR":
+                        result = atan(popOperandOffStack(&stack))
+                    case "SING":
+                        result = asin(popOperandOffStack(&stack)) / Constants.G2R
+                    case "COSG":
+                        result = acos(popOperandOffStack(&stack)) / Constants.G2R
+                    case "TANG":
+                        result = atan(popOperandOffStack(&stack)) / Constants.G2R
                     case "√x":
                         result = pow(popOperandOffStack(&stack), 2)
                     case "ex":
