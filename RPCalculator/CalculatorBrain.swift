@@ -77,6 +77,13 @@ class CalculatorBrain {
                     default:
                         break
                     }
+                } else if prefixKey == "f" {  // functions above button (orange)
+                    switch operation {
+                    case "3":  // sent from digitPressed
+                        result = popOperandOffStack(&stack) * Constants.D2R
+                    default:
+                        break
+                    }
                 } else if prefixKey == "g" {  // functions below button (blue)
                     switch operation {
                     case "SIN":
@@ -93,6 +100,8 @@ class CalculatorBrain {
                         result = log10(popOperandOffStack(&stack))
                     case "CHS":
                         result = abs(popOperandOffStack(&stack))
+                    case "3":  // sent from digitPressed
+                        result = popOperandOffStack(&stack) / Constants.D2R
                     default:
                         break
                     }

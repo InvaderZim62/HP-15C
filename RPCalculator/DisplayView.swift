@@ -45,7 +45,7 @@ class DisplayView: UIView {
     
     // create equally sized digitViews and add them to this DisplayView, leaving the specified
     // boarder (inset) around the digitViews
-    func createDigitViews() {
+    private func createDigitViews() {
         digitViews.forEach { $0.removeFromSuperview() }  // remove any past views and start over
         digitViews.removeAll()
         let leftInset: CGFloat = 10

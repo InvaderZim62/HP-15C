@@ -136,7 +136,7 @@ class CalculatorViewController: UIViewController {
         // determine length in display, knowing displayView will place decimal point in a digitView and add a space in front of positive numbers
         let lengthInDisplay = potentialDisplayString.replacingOccurrences(of: ".", with: "").count + (potentialDisplayString.first == "-" ? 0 : 1)
         if lengthInDisplay > displayView.numberOfDigits {
-            // fixed format won't fix, temporarily switch to scientific notation
+            // fixed format won't fit, temporarily switch to scientific notation
             displayString = String(format: DisplayFormat.scientific(6).string, numericalResult)
         } else {
             displayString = potentialDisplayString
@@ -152,23 +152,39 @@ class CalculatorViewController: UIViewController {
         
         switch prefixKey {
         case .f:
-            if digit == "7" {
+            switch digit {
+            case "3":
+                // →RAD pressed
+                let tempButton = UIButton()
+                tempButton.setTitle("3", for: .normal)
+                operationPressed(tempButton)  // better handled as operation
+            case "7":
                 // FIX pressed
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 prefixKey = .FIX  // wait for next digit
-            } else if digit == "8" {
+            case "8":
                 // SCI pressed
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 prefixKey = .SCI  // wait for next digit
+            default:
+                break
             }
             return
         case .g:
-            if digit == "EEX" {
+            switch digit {
+            case "3":
+                // →DEG pressed
+                let tempButton = UIButton()
+                tempButton.setTitle("3", for: .normal)
+                operationPressed(tempButton)  // better handled as operation
+            case "EEX":
                 // pi pressed
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 displayString = "3.141592654"
                 enterPressed(UIButton())
                 runAndUpdateInterface()
+            default:
+                break
             }
             prefixKey = nil
             return
