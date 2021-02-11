@@ -37,6 +37,7 @@ class CalculatorViewController: UIViewController {
     var player: AVAudioPlayer?
     var displayString = "" { didSet { displayView.displayString = displayString } }
     var userIsStillTypingDigits = false
+    var userIsEnteringExponent = false
     var decimalWasAlreadyEntered = false
     
     var prefixKey: PrefixKey? { didSet {
@@ -173,6 +174,7 @@ class CalculatorViewController: UIViewController {
         return attributedString
     }
     
+    // run program and set display string (switch to scientific notation, if fixed format won't fit)
     private func runAndUpdateInterface() {
         let numericalResult = CalculatorBrain.runProgram(brain.program)
         let potentialDisplayString = String(format: displayView.format.string, numericalResult)
@@ -193,6 +195,7 @@ class CalculatorViewController: UIViewController {
         var digit = sender.currentTitle!
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
+        // handle digit after prefix key (return before handling lone digits)
         switch prefixKey {
         case .f:
             switch digit {
@@ -257,6 +260,14 @@ class CalculatorViewController: UIViewController {
             break
         }
         
+        if digit == "EEX" {
+            if userIsStillTypingDigits {
+                userIsEnteringExponent = true
+            } else {
+                return
+            }
+        }
+        
         // add digit to display
         if userIsStillTypingDigits {
             if displayString == "0" {
@@ -267,7 +278,19 @@ class CalculatorViewController: UIViewController {
                 }
             } else {
                 if !(digit == "." && decimalWasAlreadyEntered) {  // only allow one decimal point per number
-                    displayString += digit  // append entered digit to display
+                    if userIsEnteringExponent {
+                        if digit == "EEX" {  // pws: doesn't guard against mantissa that overlaps exponent
+                            let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                            displayString = displayString.padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
+                        } else {
+                            // slide second digit of exponent left and put new digit in its place
+                            let exponent2 = String(displayString.removeLast())
+                            displayString.removeLast(1)
+                            displayString += exponent2 + digit
+                        }
+                    } else {
+                        displayString += digit  // append entered digit to display
+                    }
                 }
             }
         } else {
@@ -288,11 +311,20 @@ class CalculatorViewController: UIViewController {
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterPressed(_ sender: UIButton) {
         playClickSound()
+        if userIsEnteringExponent {
+            // convert "1.2345    01" to "1.2345E+01", before trying to convert to number
+            let exponent2 = String(displayString.removeLast())
+            let exponent1 = String(displayString.removeLast())
+            var sign = String(displayString.removeLast())
+            if sign == " " { sign = "+" }
+            displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
+        }
         if let number = Double(displayString) {
             brain.pushOperand(number)
             runAndUpdateInterface()
         }
         userIsStillTypingDigits = false
+        userIsEnteringExponent = false
         decimalWasAlreadyEntered = false
         prefixKey = nil
     }
@@ -301,6 +333,14 @@ class CalculatorViewController: UIViewController {
     @IBAction func operationPressed(_ sender: UIButton) {
         playClickSound()
         var keyName = sender.currentTitle!
+        if keyName == "CHS" && userIsEnteringExponent {
+            let exponent2 = String(displayString.removeLast())
+            let exponent1 = String(displayString.removeLast())
+            var sign = String(displayString.removeLast())
+            sign = sign == " " ? "-" : " "  // toggle sign
+            displayString += sign + exponent1 + exponent2
+            return
+        }
         if keyName == "SIN" || keyName == "COS" || keyName == "TAN" {
             keyName += trigMode.rawValue  // DEG adds D (ex. COSD), RAD adds nothing (ex. COS)
         }
@@ -341,7 +381,7 @@ class CalculatorViewController: UIViewController {
                 if displayString.hasSuffix(".") {
                     decimalWasAlreadyEntered = false
                 }
-                displayString = String(displayString.dropLast())
+                displayString = String(displayString.dropLast())  // remove last display digit
             }
         }
         prefixKey = nil
