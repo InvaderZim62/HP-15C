@@ -676,11 +676,12 @@ R</string>
                         <outletCollection property="buttons" destination="cIO-lf-oSp" collectionClass="NSMutableArray" id="5wg-u9-soK"/>
                         <outletCollection property="buttons" destination="bNW-Ui-4d7" collectionClass="NSMutableArray" id="UMp-OA-EFb"/>
                         <outletCollection property="buttons" destination="zAF-Do-b02" collectionClass="NSMutableArray" id="eZZ-8i-oD2"/>
+                        <outletCollection property="buttons" destination="J89-H6-tLf" collectionClass="NSMutableArray" id="AeX-Bc-jFv"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="97.826086956521749" y="107.24637681159422"/>
+            <point key="canvasLocation" x="232" y="103"/>
         </scene>
     </scenes>
 </document>

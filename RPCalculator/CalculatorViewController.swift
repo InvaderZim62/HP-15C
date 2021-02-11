@@ -103,11 +103,12 @@ class CalculatorViewController: UIViewController {
         "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
         "·": ("y\u{0302},r", "s"),  // \u{0302} puts ^ above y
         "Σ+": ("L.R.", "Σ-"),
-        "+": ("Py,x", "Cy,x")
+        "+": ("Py,x", "Cy,x"),
+        "E\nN\nT\nE\nR": ("RAN#", "LSTx")  // ENTER
     ]
 
     @IBOutlet weak var displayView: DisplayView!
-    @IBOutlet var buttons: [UIButton]!  // don't include ENTER button // pws: maybe use fixed alternateHeight in ButtonCoverView, and give remainder to primary
+    @IBOutlet var buttons: [UIButton]!
     @IBOutlet weak var userLabel: UILabel!
     @IBOutlet weak var fLabel: UILabel!
     @IBOutlet weak var gLabel: UILabel!
@@ -132,6 +133,7 @@ class CalculatorViewController: UIViewController {
         dmyLabel.alpha = 0
         cLabel.alpha = 0
         prgmLabel.alpha = 0
+        
         // create all text for the buttons using ButtonCoverViews
         for button in buttons {
             if let nText = button.currentTitle, let (fText, gText) = buttonText[nText] {
@@ -146,8 +148,13 @@ class CalculatorViewController: UIViewController {
         buttonCoverView.orangeLabel.text = fText
         buttonCoverView.whiteLabel.text = nText
         buttonCoverView.blueLabel.text = gText
+        
         // handle special button labels
         switch nText {
+        case "E\nN\nT\nE\nR":
+            // vertical text
+            buttonCoverView.whiteLabel.numberOfLines = 0
+            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(14)
         case "ex", "10x", "yx":
             // superscript x
             buttonCoverView.whiteLabel.attributedText = superscriptLastNCharactersOf(nText, n: 1, font: buttonCoverView.whiteLabel.font)
