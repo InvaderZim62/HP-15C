@@ -117,6 +117,7 @@ class CalculatorViewController: UIViewController {
     @IBOutlet weak var dmyLabel: UILabel!
     @IBOutlet weak var cLabel: UILabel!
     @IBOutlet weak var prgmLabel: UILabel!
+    @IBOutlet weak var logoCircleView: UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -133,6 +134,8 @@ class CalculatorViewController: UIViewController {
         dmyLabel.alpha = 0
         cLabel.alpha = 0
         prgmLabel.alpha = 0
+        logoCircleView.layer.masksToBounds = true
+        logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
         
         // create all text for the buttons using ButtonCoverViews
         for button in buttons {
