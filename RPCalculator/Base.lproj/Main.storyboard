@@ -476,48 +476,50 @@ R</string>
                                                         <rect key="frame" x="4" y="4" width="42" height="28"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="beA-il-chX" userLabel="Circle View">
-                                                                <rect key="frame" x="8" y="1" width="26" height="26"/>
+                                                                <rect key="frame" x="8.3333333333332575" y="1.3333333333333357" width="25" height="25"/>
                                                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                 <constraints>
                                                                     <constraint firstAttribute="width" secondItem="beA-il-chX" secondAttribute="height" multiplier="1:1" id="mW6-as-m3R"/>
                                                                 </constraints>
                                                             </view>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="hp" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" minimumFontSize="20" translatesAutoresizingMaskIntoConstraints="NO" id="FMc-dR-GBH">
-                                                                <rect key="frame" x="8.666666666666627" y="-1.6666666666666643" width="26.333333333333329" height="26.333333333333332"/>
+                                                                <rect key="frame" x="8.9999999999999982" y="-1" width="25.333333333333329" height="25.333333333333332"/>
                                                                 <constraints>
                                                                     <constraint firstAttribute="width" secondItem="FMc-dR-GBH" secondAttribute="height" multiplier="1:1" id="PGw-lz-cIG"/>
                                                                 </constraints>
-                                                                <fontDescription key="fontDescription" name="Futura-MediumItalic" family="Futura" pointSize="40"/>
-                                                                <color key="textColor" red="0.67059278489999996" green="0.67057996990000002" blue="0.67058867219999996" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                                <fontDescription key="fontDescription" name="Futura-MediumItalic" family="Futura" pointSize="160"/>
+                                                                <color key="textColor" red="0.74509803921568629" green="0.74509803921568629" blue="0.74509803921568629" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                                 <nil key="highlightedColor"/>
                                                             </label>
                                                         </subviews>
-                                                        <color key="backgroundColor" red="0.75686788559999996" green="0.75685352090000002" blue="0.75686329600000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                        <color key="backgroundColor" red="0.74509803921568629" green="0.74509803921568629" blue="0.74509803921568629" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                         <constraints>
                                                             <constraint firstItem="FMc-dR-GBH" firstAttribute="centerY" secondItem="D7p-Rg-TqJ" secondAttribute="centerY" multiplier="0.84" id="5kd-52-WcM"/>
                                                             <constraint firstItem="FMc-dR-GBH" firstAttribute="centerX" secondItem="D7p-Rg-TqJ" secondAttribute="centerX" multiplier="1.04" id="Dk9-Tv-yqf"/>
+                                                            <constraint firstItem="beA-il-chX" firstAttribute="centerY" secondItem="D7p-Rg-TqJ" secondAttribute="centerY" id="GDt-mr-O3J"/>
                                                             <constraint firstItem="FMc-dR-GBH" firstAttribute="height" secondItem="beA-il-chX" secondAttribute="height" multiplier="1.01" id="IX2-FA-PQo"/>
-                                                            <constraint firstAttribute="bottom" secondItem="beA-il-chX" secondAttribute="bottom" constant="1" id="LvL-90-rjn"/>
+                                                            <constraint firstItem="beA-il-chX" firstAttribute="height" secondItem="D7p-Rg-TqJ" secondAttribute="height" multiplier="0.9" id="Rjb-7M-72W"/>
                                                             <constraint firstItem="beA-il-chX" firstAttribute="centerX" secondItem="D7p-Rg-TqJ" secondAttribute="centerX" id="axq-be-P5G"/>
-                                                            <constraint firstItem="beA-il-chX" firstAttribute="top" secondItem="D7p-Rg-TqJ" secondAttribute="top" constant="1" id="bPn-fg-eee"/>
                                                         </constraints>
                                                     </view>
                                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uGa-cr-dgN" userLabel="Lower View">
                                                         <rect key="frame" x="4" y="34.000000000000007" width="42" height="12"/>
                                                         <subviews>
-                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="15C" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" minimumFontSize="14" translatesAutoresizingMaskIntoConstraints="NO" id="6DK-hW-9ZW">
-                                                                <rect key="frame" x="0.0" y="0.0" width="42" height="12"/>
-                                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="30"/>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="15C" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" minimumFontSize="13" translatesAutoresizingMaskIntoConstraints="NO" id="6DK-hW-9ZW">
+                                                                <rect key="frame" x="5.3333333333332575" y="-2" width="31" height="15.666666666666666"/>
+                                                                <constraints>
+                                                                    <constraint firstAttribute="width" secondItem="6DK-hW-9ZW" secondAttribute="height" multiplier="2:1" id="bic-4P-scQ"/>
+                                                                </constraints>
+                                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="100"/>
                                                                 <nil key="textColor"/>
                                                                 <nil key="highlightedColor"/>
                                                             </label>
                                                         </subviews>
-                                                        <color key="backgroundColor" red="0.75686788559999996" green="0.75685352090000002" blue="0.75686329600000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                        <color key="backgroundColor" red="0.74509803921568629" green="0.74509803921568629" blue="0.74509803921568629" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                         <constraints>
-                                                            <constraint firstAttribute="trailing" secondItem="6DK-hW-9ZW" secondAttribute="trailing" id="1gZ-bU-b8p"/>
-                                                            <constraint firstItem="6DK-hW-9ZW" firstAttribute="top" secondItem="uGa-cr-dgN" secondAttribute="top" id="HZp-QE-pYg"/>
-                                                            <constraint firstAttribute="bottom" secondItem="6DK-hW-9ZW" secondAttribute="bottom" id="Unn-uT-Sft"/>
-                                                            <constraint firstItem="6DK-hW-9ZW" firstAttribute="leading" secondItem="uGa-cr-dgN" secondAttribute="leading" id="YAo-si-ICy"/>
+                                                            <constraint firstItem="6DK-hW-9ZW" firstAttribute="centerY" secondItem="uGa-cr-dgN" secondAttribute="centerY" id="VL1-Yy-36D"/>
+                                                            <constraint firstItem="6DK-hW-9ZW" firstAttribute="centerX" secondItem="uGa-cr-dgN" secondAttribute="centerX" id="ZN5-dI-alL"/>
+                                                            <constraint firstItem="6DK-hW-9ZW" firstAttribute="height" secondItem="uGa-cr-dgN" secondAttribute="height" multiplier="1.3" id="vpK-33-GA7"/>
                                                         </constraints>
                                                     </view>
                                                 </subviews>

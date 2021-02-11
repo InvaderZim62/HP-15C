@@ -13,6 +13,15 @@
 //  the connections menu.  Control-drag from the little circle to the right of Touch Down (under
 //  Send Events) to the appropriate IBAction.  Cancel (click on x) the event for Touch Up Inside.
 //
+//  I made the "hp" and "15C" labels scale with the HP Logo Container View in Interface Builder,
+//  by using the following setting...
+//     Font size: (largest desired scalable size)
+//     Lines: 0
+//     Alignment: Center
+//     Baseline: Align Centers
+//     Autoshrink: Minimum Font Size
+//         number: (smallest desired scalable size)
+//
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
