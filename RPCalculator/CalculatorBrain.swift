@@ -96,41 +96,46 @@ class CalculatorBrain {
                     }
                 } else if prefixKey == "f" {  // functions above button (orange)
                     switch operation {
+                    case "STO":
+                        let number = popOperandOffStack(&stack)
+                        result = number - Double(Int(number))  // frac (decimal portion of number)
                     case "3":  // sent from digitPressed
-                        result = popOperandOffStack(&stack) * Constants.D2R
+                        result = popOperandOffStack(&stack) * Constants.D2R  // convert to radians
                     default:
                         break
                     }
                 } else if prefixKey == "g" {  // functions below button (blue)
                     switch operation {
+                    case "STO":
+                        result = Double(Int(popOperandOffStack(&stack)))  // int
                     case "SIND":
-                        result = asin(popOperandOffStack(&stack)) / Constants.D2R
+                        result = asin(popOperandOffStack(&stack)) / Constants.D2R  // arcsine in degrees
                     case "COSD":
-                        result = acos(popOperandOffStack(&stack)) / Constants.D2R
+                        result = acos(popOperandOffStack(&stack)) / Constants.D2R  // arccosine in degrees
                     case "TAND":
-                        result = atan(popOperandOffStack(&stack)) / Constants.D2R
+                        result = atan(popOperandOffStack(&stack)) / Constants.D2R  // arctangent in degrees
                     case "SINR":
-                        result = asin(popOperandOffStack(&stack))
+                        result = asin(popOperandOffStack(&stack))  // arcsine in radians
                     case "COSR":
-                        result = acos(popOperandOffStack(&stack))
+                        result = acos(popOperandOffStack(&stack))  // arccosine in radians
                     case "TANR":
-                        result = atan(popOperandOffStack(&stack))
+                        result = atan(popOperandOffStack(&stack))  // arctangent in radians
                     case "SING":
-                        result = asin(popOperandOffStack(&stack)) / Constants.G2R
+                        result = asin(popOperandOffStack(&stack)) / Constants.G2R  // arcsine in gradians
                     case "COSG":
-                        result = acos(popOperandOffStack(&stack)) / Constants.G2R
+                        result = acos(popOperandOffStack(&stack)) / Constants.G2R  // arccosine in gradians
                     case "TANG":
-                        result = atan(popOperandOffStack(&stack)) / Constants.G2R
+                        result = atan(popOperandOffStack(&stack)) / Constants.G2R  // arctangent in gradians
                     case "√x":
-                        result = pow(popOperandOffStack(&stack), 2)
+                        result = pow(popOperandOffStack(&stack), 2)  // square
                     case "ex":
                         result = log(popOperandOffStack(&stack))  // natural log
                     case "10x":
-                        result = log10(popOperandOffStack(&stack))
+                        result = log10(popOperandOffStack(&stack))  // log base 10
                     case "CHS":
-                        result = abs(popOperandOffStack(&stack))
+                        result = abs(popOperandOffStack(&stack))  // absolute value
                     case "3":  // sent from digitPressed
-                        result = popOperandOffStack(&stack) / Constants.D2R
+                        result = popOperandOffStack(&stack) / Constants.D2R  // convert to degrees
                     default:
                         break
                     }

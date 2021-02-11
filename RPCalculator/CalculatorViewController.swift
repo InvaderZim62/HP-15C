@@ -189,7 +189,7 @@ class CalculatorViewController: UIViewController {
         print("numerical result: \(numericalResult), displayString: \(displayString)")
     }
 
-    // numbers 0-9, period, EEX (pi)
+    // digits: numbers 0-9, period, EEX key
     @IBAction func digitPressed(_ sender: UIButton) {
         playClickSound()
         var digit = sender.currentTitle!
