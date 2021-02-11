@@ -523,17 +523,18 @@ R</string>
                                                 </subviews>
                                                 <color key="backgroundColor" red="0.10196178409999999" green="0.10195901239999999" blue="0.1019608751" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                 <constraints>
-                                                    <constraint firstItem="D7p-Rg-TqJ" firstAttribute="top" secondItem="obK-CZ-IpM" secondAttribute="top" constant="4" id="4WP-oM-PT8"/>
-                                                    <constraint firstAttribute="bottom" secondItem="uGa-cr-dgN" secondAttribute="bottom" constant="4" id="94B-ug-l5x"/>
-                                                    <constraint firstItem="D7p-Rg-TqJ" firstAttribute="leading" secondItem="obK-CZ-IpM" secondAttribute="leading" constant="4" id="B8z-QB-J7C"/>
+                                                    <constraint firstItem="uGa-cr-dgN" firstAttribute="centerX" secondItem="obK-CZ-IpM" secondAttribute="centerX" id="2LE-Oe-6Vt"/>
+                                                    <constraint firstItem="uGa-cr-dgN" firstAttribute="centerX" secondItem="obK-CZ-IpM" secondAttribute="centerX" id="3bQ-cl-qLn"/>
+                                                    <constraint firstItem="uGa-cr-dgN" firstAttribute="width" secondItem="obK-CZ-IpM" secondAttribute="width" multiplier="0.84" id="7gn-Gl-pnB"/>
+                                                    <constraint firstItem="D7p-Rg-TqJ" firstAttribute="centerX" secondItem="obK-CZ-IpM" secondAttribute="centerX" id="C7G-fP-XAI"/>
                                                     <constraint firstAttribute="width" constant="50" id="JqA-pp-wV4"/>
-                                                    <constraint firstItem="uGa-cr-dgN" firstAttribute="top" secondItem="D7p-Rg-TqJ" secondAttribute="bottom" constant="2" id="Jz7-v0-qf1"/>
-                                                    <constraint firstAttribute="trailing" secondItem="uGa-cr-dgN" secondAttribute="trailing" constant="4" id="Qa1-DW-FMT"/>
-                                                    <constraint firstItem="uGa-cr-dgN" firstAttribute="leading" secondItem="obK-CZ-IpM" secondAttribute="leading" constant="4" id="Ybe-yP-yXi"/>
+                                                    <constraint firstItem="D7p-Rg-TqJ" firstAttribute="centerY" secondItem="obK-CZ-IpM" secondAttribute="centerY" multiplier="0.72" id="Por-Nu-rea"/>
+                                                    <constraint firstItem="D7p-Rg-TqJ" firstAttribute="height" secondItem="obK-CZ-IpM" secondAttribute="height" multiplier="0.56" id="ScH-tV-nRx"/>
+                                                    <constraint firstItem="uGa-cr-dgN" firstAttribute="centerY" secondItem="obK-CZ-IpM" secondAttribute="centerY" multiplier="1.6" id="Syc-7v-zeO"/>
                                                     <constraint firstAttribute="height" constant="50" id="b3s-9d-iba"/>
                                                     <constraint firstItem="uGa-cr-dgN" firstAttribute="centerX" secondItem="obK-CZ-IpM" secondAttribute="centerX" id="fER-Xb-5Fb"/>
-                                                    <constraint firstAttribute="trailing" secondItem="D7p-Rg-TqJ" secondAttribute="trailing" constant="4" id="lXk-JP-DOE"/>
                                                     <constraint firstItem="uGa-cr-dgN" firstAttribute="height" secondItem="obK-CZ-IpM" secondAttribute="height" multiplier="0.24" id="vGu-50-2AU"/>
+                                                    <constraint firstItem="D7p-Rg-TqJ" firstAttribute="width" secondItem="obK-CZ-IpM" secondAttribute="width" multiplier="0.84" id="vJR-Oh-8pb"/>
                                                 </constraints>
                                             </view>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rnD-ga-Zt7" customClass="DisplayView" customModule="RPCalculator" customModuleProvider="target">
