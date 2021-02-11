@@ -479,8 +479,7 @@ R</string>
                                                                 <rect key="frame" x="8" y="1" width="26" height="26"/>
                                                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                 <constraints>
-                                                                    <constraint firstAttribute="height" constant="26" id="Sai-bS-x6b"/>
-                                                                    <constraint firstAttribute="width" constant="26" id="gjZ-z8-wnb"/>
+                                                                    <constraint firstAttribute="width" secondItem="beA-il-chX" secondAttribute="height" multiplier="1:1" id="mW6-as-m3R"/>
                                                                 </constraints>
                                                                 <userDefinedRuntimeAttributes>
                                                                     <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
@@ -499,9 +498,10 @@ R</string>
                                                         <color key="backgroundColor" red="0.75686788559999996" green="0.75685352090000002" blue="0.75686329600000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                         <constraints>
                                                             <constraint firstItem="FMc-dR-GBH" firstAttribute="centerX" secondItem="D7p-Rg-TqJ" secondAttribute="centerX" id="9Ll-Nq-4F8"/>
-                                                            <constraint firstItem="beA-il-chX" firstAttribute="centerY" secondItem="D7p-Rg-TqJ" secondAttribute="centerY" id="Khi-PQ-jn7"/>
+                                                            <constraint firstAttribute="bottom" secondItem="beA-il-chX" secondAttribute="bottom" constant="1" id="LvL-90-rjn"/>
+                                                            <constraint firstItem="beA-il-chX" firstAttribute="centerX" secondItem="D7p-Rg-TqJ" secondAttribute="centerX" id="axq-be-P5G"/>
                                                             <constraint firstItem="FMc-dR-GBH" firstAttribute="centerY" secondItem="D7p-Rg-TqJ" secondAttribute="centerY" constant="-2" id="b1g-uq-P3M"/>
-                                                            <constraint firstItem="beA-il-chX" firstAttribute="centerX" secondItem="D7p-Rg-TqJ" secondAttribute="centerX" id="rkE-fV-uoD"/>
+                                                            <constraint firstItem="beA-il-chX" firstAttribute="top" secondItem="D7p-Rg-TqJ" secondAttribute="top" constant="1" id="bPn-fg-eee"/>
                                                         </constraints>
                                                     </view>
                                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uGa-cr-dgN" userLabel="Lower View">
@@ -516,7 +516,6 @@ R</string>
                                                         </subviews>
                                                         <color key="backgroundColor" red="0.75686788559999996" green="0.75685352090000002" blue="0.75686329600000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                         <constraints>
-                                                            <constraint firstAttribute="height" constant="12" id="E5Z-bL-S8l"/>
                                                             <constraint firstItem="6DK-hW-9ZW" firstAttribute="centerY" secondItem="uGa-cr-dgN" secondAttribute="centerY" id="evr-Dc-I9O"/>
                                                             <constraint firstItem="6DK-hW-9ZW" firstAttribute="centerX" secondItem="uGa-cr-dgN" secondAttribute="centerX" id="kJW-Df-QYD"/>
                                                         </constraints>
@@ -534,6 +533,7 @@ R</string>
                                                     <constraint firstAttribute="height" constant="50" id="b3s-9d-iba"/>
                                                     <constraint firstItem="uGa-cr-dgN" firstAttribute="centerX" secondItem="obK-CZ-IpM" secondAttribute="centerX" id="fER-Xb-5Fb"/>
                                                     <constraint firstAttribute="trailing" secondItem="D7p-Rg-TqJ" secondAttribute="trailing" constant="4" id="lXk-JP-DOE"/>
+                                                    <constraint firstItem="uGa-cr-dgN" firstAttribute="height" secondItem="obK-CZ-IpM" secondAttribute="height" multiplier="0.24" id="vGu-50-2AU"/>
                                                 </constraints>
                                             </view>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rnD-ga-Zt7" customClass="DisplayView" customModule="RPCalculator" customModuleProvider="target">
