@@ -10,15 +10,19 @@
 //  |  |      |   |         |      |      |   |  |      |   |  |      |
 //   --            --     --            --     --            --     --
 //
+//  Note: The real HP-15C has a rectangular dash in the first position for the minus sign (versus using a
+//  complete digit with only the middleCross drawn for a minus sign).  That also means, words like Error
+//  start at the second digit.
+//
 
 import UIKit
 
 struct DigitConst {
-    static let topOffsetFactor: CGFloat = 0.05  // times view height (or width, if height > 2 width)
-    static let segmentThicknessFactor: CGFloat = 0.28  // times segment length
-    static let gapWidth: CGFloat = 0.6  // points
-    static let periodOffsetFactor: CGFloat = 0.2  // times view width
-    static let periodRadiusFactor: CGFloat = 0.1  // times view width
+    static let topOffsetFactor: CGFloat = 0.05  // offset of upperCross below view top (times view height or width, if height > 2 width)
+    static let upperSegmentFraction: CGFloat = 0.47
+    static let segmentThicknessFactor: CGFloat = 0.15  // (times view width)
+    static let gapWidthFactor: CGFloat = 0.022  // (times view width)
+    static let periodOffsetFactor: CGFloat = 0.11  // (times view width)
 }
 
 class DigitView: UIView {
@@ -61,26 +65,25 @@ class DigitView: UIView {
     ]
 
     override func draw(_ rect: CGRect) {
-        var topOffset: CGFloat = 0
-        if bounds.height > 2 * bounds.width {
-            // if tall and narrow view, set topOffset so sides are topFactor times width from edges
-            // Note: this was done before I added the decimal point, so it may have to be reworked
-            topOffset = bounds.height / 2 - bounds.width + 2 * DigitConst.topOffsetFactor * bounds.width
-        } else {
-            topOffset = DigitConst.topOffsetFactor * bounds.height
-        }
-        let segmentLength = bounds.height / 2 - topOffset
-        let segmentWidth = DigitConst.segmentThicknessFactor * segmentLength
-        let periodOffset = DigitConst.periodOffsetFactor * bounds.width
-        let periodRadius = DigitConst.periodRadiusFactor * bounds.width
-        let segmentMidX = bounds.midX - (periodOffset + periodRadius) / 2
+        let topOffset: CGFloat = DigitConst.topOffsetFactor * bounds.height
+        let segmentThickness = DigitConst.segmentThicknessFactor * bounds.width
+        let digitHeight = bounds.height - 2 * topOffset
+        let upperSegmentHeight = digitHeight * DigitConst.upperSegmentFraction
+        let lowerSegmentHeight = digitHeight * (1 - DigitConst.upperSegmentFraction)
+        let lowerInnerBoxLength = lowerSegmentHeight - 3 * segmentThickness / 2
+        let digitWidth = lowerInnerBoxLength + 2 * segmentThickness
         
-        let topLeftCorner = CGPoint(x: segmentMidX - segmentLength / 2, y: topOffset)
-        let topRightCorner = CGPoint(x: segmentMidX + segmentLength / 2, y: topOffset)
-        let middleLeftCorner = CGPoint(x: segmentMidX - segmentLength / 2, y: topOffset + segmentLength)
-        let middleRightCorner = CGPoint(x: segmentMidX + segmentLength / 2, y: topOffset + segmentLength)
-        let bottomLeftCorner = CGPoint(x: segmentMidX - segmentLength / 2, y: topOffset + 2 * segmentLength)
-        let bottomRightCorner = CGPoint(x: segmentMidX + segmentLength / 2, y: topOffset + 2 * segmentLength)
+        let gapWidth = DigitConst.gapWidthFactor * bounds.width
+        let periodOffset = DigitConst.periodOffsetFactor * bounds.width
+        let periodWidth = 1.1 * segmentThickness
+        let segmentMidX = bounds.midX - (periodOffset + periodWidth) / 2
+
+        let topLeftCorner = CGPoint(x: segmentMidX - digitWidth / 2, y: topOffset)
+        let topRightCorner = CGPoint(x: segmentMidX + digitWidth / 2, y: topOffset)
+        let middleLeftCorner = CGPoint(x: segmentMidX - digitWidth / 2, y: topOffset + upperSegmentHeight)
+        let middleRightCorner = CGPoint(x: segmentMidX + digitWidth / 2, y: topOffset + upperSegmentHeight)
+        let bottomLeftCorner = CGPoint(x: segmentMidX - digitWidth / 2, y: bounds.height - topOffset)
+        let bottomRightCorner = CGPoint(x: segmentMidX + digitWidth / 2, y: bounds.height - topOffset)
         
         if let segments = allSegments[digit] {
             for segment in segments {
@@ -88,54 +91,53 @@ class DigitView: UIView {
                 let shape = UIBezierPath()
                 switch segment {
                 case .upperCross:
-                    shape.move(to: CGPoint(x: topLeftCorner.x + DigitConst.gapWidth, y: topLeftCorner.y))
-                    shape.addLine(to: CGPoint(x: topRightCorner.x - DigitConst.gapWidth, y: topRightCorner.y))
-                    shape.addLine(to: CGPoint(x: topRightCorner.x - segmentWidth - DigitConst.gapWidth, y: topRightCorner.y + segmentWidth))
-                    shape.addLine(to: CGPoint(x: topLeftCorner.x + segmentWidth + DigitConst.gapWidth, y: topLeftCorner.y + segmentWidth))
+                    shape.move(to: CGPoint(x: topLeftCorner.x + gapWidth, y: topLeftCorner.y))
+                    shape.addLine(to: CGPoint(x: topRightCorner.x - gapWidth, y: topRightCorner.y))
+                    shape.addLine(to: CGPoint(x: topRightCorner.x - segmentThickness - gapWidth, y: topRightCorner.y + segmentThickness))
+                    shape.addLine(to: CGPoint(x: topLeftCorner.x + segmentThickness + gapWidth, y: topLeftCorner.y + segmentThickness))
                 case .upperLeft:
-                    shape.move(to: CGPoint(x: topLeftCorner.x, y: topLeftCorner.y + DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: topLeftCorner.x + segmentWidth, y: topLeftCorner.y + segmentWidth + DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: middleLeftCorner.x + segmentWidth, y: middleLeftCorner.y - segmentWidth / 2 - DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: middleLeftCorner.x, y: middleLeftCorner.y - DigitConst.gapWidth))
+                    shape.move(to: CGPoint(x: topLeftCorner.x, y: topLeftCorner.y + gapWidth))
+                    shape.addLine(to: CGPoint(x: topLeftCorner.x + segmentThickness, y: topLeftCorner.y + segmentThickness + gapWidth))
+                    shape.addLine(to: CGPoint(x: middleLeftCorner.x + segmentThickness, y: middleLeftCorner.y - segmentThickness / 2 - gapWidth))
+                    shape.addLine(to: CGPoint(x: middleLeftCorner.x, y: middleLeftCorner.y - gapWidth))
                 case .upperRight:
-                    shape.move(to: CGPoint(x: topRightCorner.x, y: topRightCorner.y + DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: middleRightCorner.x, y: middleRightCorner.y - DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: middleRightCorner.x - segmentWidth, y: middleRightCorner.y - segmentWidth / 2 - DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: topRightCorner.x - segmentWidth, y: topRightCorner.y + segmentWidth + DigitConst.gapWidth))
+                    shape.move(to: CGPoint(x: topRightCorner.x, y: topRightCorner.y + gapWidth))
+                    shape.addLine(to: CGPoint(x: middleRightCorner.x, y: middleRightCorner.y - gapWidth))
+                    shape.addLine(to: CGPoint(x: middleRightCorner.x - segmentThickness, y: middleRightCorner.y - segmentThickness / 2 - gapWidth))
+                    shape.addLine(to: CGPoint(x: topRightCorner.x - segmentThickness, y: topRightCorner.y + segmentThickness + gapWidth))
                 case .middleCross:
-                    shape.move(to: CGPoint(x: middleLeftCorner.x + DigitConst.gapWidth, y: middleLeftCorner.y))
-                    shape.addLine(to: CGPoint(x: middleLeftCorner.x + segmentWidth + DigitConst.gapWidth, y: middleLeftCorner.y - segmentWidth / 2))
-                    shape.addLine(to: CGPoint(x: middleRightCorner.x - segmentWidth - DigitConst.gapWidth, y: middleRightCorner.y - segmentWidth / 2))
-                    shape.addLine(to: CGPoint(x: middleRightCorner.x - DigitConst.gapWidth, y: middleRightCorner.y))
-                    shape.addLine(to: CGPoint(x: middleRightCorner.x - segmentWidth - DigitConst.gapWidth, y: middleRightCorner.y + segmentWidth / 2))
-                    shape.addLine(to: CGPoint(x: middleLeftCorner.x + segmentWidth + DigitConst.gapWidth, y: middleLeftCorner.y + segmentWidth / 2))
+                    shape.move(to: CGPoint(x: middleLeftCorner.x + gapWidth, y: middleLeftCorner.y))
+                    shape.addLine(to: CGPoint(x: middleLeftCorner.x + segmentThickness + gapWidth, y: middleLeftCorner.y - segmentThickness / 2))
+                    shape.addLine(to: CGPoint(x: middleRightCorner.x - segmentThickness - gapWidth, y: middleRightCorner.y - segmentThickness / 2))
+                    shape.addLine(to: CGPoint(x: middleRightCorner.x - gapWidth, y: middleRightCorner.y))
+                    shape.addLine(to: CGPoint(x: middleRightCorner.x - segmentThickness - gapWidth, y: middleRightCorner.y + segmentThickness / 2))
+                    shape.addLine(to: CGPoint(x: middleLeftCorner.x + segmentThickness + gapWidth, y: middleLeftCorner.y + segmentThickness / 2))
                 case .lowerLeft:
-                    shape.move(to: CGPoint(x: middleLeftCorner.x, y: middleLeftCorner.y + DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: middleLeftCorner.x + segmentWidth, y: middleLeftCorner.y + segmentWidth / 2 + DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: bottomLeftCorner.x + segmentWidth, y: bottomLeftCorner.y - segmentWidth - DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: bottomLeftCorner.x, y: bottomLeftCorner.y - DigitConst.gapWidth))
+                    shape.move(to: CGPoint(x: middleLeftCorner.x, y: middleLeftCorner.y + gapWidth))
+                    shape.addLine(to: CGPoint(x: middleLeftCorner.x + segmentThickness, y: middleLeftCorner.y + segmentThickness / 2 + gapWidth))
+                    shape.addLine(to: CGPoint(x: bottomLeftCorner.x + segmentThickness, y: bottomLeftCorner.y - segmentThickness - gapWidth))
+                    shape.addLine(to: CGPoint(x: bottomLeftCorner.x, y: bottomLeftCorner.y - gapWidth))
                 case .lowerRight:
-                    shape.move(to: CGPoint(x: middleRightCorner.x, y: middleRightCorner.y + DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: bottomRightCorner.x, y: bottomRightCorner.y - DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: bottomRightCorner.x - segmentWidth, y: bottomRightCorner.y - segmentWidth - DigitConst.gapWidth))
-                    shape.addLine(to: CGPoint(x: middleRightCorner.x - segmentWidth, y: middleRightCorner.y + segmentWidth / 2 + DigitConst.gapWidth))
+                    shape.move(to: CGPoint(x: middleRightCorner.x, y: middleRightCorner.y + gapWidth))
+                    shape.addLine(to: CGPoint(x: bottomRightCorner.x, y: bottomRightCorner.y - gapWidth))
+                    shape.addLine(to: CGPoint(x: bottomRightCorner.x - segmentThickness, y: bottomRightCorner.y - segmentThickness - gapWidth))
+                    shape.addLine(to: CGPoint(x: middleRightCorner.x - segmentThickness, y: middleRightCorner.y + segmentThickness / 2 + gapWidth))
                 case .lowerCross:
-                    shape.move(to: CGPoint(x: bottomLeftCorner.x + DigitConst.gapWidth, y: bottomLeftCorner.y))
-                    shape.addLine(to: CGPoint(x: bottomLeftCorner.x + segmentWidth + DigitConst.gapWidth, y: bottomLeftCorner.y - segmentWidth))
-                    shape.addLine(to: CGPoint(x: bottomRightCorner.x - segmentWidth - DigitConst.gapWidth, y: bottomRightCorner.y - segmentWidth))
-                    shape.addLine(to: CGPoint(x: bottomRightCorner.x - DigitConst.gapWidth, y: bottomRightCorner.y))
+                    shape.move(to: CGPoint(x: bottomLeftCorner.x + gapWidth, y: bottomLeftCorner.y))
+                    shape.addLine(to: CGPoint(x: bottomLeftCorner.x + segmentThickness + gapWidth, y: bottomLeftCorner.y - segmentThickness))
+                    shape.addLine(to: CGPoint(x: bottomRightCorner.x - segmentThickness - gapWidth, y: bottomRightCorner.y - segmentThickness))
+                    shape.addLine(to: CGPoint(x: bottomRightCorner.x - gapWidth, y: bottomRightCorner.y))
                 }
                 shape.fill()
             }
         }
         if trailingDecimal {
-            let dotCenter = CGPoint(x: bottomRightCorner.x + periodOffset, y: bottomRightCorner.y - periodRadius)
-            let dot = UIBezierPath(arcCenter: dotCenter,
-                                   radius: periodRadius,
-                                   startAngle: 0,
-                                   endAngle: 2 * CGFloat.pi,
-                                   clockwise: true)
-            dot.fill()
+            let rect = CGRect(x: bottomRightCorner.x + periodOffset,
+                              y: bottomRightCorner.y - 1.1 * periodWidth,
+                              width: periodWidth,
+                              height: periodWidth)
+            let square = UIBezierPath(roundedRect: rect, cornerRadius: 1.2)
+            square.fill()
         }
     }
 }

@@ -52,8 +52,8 @@ class DisplayView: UIView {
     private func createDigitViews() {
         digitViews.forEach { $0.removeFromSuperview() }  // remove any past views and start over
         digitViews.removeAll()
-        let leftInset: CGFloat = 10
-        let rightInset: CGFloat = 15
+        let leftInset: CGFloat = 6
+        let rightInset: CGFloat = 6
         let topInset: CGFloat = 10
         let bottomInset: CGFloat = 0.3 * bounds.height
         let digitViewWidth = (bounds.width - leftInset - rightInset) / CGFloat(numberOfDigits)
@@ -61,6 +61,7 @@ class DisplayView: UIView {
             let digitView = DigitView(frame: CGRect(x: digitViewWidth * CGFloat(index) + leftInset,
                                                     y: topInset, width: digitViewWidth, height: bounds.height - topInset - bottomInset))
             digitView.backgroundColor = .clear
+//            if index == 1 { digitView.backgroundColor = .gray }  // show size of digitView
             addSubview(digitView)
             digitViews.append(digitView)
         }

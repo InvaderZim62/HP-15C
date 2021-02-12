@@ -149,8 +149,11 @@ class CalculatorViewController: UIViewController {
         prgmLabel.alpha = 0
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
-        
-        // create all text for the buttons using ButtonCoverViews
+        createButtonCovers()
+    }
+    
+    // create all text for the buttons using ButtonCoverViews, placed over button locations from Autolayout
+    private func createButtonCovers() {
         for button in buttons {
             if let nText = button.currentTitle, let (fText, gText) = buttonText[nText] {
                 createCoverForButton(button, fText: fText, nText: nText, gText: gText)
@@ -426,7 +429,7 @@ class CalculatorViewController: UIViewController {
     
     private func simulatePressingButton(_ button: UIButton) {
         playClickSound()
-        buttonCoverViews[button]?.whiteLabel.textColor = .darkGray
+        buttonCoverViews[button]?.whiteLabel.textColor = .darkGray  // pws: consider creating a function in ButtonCoverView (this line only)
         button.addTarget(self, action: #selector(simulateReleasingButton(_:)), for: .touchUpInside)
     }
 

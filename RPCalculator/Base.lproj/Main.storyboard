@@ -543,10 +543,10 @@ R</string>
                                                 </constraints>
                                             </view>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rnD-ga-Zt7" customClass="DisplayView" customModule="RPCalculator" customModuleProvider="target">
-                                                <rect key="frame" x="110" y="20" width="319" height="60"/>
+                                                <rect key="frame" x="110" y="20" width="342" height="60"/>
                                                 <subviews>
                                                     <stackView opaque="NO" contentMode="scaleToFill" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="sWc-ai-Iuj">
-                                                        <rect key="frame" x="33.666666666666686" y="43.000000000000007" width="271.66666666666669" height="14.333333333333336"/>
+                                                        <rect key="frame" x="45" y="43.000000000000007" width="271.66666666666669" height="14.333333333333336"/>
                                                         <subviews>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="USER" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dEA-4x-ZyI">
                                                                 <rect key="frame" x="0.0" y="0.0" width="31.666666666666668" height="14.333333333333334"/>
@@ -555,13 +555,13 @@ R</string>
                                                                 <nil key="highlightedColor"/>
                                                             </label>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="f" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ayy-ES-Kg8">
-                                                                <rect key="frame" x="43.666666666666657" y="0.0" width="4.6666666666666643" height="14.333333333333334"/>
+                                                                <rect key="frame" x="43.666666666666686" y="0.0" width="4.6666666666666643" height="14.333333333333334"/>
                                                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                                                 <nil key="textColor"/>
                                                                 <nil key="highlightedColor"/>
                                                             </label>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="g" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="w6W-Ci-oNU">
-                                                                <rect key="frame" x="60.333333333333314" y="0.0" width="7.3333333333333286" height="14.333333333333334"/>
+                                                                <rect key="frame" x="60.33333333333335" y="0.0" width="7.3333333333333357" height="14.333333333333334"/>
                                                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                                                 <nil key="textColor"/>
                                                                 <nil key="highlightedColor"/>
@@ -573,7 +573,7 @@ R</string>
                                                                 <nil key="highlightedColor"/>
                                                             </label>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="GRAD" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OlI-qv-BUW">
-                                                                <rect key="frame" x="127.99999999999999" y="0.0" width="33.666666666666671" height="14.333333333333334"/>
+                                                                <rect key="frame" x="128.00000000000003" y="0.0" width="33.666666666666657" height="14.333333333333334"/>
                                                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                                                 <nil key="textColor"/>
                                                                 <nil key="highlightedColor"/>
@@ -585,7 +585,7 @@ R</string>
                                                                 <nil key="highlightedColor"/>
                                                             </label>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="C" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Plz-XI-dPr">
-                                                                <rect key="frame" x="215.99999999999997" y="0.0" width="8.6666666666666572" height="14.333333333333334"/>
+                                                                <rect key="frame" x="216.00000000000003" y="0.0" width="8.6666666666666572" height="14.333333333333334"/>
                                                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                                                 <nil key="textColor"/>
                                                                 <nil key="highlightedColor"/>
@@ -625,7 +625,7 @@ R</string>
                                     <constraint firstItem="rnD-ga-Zt7" firstAttribute="leading" secondItem="MBj-zg-ytI" secondAttribute="centerX" id="dv3-7W-nWx"/>
                                     <constraint firstItem="qMl-bI-Ow8" firstAttribute="top" secondItem="0rb-hT-Hnj" secondAttribute="top" id="j55-bl-cGC"/>
                                     <constraint firstAttribute="bottom" secondItem="DsF-Y8-fDc" secondAttribute="bottom" constant="20" id="uH7-xt-cax"/>
-                                    <constraint firstItem="rnD-ga-Zt7" firstAttribute="trailing" secondItem="LEw-Jv-C9W" secondAttribute="centerX" id="ukB-Xy-Pb0"/>
+                                    <constraint firstItem="rnD-ga-Zt7" firstAttribute="trailing" secondItem="LEw-Jv-C9W" secondAttribute="trailing" id="ukB-Xy-Pb0"/>
                                     <constraint firstAttribute="height" constant="375" id="uol-SK-w3F"/>
                                 </constraints>
                             </view>
