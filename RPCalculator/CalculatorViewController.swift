@@ -13,8 +13,8 @@
 //  the connections menu.  Control-drag from the little circle to the right of Touch Down (under
 //  Send Events) to the appropriate IBAction.  Cancel (click on x) the event for Touch Up Inside.
 //
-//  I made the "hp" and "15C" labels scale with the HP Logo Container View in Interface Builder,
-//  by using the following setting...
+//  I made the "hp" and "15C" labels scale with the HP Logo Container View in Interface Builder
+//  by using the following settings...
 //     Font size: (largest desired scalable size)
 //     Lines: 0
 //     Alignment: Center
@@ -326,27 +326,6 @@ class CalculatorViewController: UIViewController {
 
         prefixKey = nil
     }
-
-    // push digits from display onto stack when enter key is pressed
-    @IBAction func enterPressed(_ sender: UIButton) {
-        playClickSound()
-        if userIsEnteringExponent {
-            // convert "1.2345    01" to "1.2345E+01", before trying to convert to number
-            let exponent2 = String(displayString.removeLast())
-            let exponent1 = String(displayString.removeLast())
-            var sign = String(displayString.removeLast())
-            if sign == " " { sign = "+" }
-            displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
-        }
-        if let number = Double(displayString) {
-            brain.pushOperand(number)
-            runAndUpdateInterface()
-        }
-        userIsStillTypingDigits = false
-        userIsEnteringExponent = false
-        decimalWasAlreadyEntered = false
-        prefixKey = nil
-    }
     
     // perform operation pressed (button title), and display results
     @IBAction func operationPressed(_ sender: UIButton) {
@@ -373,15 +352,26 @@ class CalculatorViewController: UIViewController {
         
         prefixKey = nil
     }
-    
-    @IBAction func fPressed(_ sender: UIButton) {
+
+    // push digits from display onto stack when enter key is pressed
+    @IBAction func enterPressed(_ sender: UIButton) {
         playClickSound()
-        prefixKey = .f
-    }
-    
-    @IBAction func gPressed(_ sender: UIButton) {
-        playClickSound()
-        prefixKey = .g
+        if userIsEnteringExponent {
+            // convert "1.2345    01" to "1.2345E+01", before trying to convert to number
+            let exponent2 = String(displayString.removeLast())
+            let exponent1 = String(displayString.removeLast())
+            var sign = String(displayString.removeLast())
+            if sign == " " { sign = "+" }
+            displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
+        }
+        if let number = Double(displayString) {
+            brain.pushOperand(number)
+            runAndUpdateInterface()
+        }
+        userIsStillTypingDigits = false
+        userIsEnteringExponent = false
+        decimalWasAlreadyEntered = false
+        prefixKey = nil
     }
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
@@ -404,6 +394,16 @@ class CalculatorViewController: UIViewController {
             }
         }
         prefixKey = nil
+    }
+
+    @IBAction func fPressed(_ sender: UIButton) {
+        playClickSound()
+        prefixKey = .f
+    }
+    
+    @IBAction func gPressed(_ sender: UIButton) {
+        playClickSound()
+        prefixKey = .g
     }
 
     func playClickSound() {
