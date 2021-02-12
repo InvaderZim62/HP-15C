@@ -45,9 +45,11 @@ class CalculatorViewController: UIViewController {
     var brain = CalculatorBrain()
     var player: AVAudioPlayer?
     var displayString = "" { didSet { displayView.displayString = displayString } }
+    var calculatorIsOn = true
     var userIsStillTypingDigits = false
     var userIsEnteringExponent = false
     var decimalWasAlreadyEntered = false
+    var buttonCoverViews = [UIButton: ButtonCoverView]()
     
     var prefixKey: PrefixKey? { didSet {
         fLabel.alpha = 0
@@ -128,6 +130,8 @@ class CalculatorViewController: UIViewController {
     @IBOutlet weak var prgmLabel: UILabel!
     @IBOutlet weak var logoCircleView: UIView!
     
+    // MARK: - Start of code
+    
     override func viewDidLoad() {
         super.viewDidLoad()
     }
@@ -182,6 +186,7 @@ class CalculatorViewController: UIViewController {
             break
         }
         button.superview?.addSubview(buttonCoverView)
+        buttonCoverViews[button] = buttonCoverView
     }
     
     private func superscriptLastNCharactersOf(_ string: String, n: Int, font: UIFont) -> NSMutableAttributedString {
@@ -207,10 +212,12 @@ class CalculatorViewController: UIViewController {
         }
         print("numerical result: \(numericalResult), displayString: \(displayString)")
     }
+    
+    // MARK: - Button actions
 
     // digits: numbers 0-9, period, EEX key
     @IBAction func digitPressed(_ sender: UIButton) {
-        playClickSound()
+        simulatePressingButton(sender)
         var digit = sender.currentTitle!
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
@@ -329,7 +336,7 @@ class CalculatorViewController: UIViewController {
     
     // perform operation pressed (button title), and display results
     @IBAction func operationPressed(_ sender: UIButton) {
-        playClickSound()
+        simulatePressingButton(sender)
         var keyName = sender.currentTitle!
         if keyName == "CHS" && userIsEnteringExponent {
             let exponent2 = String(displayString.removeLast())
@@ -355,7 +362,9 @@ class CalculatorViewController: UIViewController {
 
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterPressed(_ sender: UIButton) {
-        playClickSound()
+        if sender.titleLabel?.text != nil {
+            simulatePressingButton(sender)  // only show if user pressed ENTER - not if code calling enterPressed(UIButton())
+        }
         if userIsEnteringExponent {
             // convert "1.2345    01" to "1.2345E+01", before trying to convert to number
             let exponent2 = String(displayString.removeLast())
@@ -375,7 +384,7 @@ class CalculatorViewController: UIViewController {
     }
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
-        playClickSound()
+        simulatePressingButton(sender)
         if prefixKey == .g || !userIsStillTypingDigits {  // clear all
             displayString = "0.0000"
             brain.clearStack()
@@ -397,16 +406,38 @@ class CalculatorViewController: UIViewController {
     }
 
     @IBAction func fPressed(_ sender: UIButton) {
-        playClickSound()
+        simulatePressingButton(sender)
         prefixKey = .f
     }
     
     @IBAction func gPressed(_ sender: UIButton) {
-        playClickSound()
+        simulatePressingButton(sender)
         prefixKey = .g
     }
 
-    func playClickSound() {
+    @IBAction func onPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        calculatorIsOn = !calculatorIsOn
+        displayView.turnOnIf(calculatorIsOn)
+        buttons.forEach { $0.isUserInteractionEnabled = calculatorIsOn }
+    }
+    
+    // MARK: - Simulated button
+    
+    private func simulatePressingButton(_ button: UIButton) {
+        playClickSound()
+        buttonCoverViews[button]?.whiteLabel.textColor = .darkGray
+        button.addTarget(self, action: #selector(simulateReleasingButton(_:)), for: .touchUpInside)
+    }
+
+    @objc private func simulateReleasingButton(_ button: UIButton) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {  // delay before restoring color, otherwise it is unnoticeable
+            self.buttonCoverViews[button]?.whiteLabel.textColor = CoverConst.whiteColor
+            button.removeTarget(nil, action: nil, for: .touchUpInside)
+        }
+    }
+    
+    private func playClickSound() {
         guard let url = Bundle.main.url(forResource: "click", withExtension: "wav") else { return }
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)

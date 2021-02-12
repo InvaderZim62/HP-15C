@@ -43,6 +43,10 @@ class DisplayView: UIView {
     private var digitViews = [DigitView]()
     private var exponentWasFound = false
     
+    func turnOnIf(_ isOn: Bool) {
+        digitViews.forEach { $0.alpha = isOn ? 1 : 0 }
+    }
+    
     // create equally sized digitViews and add them to this DisplayView, leaving the specified
     // boarder (inset) around the digitViews
     private func createDigitViews() {
