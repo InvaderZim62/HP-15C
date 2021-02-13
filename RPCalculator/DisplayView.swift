@@ -76,7 +76,7 @@ class DisplayView: UIView {
     private func updateDisplay() {
         clearDisplay()  // start with all blank digits
         var modifiedDisplayString = displayString
-        if displayString == "nan" || displayString == "inf" {
+        if displayString == "nan." || displayString == "inf." {
             modifiedDisplayString = " Error"
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
