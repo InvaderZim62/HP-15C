@@ -45,6 +45,8 @@ class CalculatorViewController: UIViewController {
     var brain = CalculatorBrain()
     var player: AVAudioPlayer?
     var displayString = "" { didSet { displayView.displayString = displayString } }
+    var displayLabels = [UILabel]()
+    var displayLabelAlphas = [CGFloat]()
     var calculatorIsOn = true
     var userIsStillTypingDigits = false
     var userIsEnteringExponent = false
@@ -134,24 +136,32 @@ class CalculatorViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        displayLabels = [userLabel, fLabel, gLabel, beginLabel, gradLabel, dmyLabel, cLabel, prgmLabel]
+        displayLabelAlphas.append(contentsOf: repeatElement(0, count: displayLabels.count))  // allocate the same sized array
+        hideDisplayLabels()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         displayView.numberOfDigits = 11  // one digit for sign
         displayString = "0.0000"
-        userLabel.alpha = 0  // don't hide, or stackView layout changes
-        fLabel.alpha = 0
-        gLabel.alpha = 0
-        beginLabel.alpha = 0
-        gradLabel.alpha = 0
-        dmyLabel.alpha = 0
-        cLabel.alpha = 0
-        prgmLabel.alpha = 0
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
         createButtonCovers()
     }
     
+    private func hideDisplayLabels() {
+        for (index, label) in displayLabels.enumerated() {
+            displayLabelAlphas[index] = label.alpha  // save current setting for unhiding
+            displayLabels[index].alpha = 0  // use alpha, instead of isHidden, to maintain stackView layout
+        }
+    }
+    
+    private func unhideDisplayLabels() {
+        for (index, alpha) in displayLabelAlphas.enumerated() {
+            displayLabels[index].alpha = alpha
+        }
+    }
+
     // create all text for the buttons using ButtonCoverViews, placed over button locations from Autolayout
     private func createButtonCovers() {
         for button in buttons {
@@ -422,6 +432,11 @@ class CalculatorViewController: UIViewController {
         simulatePressingButton(sender)
         calculatorIsOn = !calculatorIsOn
         displayView.turnOnIf(calculatorIsOn)
+        if calculatorIsOn {
+            unhideDisplayLabels()
+        } else {
+            hideDisplayLabels()
+        }
         buttons.forEach { $0.isUserInteractionEnabled = calculatorIsOn }
     }
     
