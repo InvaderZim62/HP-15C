@@ -22,13 +22,14 @@ struct DigitConst {
     static let upperSegmentFraction: CGFloat = 0.47
     static let segmentThicknessFactor: CGFloat = 0.15  // (times view width)
     static let gapWidthFactor: CGFloat = 0.022  // (times view width)
-    static let periodOffsetFactor: CGFloat = 0.11  // (times view width)
+    static let periodOffsetFactor: CGFloat = 0.13  // (times view width)
 }
 
 class DigitView: UIView {
     
     var digit: Character = " " { didSet { setNeedsDisplay() } }
     var trailingDecimal = false
+    var trailingComma = false
     
     enum Segment {
         case upperCross
@@ -43,6 +44,7 @@ class DigitView: UIView {
     func clear() {
         digit = " "
         trailingDecimal = false
+        trailingComma = false
     }
     
     private let allSegments: [Character: [Segment]] = [
@@ -67,7 +69,9 @@ class DigitView: UIView {
     override func draw(_ rect: CGRect) {
         let topOffset: CGFloat = DigitConst.topOffsetFactor * bounds.height
         let segmentThickness = DigitConst.segmentThicknessFactor * bounds.width
-        let digitHeight = bounds.height - 2 * topOffset
+        let periodWidth = 1.1 * segmentThickness
+        let commaLength = periodWidth
+        let digitHeight = bounds.height - 2 * topOffset - commaLength
         let upperSegmentHeight = digitHeight * DigitConst.upperSegmentFraction
         let lowerSegmentHeight = digitHeight * (1 - DigitConst.upperSegmentFraction)
         let lowerInnerBoxLength = lowerSegmentHeight - 3 * segmentThickness / 2
@@ -75,15 +79,14 @@ class DigitView: UIView {
         
         let gapWidth = DigitConst.gapWidthFactor * bounds.width
         let periodOffset = DigitConst.periodOffsetFactor * bounds.width
-        let periodWidth = 1.1 * segmentThickness
         let segmentMidX = bounds.midX - (periodOffset + periodWidth) / 2
-
+        
         let topLeftCorner = CGPoint(x: segmentMidX - digitWidth / 2, y: topOffset)
         let topRightCorner = CGPoint(x: segmentMidX + digitWidth / 2, y: topOffset)
         let middleLeftCorner = CGPoint(x: segmentMidX - digitWidth / 2, y: topOffset + upperSegmentHeight)
         let middleRightCorner = CGPoint(x: segmentMidX + digitWidth / 2, y: topOffset + upperSegmentHeight)
-        let bottomLeftCorner = CGPoint(x: segmentMidX - digitWidth / 2, y: bounds.height - topOffset)
-        let bottomRightCorner = CGPoint(x: segmentMidX + digitWidth / 2, y: bounds.height - topOffset)
+        let bottomLeftCorner = CGPoint(x: segmentMidX - digitWidth / 2, y: topOffset + upperSegmentHeight + lowerSegmentHeight)
+        let bottomRightCorner = CGPoint(x: segmentMidX + digitWidth / 2, y: topOffset + upperSegmentHeight + lowerSegmentHeight)
         
         if let segments = allSegments[digit] {
             for segment in segments {
@@ -131,13 +134,20 @@ class DigitView: UIView {
                 shape.fill()
             }
         }
-        if trailingDecimal {
-            let rect = CGRect(x: bottomRightCorner.x + periodOffset,
-                              y: bottomRightCorner.y - 1.1 * periodWidth,
-                              width: periodWidth,
-                              height: periodWidth)
+        let periodOrigin = CGPoint(x: bottomRightCorner.x + periodOffset, y: bottomRightCorner.y - 1.1 * periodWidth)
+        if trailingDecimal || trailingComma {
+            let rect = CGRect(x: periodOrigin.x, y: periodOrigin.y, width: periodWidth, height: periodWidth)
             let square = UIBezierPath(roundedRect: rect, cornerRadius: 1.2)
             square.fill()
+        }
+        let commaOrigin = CGPoint(x: periodOrigin.x, y: periodOrigin.y + periodWidth + gapWidth)
+        if trailingComma {
+            let tail = UIBezierPath()
+            tail.move(to: commaOrigin)
+            tail.addLine(to: CGPoint(x: commaOrigin.x + periodWidth, y: commaOrigin.y))
+            tail.addLine(to: CGPoint(x: commaOrigin.x, y: commaOrigin.y + commaLength))
+            tail.addLine(to: CGPoint(x: commaOrigin.x - 0.6 * periodOffset, y: commaOrigin.y + commaLength))
+            tail.fill()
         }
     }
 }

@@ -55,7 +55,7 @@ class DisplayView: UIView {
         let leftInset: CGFloat = 6
         let rightInset: CGFloat = 6
         let topInset: CGFloat = 10
-        let bottomInset: CGFloat = 0.3 * bounds.height
+        let bottomInset: CGFloat = 0.24 * bounds.height
         let digitViewWidth = (bounds.width - leftInset - rightInset) / CGFloat(numberOfDigits)
         for index in 0..<numberOfDigits {
             let digitView = DigitView(frame: CGRect(x: digitViewWidth * CGFloat(index) + leftInset,
@@ -77,23 +77,28 @@ class DisplayView: UIView {
         clearDisplay()  // start with all blank digits
         var modifiedDisplayString = displayString
         if displayString == "nan" || displayString == "inf" {
-            modifiedDisplayString = "Error"
+            modifiedDisplayString = " Error"
         } else if displayString.first != "-" {
-            modifiedDisplayString = " " + displayString  // leave first digit blank, if number is positive
+            modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }
         var displayIndex = 0
         var stringIndex = 0
-        while displayIndex < numberOfDigits {
+        while displayIndex < numberOfDigits + 1 {  // look one more, in case decimal past last digit
             if stringIndex < modifiedDisplayString.count {
                 let index = modifiedDisplayString.index(modifiedDisplayString.startIndex, offsetBy: stringIndex)
                 let character = modifiedDisplayString[index]
                 if character == "." {
                     displayIndex -= 1  // add decimal point to prior digitView
                     digitViews[displayIndex].trailingDecimal = true
+                    var commaIndex = displayIndex - 3
+                    while commaIndex > 0 {
+                        digitViews[commaIndex].trailingComma = true
+                        commaIndex -= 3
+                    }
                 } else if character == "e" {
                     exponentWasFound = true
                     displayIndex = 7  // will increment to 8, below
-                } else {
+                } else if displayIndex < numberOfDigits {
                     // display this digit
                     digitViews[displayIndex].digit = character
                 }

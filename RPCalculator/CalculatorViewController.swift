@@ -215,13 +215,13 @@ class CalculatorViewController: UIViewController {
     private func runAndUpdateInterface() {
         let numericalResult = CalculatorBrain.runProgram(brain.program)
         let potentialDisplayString = String(format: displayView.format.string, numericalResult)
-        // determine length in display, knowing displayView will place decimal point in a digitView and add a space in front of positive numbers
+        // determine length in display, knowing displayView will combine decimal point with digit and add a space in front of positive numbers
         let lengthInDisplay = potentialDisplayString.replacingOccurrences(of: ".", with: "").count + (potentialDisplayString.first == "-" ? 0 : 1)
         if lengthInDisplay > displayView.numberOfDigits {
-            // fixed format won't fit, temporarily switch to scientific notation
+            // fixed format won't fit, temporarily switch to scientific notation with 6 decimal places
             displayString = String(format: DisplayFormat.scientific(6).string, numericalResult)
         } else {
-            displayString = potentialDisplayString
+            displayString = potentialDisplayString + (potentialDisplayString.contains(".") ? "" : ".")  // make sure at least one decimal point
         }
         print("numerical result: \(numericalResult), displayString: \(displayString)")
     }
