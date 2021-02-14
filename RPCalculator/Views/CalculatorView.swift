@@ -9,8 +9,8 @@ import UIKit
 
 struct CalcConst {
     static let orangeColor = #colorLiteral(red: 0.81, green: 0.46, blue: 0.0, alpha: 1)
-    static let horizontalLineLength: CGFloat = 102
-    static let verticalLineLength: CGFloat = 5
+    static let horizontalLineLength: CGFloat = 100
+    static let verticalLineLength: CGFloat = 6
     static let lineGapToLabel: CGFloat = 4
 }
 

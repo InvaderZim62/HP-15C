@@ -106,7 +106,7 @@ class CalculatorViewController: UIViewController {
         "GSB": ("∑", "RTN"),
         "R↓": ("PRGM", "R↑"),
         "x≷y": ("REG", "RND"),
-        "←": ("PREFIX", "CLx"),
+        "←": ("PREFIX", "CL x"),
         "1": ("→R", "→P"),
         "2": ("→H.MS", "→H"),
         "3": ("→RAD", "→DEG"),
@@ -117,7 +117,7 @@ class CalculatorViewController: UIViewController {
         "·": ("y\u{0302},r", "s"),  // \u{0302} puts ^ above y
         "Σ+": ("L.R.", "Σ-"),
         "+": ("Py,x", "Cy,x"),
-        "E\nN\nT\nE\nR": ("RAN#", "LSTx")  // ENTER
+        "E\nN\nT\nE\nR": ("RAN #", "LST x")  // ENTER
     ]
 
     @IBOutlet weak var displayView: DisplayView!
