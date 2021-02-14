@@ -121,8 +121,8 @@ class CalculatorViewController: UIViewController {
     ]
 
     @IBOutlet weak var displayView: DisplayView!
-    @IBOutlet var buttons: [UIButton]!
-    @IBOutlet weak var userLabel: UILabel!
+    @IBOutlet var buttons: [UIButton]!  // all buttons, except ON
+    @IBOutlet weak var userLabel: UILabel!  // next 8 labels are in displayView
     @IBOutlet weak var fLabel: UILabel!
     @IBOutlet weak var gLabel: UILabel!
     @IBOutlet weak var beginLabel: UILabel!
@@ -130,7 +130,9 @@ class CalculatorViewController: UIViewController {
     @IBOutlet weak var dmyLabel: UILabel!
     @IBOutlet weak var cLabel: UILabel!
     @IBOutlet weak var prgmLabel: UILabel!
-    @IBOutlet weak var logoCircleView: UIView!
+    @IBOutlet weak var logoCircleView: UIView!  // used to make view round in viewDidLoad
+    @IBOutlet weak var calculatorView: CalculatorView!  // used to draw bracket around CLEAR label
+    @IBOutlet weak var clearLabel: UILabel!  // used to anchor line drawing in calculatorView
     
     // MARK: - Start of code
     
@@ -139,6 +141,7 @@ class CalculatorViewController: UIViewController {
         displayLabels = [userLabel, fLabel, gLabel, beginLabel, gradLabel, dmyLabel, cLabel, prgmLabel]
         displayLabelAlphas.append(contentsOf: repeatElement(0, count: displayLabels.count))  // allocate the same sized array
         hideDisplayLabels()
+        calculatorView.clearLabel = clearLabel
     }
     
     override func viewWillAppear(_ animated: Bool) {

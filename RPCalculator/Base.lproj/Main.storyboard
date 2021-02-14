@@ -15,10 +15,10 @@
                         <rect key="frame" x="0.0" y="0.0" width="736" height="414"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0rb-hT-Hnj">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0rb-hT-Hnj" customClass="CalculatorView" customModule="RPCalculator" customModuleProvider="target">
                                 <rect key="frame" x="34.666666666666686" y="19.666666666666657" width="667" height="375"/>
                                 <subviews>
-                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="18" translatesAutoresizingMaskIntoConstraints="NO" id="DsF-Y8-fDc">
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="18" translatesAutoresizingMaskIntoConstraints="NO" id="DsF-Y8-fDc" userLabel="Keyboard Stack View">
                                         <rect key="frame" x="23.333333333333314" y="125" width="620" height="230"/>
                                         <subviews>
                                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" spacing="25" translatesAutoresizingMaskIntoConstraints="NO" id="rU1-NA-IQw">
@@ -469,7 +469,7 @@ R</string>
                                             <constraint firstAttribute="width" constant="620" id="sMB-JP-saS"/>
                                         </constraints>
                                     </stackView>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qMl-bI-Ow8">
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qMl-bI-Ow8" userLabel="Upper Section View">
                                         <rect key="frame" x="0.0" y="0.0" width="667" height="100"/>
                                         <subviews>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="obK-CZ-IpM" userLabel="Logo Container View">
@@ -614,13 +614,21 @@ R</string>
                                             <constraint firstItem="rnD-ga-Zt7" firstAttribute="top" secondItem="obK-CZ-IpM" secondAttribute="top" id="xud-Wi-mjm"/>
                                         </constraints>
                                     </view>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="CLEAR" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cjc-39-6GV">
+                                        <rect key="frame" x="189.33333333333334" y="228.33333333333334" width="32.666666666666657" height="12"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="10"/>
+                                        <color key="textColor" red="0.80914461609999999" green="0.50980392156862742" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
                                 </subviews>
                                 <color key="backgroundColor" red="0.12984204290000001" green="0.12984612579999999" blue="0.12984395030000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstItem="qMl-bI-Ow8" firstAttribute="leading" secondItem="0rb-hT-Hnj" secondAttribute="leading" id="0oL-Ks-m9r"/>
+                                    <constraint firstItem="cjc-39-6GV" firstAttribute="top" secondItem="BdM-wH-neP" secondAttribute="bottom" constant="1" id="Amv-l7-Hqe"/>
                                     <constraint firstAttribute="trailing" secondItem="qMl-bI-Ow8" secondAttribute="trailing" id="Egu-br-nNC"/>
                                     <constraint firstItem="DsF-Y8-fDc" firstAttribute="centerX" secondItem="0rb-hT-Hnj" secondAttribute="centerX" id="HkM-jR-fWh"/>
                                     <constraint firstItem="obK-CZ-IpM" firstAttribute="leading" secondItem="ssy-4E-iZw" secondAttribute="leading" id="P6B-Mw-ceq"/>
+                                    <constraint firstItem="cjc-39-6GV" firstAttribute="centerX" secondItem="BdM-wH-neP" secondAttribute="trailing" constant="9" id="a6X-Cn-up3"/>
                                     <constraint firstAttribute="width" constant="667" id="bzx-Ck-Deh"/>
                                     <constraint firstItem="rnD-ga-Zt7" firstAttribute="leading" secondItem="MBj-zg-ytI" secondAttribute="centerX" id="dv3-7W-nWx"/>
                                     <constraint firstItem="qMl-bI-Ow8" firstAttribute="top" secondItem="0rb-hT-Hnj" secondAttribute="top" id="j55-bl-cGC"/>
@@ -640,6 +648,8 @@ R</string>
                     <connections>
                         <outlet property="beginLabel" destination="KG0-Z0-9YV" id="QxF-Sg-FyP"/>
                         <outlet property="cLabel" destination="Plz-XI-dPr" id="Z4w-Fj-to3"/>
+                        <outlet property="calculatorView" destination="0rb-hT-Hnj" id="BTs-3r-34P"/>
+                        <outlet property="clearLabel" destination="cjc-39-6GV" id="Qg4-54-h8O"/>
                         <outlet property="displayView" destination="rnD-ga-Zt7" id="tkM-On-xMm"/>
                         <outlet property="dmyLabel" destination="C1d-Ys-nnQ" id="1ch-me-DVD"/>
                         <outlet property="fLabel" destination="ayy-ES-Kg8" id="uwX-OC-Yfe"/>
