@@ -401,12 +401,17 @@ class CalculatorViewController: UIViewController {
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
-        if prefixKey == .g || !userIsStillTypingDigits {  // clear all
+        if prefixKey == .f {
+            // clear prefix
+            prefixKey = nil
+        } else if prefixKey == .g || !userIsStillTypingDigits {
+            // clear all
             displayString = "0.0000"
             brain.clearStack()
             userIsStillTypingDigits = false
             decimalWasAlreadyEntered = false
         } else {
+            // remove last pressed digit
             if displayString.count == 1 {
                 displayString = "0.0000"
                 userIsStillTypingDigits = false
