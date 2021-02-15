@@ -32,6 +32,8 @@ enum PrefixKey: String {
     case FIX
     case SCI
     case ENG
+    case STO
+    case RCL
 }
 
 enum TrigMode: String {
@@ -280,7 +282,6 @@ class CalculatorViewController: UIViewController {
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 displayString = "3.141592654"
                 enterPressed(UIButton())
-                runAndUpdateInterface()
             default:
                 break
             }
@@ -299,6 +300,28 @@ class CalculatorViewController: UIViewController {
                 // number after FIX pressed
                 displayView.format = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantisa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
+            }
+            prefixKey = nil
+            return
+        case .STO:
+            switch digit {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not include registers ".0" through ".9"
+                // store displayed number in register
+                enterPressed(UIButton())
+                brain.storeResultsInRegister(digit)
+            default:
+                break
+            }
+            prefixKey = nil
+            return
+        case .RCL:
+            switch digit {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // recall register, show in display
+                displayString = String(brain.recallNumberFromRegister(digit))
+                enterPressed(UIButton())
+            default:
+                break
             }
             prefixKey = nil
             return
@@ -359,19 +382,25 @@ class CalculatorViewController: UIViewController {
         simulatePressingButton(sender)
         var keyName = sender.currentTitle!
         if keyName == "CHS" && userIsEnteringExponent {
+            // change sign in front of exponent
             let exponent2 = String(displayString.removeLast())
             let exponent1 = String(displayString.removeLast())
             var sign = String(displayString.removeLast())
             sign = sign == " " ? "-" : " "  // toggle sign
             displayString += sign + exponent1 + exponent2
             return
+        } else if keyName == "STO" {
+            prefixKey = .STO
+            return
+        } else if keyName == "RCL" {
+            prefixKey = .RCL
+            return
         }
         if keyName == "SIN" || keyName == "COS" || keyName == "TAN" {
-            keyName += trigMode.rawValue  // DEG adds D (ex. COSD), RAD adds nothing (ex. COS)
+            keyName += trigMode.rawValue  // DEG adds D to trig name (ex. COSD), RAD adds nothing (ex. COS)
         }
-        // pws: For now, I assumed an operation is only preceded by no prefix key, or by f, or g
-        // if this is not the case, prefixPlusOperation (below) and prefixKey (in CalculatorBrain.popOperationOffStack) must change
-        precondition((prefixKey?.rawValue ?? "n").count == 1, "Operation selected with prefix key other than f or g")
+        // pws: instead of precondition, do... if count != 1, send "Error" to display (ex. 5 Enter STO COS)
+        precondition((prefixKey?.rawValue ?? "n").count == 1, "Arrived here with prefix key other than f or g")
         let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + keyName  // capture before clearing prefixKey in enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
         brain.pushOperation(prefixPlusOperation)
@@ -383,7 +412,7 @@ class CalculatorViewController: UIViewController {
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterPressed(_ sender: UIButton) {
         if sender.titleLabel?.text != nil {
-            simulatePressingButton(sender)  // only show if user pressed ENTER - not if code calling enterPressed(UIButton())
+            simulatePressingButton(sender)  // only simulate if user pressed ENTER - not if code calling enterPressed(UIButton())
         }
         if userIsEnteringExponent {
             // convert "1.2345    01" to "1.2345E+01", before trying to convert to number

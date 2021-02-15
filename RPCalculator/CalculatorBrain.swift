@@ -14,12 +14,16 @@ struct Constants {
 
 class CalculatorBrain {
     
+    private var programStack = [Any]()
+
     var program: [Any] {
         let stackCopy = programStack
         return stackCopy
     }
     
-    private var programStack = [Any]()
+    private var dataStorage = [String: Double]()  // [register name: number]
+    
+    // MARK: - Start of code
     
     func pushOperand(_ operand: Double) {
         programStack.append(operand)
@@ -144,5 +148,13 @@ class CalculatorBrain {
         }
         
         return result;
+    }
+    
+    func storeResultsInRegister(_ name: String) {
+        dataStorage[name] = CalculatorBrain.runProgram(program)
+    }
+    
+    func recallNumberFromRegister(_ name: String) -> Double {
+        return dataStorage[name] ?? 0.0
     }
 }
