@@ -71,8 +71,8 @@ class DisplayView: UIView {
         digitViews.forEach { $0.clear() }
     }
     
-    // set the digit character for each of the digitViews, drawn from numberString
-    // set the trailingDecimal boolean to true for the digitView preceding the decimal point
+    // set the digit character for each of the digitViews, drawn from modifiedDisplayString
+    // set the trailingDecimal or trailingComma boolean to true for the digitView preceding the decimal point or comma
     private func updateDisplay() {
         clearDisplay()  // start with all blank digits
         var modifiedDisplayString = displayString
