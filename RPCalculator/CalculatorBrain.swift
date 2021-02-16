@@ -15,13 +15,12 @@ struct Constants {
 class CalculatorBrain {
     
     private var programStack = [Any]()
-
+    private var storageRegisters = [String: Double]()  // [register name: number]
+    
     var program: [Any] {
         let stackCopy = programStack
         return stackCopy
     }
-    
-    private var dataStorage = [String: Double]()  // [register name: number]
     
     // MARK: - Start of code
     
@@ -40,6 +39,10 @@ class CalculatorBrain {
     
     func clearStack() {
         programStack.removeAll()
+    }
+    
+    func clearRegisters() {
+        storageRegisters.removeAll()
     }
     
     static func popOperandOffStack(_ stack: inout [Any]) -> Double {
@@ -151,10 +154,10 @@ class CalculatorBrain {
     }
     
     func storeResultsInRegister(_ name: String) {
-        dataStorage[name] = CalculatorBrain.runProgram(program)
+        storageRegisters[name] = CalculatorBrain.runProgram(program)
     }
     
     func recallNumberFromRegister(_ name: String) -> Double {
-        return dataStorage[name] ?? 0.0
+        return storageRegisters[name] ?? 0.0
     }
 }

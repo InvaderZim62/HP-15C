@@ -458,7 +458,17 @@ class CalculatorViewController: UIViewController {
         }
         prefixKey = nil
     }
-
+    
+    @IBAction func swapXyPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // back-arrow can only follow f, g, or no prefix
+        if prefixKey == .f {
+            // clear storage registers
+            brain.clearRegisters()
+        }
+        prefixKey = nil
+    }
+    
     @IBAction func fPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // f can only follow f, g, or no prefix
