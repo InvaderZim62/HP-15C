@@ -250,12 +250,14 @@ class CalculatorViewController: UIViewController {
         // handle digit after prefix key (return before handling lone digits)
         switch prefixKey {
         case .f:
+            prefixKey = nil
             switch digit {
             case "3":
                 // →RAD pressed
                 let tempButton = UIButton()
                 tempButton.setTitle("3", for: .normal)
-                operationPressed(tempButton)  // better handled as operation (retain the prefixKey here)
+                prefixKey = .f
+                operationPressed(tempButton)  // better handled as operation
             case "7":
                 // FIX pressed
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
@@ -267,14 +269,15 @@ class CalculatorViewController: UIViewController {
             default:
                 break
             }
-            return
         case .g:
+            prefixKey = nil
             switch digit {
             case "3":
                 // →DEG pressed
                 let tempButton = UIButton()
                 tempButton.setTitle("3", for: .normal)
-                operationPressed(tempButton)  // better handled as operation (retain the prefixKey here)
+                prefixKey = .g
+                operationPressed(tempButton)  // better handled as operation
             case "7":
                 trigMode = .DEG
             case "8":
@@ -289,96 +292,87 @@ class CalculatorViewController: UIViewController {
             default:
                 break
             }
-            prefixKey = nil
-            return
         case .FIX:
+            prefixKey = nil
             if let decimalPlaces = Int(digit) {
-                prefixKey = nil
                 // number after FIX pressed
                 displayView.format = .fixed(decimalPlaces)
                 runAndUpdateInterface()
             }
-            return
         case .SCI:
+            prefixKey = nil
             if let decimalPlaces = Int(digit) {
-                prefixKey = nil
                 // number after FIX pressed
                 displayView.format = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantisa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             }
-            return
         case .STO:
+            prefixKey = nil
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not include registers ".0" through ".9"
-                prefixKey = nil
                 // store displayed number in register
                 enterPressed(UIButton())
                 brain.storeResultsInRegister(digit)
             default:
                 break
             }
-            return
         case .RCL:
+            prefixKey = nil
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
-                prefixKey = nil
                 // recall register, show in display
                 displayString = String(brain.recallNumberFromStorageRegister(digit))
                 enterPressed(UIButton())
             default:
                 break
             }
-            return
         default:
-            break
-        }
-        
-        if digit == "EEX" {
-            if userIsStillTypingDigits {
-                userIsEnteringExponent = true
-            } else {
-                return
-            }
-        }
-        
-        // add digit to display
-        if userIsStillTypingDigits {
-            if displayString == "0" {
-                if digit == "." {
-                    displayString += digit  // append decimal to leading zero
-                } else if digit != "0" {
-                    displayString = digit  // replace leading zero with digit
+            // no prefitKey section
+            if digit == "EEX" {
+                if userIsStillTypingDigits {
+                    userIsEnteringExponent = true
+                } else {
+                    return
                 }
-            } else {
-                if !(digit == "." && decimalWasAlreadyEntered) {  // only allow one decimal point per number
-                    if userIsEnteringExponent {
-                        if digit == "EEX" {  // pws: doesn't guard against mantissa that overlaps exponent
-                            let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
-                            displayString = displayString.padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
+            }
+            
+            // add digit to display
+            if userIsStillTypingDigits {
+                if displayString == "0" {
+                    if digit == "." {
+                        displayString += digit  // append decimal to leading zero
+                    } else if digit != "0" {
+                        displayString = digit  // replace leading zero with digit
+                    }
+                } else {
+                    if !(digit == "." && decimalWasAlreadyEntered) {  // only allow one decimal point per number
+                        if userIsEnteringExponent {
+                            if digit == "EEX" {  // pws: doesn't guard against mantissa that overlaps exponent
+                                let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                                displayString = displayString.padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
+                            } else {
+                                // slide second digit of exponent left and put new digit in its place
+                                let exponent2 = String(displayString.removeLast())
+                                displayString.removeLast(1)
+                                displayString += exponent2 + digit
+                            }
                         } else {
-                            // slide second digit of exponent left and put new digit in its place
-                            let exponent2 = String(displayString.removeLast())
-                            displayString.removeLast(1)
-                            displayString += exponent2 + digit
+                            displayString += digit  // append entered digit to display
                         }
-                    } else {
-                        displayString += digit  // append entered digit to display
                     }
                 }
-            }
-        } else {
-            // start clean display with digit
-            if digit == "." {
-                displayString = "0."  // precede leading decimal point with a zero
             } else {
-                displayString = digit
+                // start clean display with digit
+                if digit == "." {
+                    displayString = "0."  // precede leading decimal point with a zero
+                } else {
+                    displayString = digit
+                }
+                userIsStillTypingDigits = true
             }
-            userIsStillTypingDigits = true
+            
+            if digit == "." { decimalWasAlreadyEntered = true }
         }
-        
-        if digit == "." { decimalWasAlreadyEntered = true }
-
-        prefixKey = nil
     }
     
     // perform operation pressed (button title), and display results
@@ -386,7 +380,7 @@ class CalculatorViewController: UIViewController {
         simulatePressingButton(sender)
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // operation can only follow f, g, or no prefix
         var keyName = sender.currentTitle!
-        if keyName == "CHS" && userIsEnteringExponent {
+        if keyName == "CHS" && userIsEnteringExponent {  // if CHS and not entering exponent, pushOperation("nCHS"), below
             // change sign in front of exponent
             let exponent2 = String(displayString.removeLast())
             let exponent1 = String(displayString.removeLast())
@@ -405,10 +399,10 @@ class CalculatorViewController: UIViewController {
             keyName += trigMode.rawValue  // DEG adds D to trig name (ex. COSD), RAD adds nothing (ex. COS)
         }
         let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + keyName  // capture before clearing prefixKey in enterPressed
+        prefixKey = nil  // must come after previous line and before enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
         brain.pushOperation(prefixPlusOperation)
         runAndUpdateInterface()
-        prefixKey = nil
     }
 
     // push digits from display onto stack when enter key is pressed
@@ -419,6 +413,7 @@ class CalculatorViewController: UIViewController {
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // enter can only follow f, g, or no prefix
         switch prefixKey {
         case .g:
+            prefixKey = nil
             // LSTx key pressed
             displayString = String(brain.lastXRegister)
         default:
@@ -439,7 +434,6 @@ class CalculatorViewController: UIViewController {
         userIsStillTypingDigits = false
         userIsEnteringExponent = false
         decimalWasAlreadyEntered = false
-        prefixKey = nil
     }
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
@@ -473,12 +467,11 @@ class CalculatorViewController: UIViewController {
     @IBAction func swapXyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // back-arrow can only follow f, g, or no prefix
-        if prefixKey == .f {
+        switch prefixKey {
+        case .f:
             // clear storage registers
             brain.clearStorageRegisters()
-        } else if prefixKey == .g {
-            // random number (TBD)
-        } else {
+        default:
             // swap x-y registers
             if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
             brain.swapXyRegisters()
