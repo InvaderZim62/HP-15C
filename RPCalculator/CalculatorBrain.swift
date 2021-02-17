@@ -8,21 +8,29 @@
 import Foundation
 
 struct Constants {
+    static let stackSize = 5  // dummy, T, Z, Y, X (dummy needed to allow operand to temporarily push onto stack)
     static let D2R = Double.pi / 180
     static let G2R = Double.pi / 200  // gradians to radians
 }
 
 class CalculatorBrain {
     
-    private var programStack = [Any]()
-    private var storageRegisters = [String: Double]()  // [register name: number]
-    
-    var program: [Any] {
-        let stackCopy = programStack
-        return stackCopy
+    // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
+    private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {
+        didSet {
+            // truncate stack to last 5 elements, then pad front with repeat of 0th element if size < 5
+            programStack = programStack.suffix(Constants.stackSize)
+            programStack.insert(contentsOf: repeatElement(programStack[0], count: Constants.stackSize - programStack.count), at: 0)
+        }
     }
     
+    private var storageRegisters = [String: Double]()  // [register name: number]
+    
     // MARK: - Start of code
+    
+    func printStack() {
+        print(programStack.suffix(Constants.stackSize - 1))  // don't print dummy register
+    }
     
     func pushOperand(_ operand: Double) {
         programStack.append(operand)
@@ -32,14 +40,16 @@ class CalculatorBrain {
         programStack.append(operation)
     }
     
-    static func runProgram(_ program: [Any]) -> Double {
-        print(program)
-        var stack = program
-        return popOperandOffStack(&stack)
+    func runProgram() -> Double {
+        let result = popOperandOffStack(&programStack)
+        pushOperand(result)
+        printStack()
+        return result
     }
     
     func clearStack() {
-        programStack.removeAll()
+        programStack = [Any](repeating: 0.0, count: Constants.stackSize)
+        printStack()
     }
     
     func clearRegisters() {
@@ -50,7 +60,7 @@ class CalculatorBrain {
         // TBD
     }
     
-    static func popOperandOffStack(_ stack: inout [Any]) -> Double {
+    func popOperandOffStack(_ stack: inout [Any]) -> Double {
         var result = 0.0;
         
         if let topOfStack = stack.popLast() {
@@ -159,7 +169,7 @@ class CalculatorBrain {
     }
     
     func storeResultsInRegister(_ name: String) {
-        storageRegisters[name] = CalculatorBrain.runProgram(program)
+        storageRegisters[name] = runProgram()
     }
     
     func recallNumberFromRegister(_ name: String) -> Double {

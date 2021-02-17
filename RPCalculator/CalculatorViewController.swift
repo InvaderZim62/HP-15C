@@ -222,7 +222,7 @@ class CalculatorViewController: UIViewController {
     
     // run program and set display string (switch to scientific notation, if fixed format won't fit)
     private func runAndUpdateInterface() {
-        let numericalResult = CalculatorBrain.runProgram(brain.program)
+        let numericalResult = brain.runProgram()
         let potentialDisplayString = String(format: displayView.format.string, numericalResult)
         let displayConvertedBackToNumber = Double(potentialDisplayString)
         // determine length in display, knowing displayView will combine decimal point with digit and add a space in front of positive numbers
