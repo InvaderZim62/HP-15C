@@ -323,7 +323,7 @@ class CalculatorViewController: UIViewController {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 prefixKey = nil
                 // recall register, show in display
-                displayString = String(brain.recallNumberFromRegister(digit))
+                displayString = String(brain.recallNumberFromStorageRegister(digit))
                 enterPressed(UIButton())
             default:
                 break
@@ -468,12 +468,14 @@ class CalculatorViewController: UIViewController {
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // back-arrow can only follow f, g, or no prefix
         if prefixKey == .f {
             // clear storage registers
-            brain.clearRegisters()
+            brain.clearStorageRegisters()
         } else if prefixKey == .g {
             // random number (TBD)
         } else {
             // swap x-y registers
-            brain.swapXyRegisters()  // not yet implemented
+            if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+            brain.swapXyRegisters()
+            runAndUpdateInterface()
         }
         prefixKey = nil
     }

@@ -52,12 +52,13 @@ class CalculatorBrain {
         printStack()
     }
     
-    func clearRegisters() {
+    func clearStorageRegisters() {
         storageRegisters.removeAll()
     }
     
     func swapXyRegisters() {
-        // TBD
+        programStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)  // swap last to elements
+        printStack()
     }
     
     func popOperandOffStack(_ stack: inout [Any]) -> Double {
@@ -172,7 +173,7 @@ class CalculatorBrain {
         storageRegisters[name] = runProgram()
     }
     
-    func recallNumberFromRegister(_ name: String) -> Double {
+    func recallNumberFromStorageRegister(_ name: String) -> Double {
         return storageRegisters[name] ?? 0.0
     }
 }
