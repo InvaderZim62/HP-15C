@@ -417,13 +417,20 @@ class CalculatorViewController: UIViewController {
             simulatePressingButton(sender)  // only simulate if user pressed ENTER - not if code calling enterPressed(UIButton())
         }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // enter can only follow f, g, or no prefix
-        if userIsEnteringExponent {
-            // convert "1.2345    01" to "1.2345E+01", before trying to convert to number
-            let exponent2 = String(displayString.removeLast())
-            let exponent1 = String(displayString.removeLast())
-            var sign = String(displayString.removeLast())
-            if sign == " " { sign = "+" }
-            displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
+        switch prefixKey {
+        case .g:
+            // LSTx key pressed
+            displayString = String(brain.lastXRegister)
+        default:
+            // Enter key pressed
+            if userIsEnteringExponent {
+                // convert "1.2345    01" to "1.2345E+01", before trying to convert to number
+                let exponent2 = String(displayString.removeLast())
+                let exponent1 = String(displayString.removeLast())
+                var sign = String(displayString.removeLast())
+                if sign == " " { sign = "+" }
+                displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
+            }
         }
         if let number = Double(displayString) {
             brain.pushOperand(number)

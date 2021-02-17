@@ -15,6 +15,8 @@ struct Constants {
 
 class CalculatorBrain {
     
+    var lastXRegister = 0.0
+
     // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
     private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {
         didSet {
@@ -29,7 +31,7 @@ class CalculatorBrain {
     // MARK: - Start of code
     
     func printStack() {
-        print(programStack.suffix(Constants.stackSize - 1))  // don't print dummy register
+        print(programStack.suffix(Constants.stackSize - 1), lastXRegister)  // don't print dummy register
     }
     
     func pushOperand(_ operand: Double) {
@@ -41,6 +43,7 @@ class CalculatorBrain {
     }
     
     func runProgram() -> Double {
+        if let registerX = programStack.last as? Double { lastXRegister = registerX }  // save register X (display) before computing new results
         let result = popOperandOffStack(&programStack)
         pushOperand(result)
         printStack()
@@ -57,7 +60,7 @@ class CalculatorBrain {
     }
     
     func swapXyRegisters() {
-        programStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)  // swap last to elements
+        programStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)  // swap last two elements
         printStack()
     }
     
