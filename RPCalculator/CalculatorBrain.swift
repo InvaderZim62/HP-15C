@@ -31,8 +31,9 @@ class CalculatorBrain {
     func pushOperation(_ operation: String) {
         programStack.append(operation)
     }
-
+    
     static func runProgram(_ program: [Any]) -> Double {
+        print(program)
         var stack = program
         return popOperandOffStack(&stack)
     }
@@ -43,6 +44,10 @@ class CalculatorBrain {
     
     func clearRegisters() {
         storageRegisters.removeAll()
+    }
+    
+    func swapXyRegisters() {
+        // TBD
     }
     
     static func popOperandOffStack(_ stack: inout [Any]) -> Double {

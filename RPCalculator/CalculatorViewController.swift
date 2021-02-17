@@ -22,6 +22,10 @@
 //     Autoshrink: Minimum Font Size
 //         number: (smallest desired scalable size)
 //
+//  Usefull functions...
+//     let lastDigit = displayString.removeLast()     // remove last digit and return it
+//     displayString.removeLast(n)                    // removes last n digits without returning them
+//
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
@@ -232,7 +236,7 @@ class CalculatorViewController: UIViewController {
         } else {
             displayString = potentialDisplayString + (potentialDisplayString.contains(".") ? "" : ".")  // make sure at least one decimal point
         }
-        print("numerical result: \(numericalResult), displayString: \(displayString)")
+//        print("numerical result: \(numericalResult), displayString: \(displayString)")
     }
     
     // MARK: - Button actions
@@ -465,6 +469,11 @@ class CalculatorViewController: UIViewController {
         if prefixKey == .f {
             // clear storage registers
             brain.clearRegisters()
+        } else if prefixKey == .g {
+            // random number (TBD)
+        } else {
+            // swap x-y registers
+            brain.swapXyRegisters()  // not yet implemented
         }
         prefixKey = nil
     }
