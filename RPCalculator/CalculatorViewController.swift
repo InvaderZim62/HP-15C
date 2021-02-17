@@ -239,11 +239,22 @@ class CalculatorViewController: UIViewController {
 //        print("numerical result: \(numericalResult), displayString: \(displayString)")
     }
     
+    private func restoreFromError() -> Bool {
+        if brain.errorPresent {
+            brain.errorPresent = false
+            runAndUpdateInterface()
+            return true
+        } else {
+            return false
+        }
+    }
+    
     // MARK: - Button actions
 
     // digits: numbers 0-9, period, EEX key
     @IBAction func digitPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
+        if restoreFromError() { return }
         var digit = sender.currentTitle!
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
@@ -378,6 +389,7 @@ class CalculatorViewController: UIViewController {
     // perform operation pressed (button title), and display results
     @IBAction func operationPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
+        if restoreFromError() { return }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // operation can only follow f, g, or no prefix
         var keyName = sender.currentTitle!
         if keyName == "CHS" && userIsEnteringExponent {  // if CHS and not entering exponent, pushOperation("nCHS"), below
@@ -408,7 +420,9 @@ class CalculatorViewController: UIViewController {
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterPressed(_ sender: UIButton) {
         if sender.titleLabel?.text != nil {
-            simulatePressingButton(sender)  // only simulate if user pressed ENTER - not if code calling enterPressed(UIButton())
+            // only simulate if user pressed ENTER - not if code calling enterPressed(UIButton())
+            simulatePressingButton(sender)
+            if restoreFromError() { return }
         }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // enter can only follow f, g, or no prefix
         switch prefixKey {
@@ -438,6 +452,7 @@ class CalculatorViewController: UIViewController {
     
     @IBAction func backArrowPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
+        if restoreFromError() { return }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // back-arrow can only follow f, g, or no prefix
         if prefixKey == .f {
             // clear prefix
@@ -466,6 +481,7 @@ class CalculatorViewController: UIViewController {
     
     @IBAction func swapXyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
+        if restoreFromError() { return }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // back-arrow can only follow f, g, or no prefix
         switch prefixKey {
         case .f:
@@ -482,18 +498,21 @@ class CalculatorViewController: UIViewController {
     
     @IBAction func fPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
+        if restoreFromError() { return }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // f can only follow f, g, or no prefix
         prefixKey = .f
     }
     
     @IBAction func gPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
+        if restoreFromError() { return }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // g can only follow f, g, or no prefix
         prefixKey = .g
     }
 
     @IBAction func onPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
+        _ = restoreFromError()  // ON is the only key that finishes performing its function if restoring from error
         calculatorIsOn = !calculatorIsOn
         displayView.turnOnIf(calculatorIsOn)
         if calculatorIsOn {

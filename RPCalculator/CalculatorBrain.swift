@@ -16,6 +16,7 @@ struct Constants {
 class CalculatorBrain {
     
     var lastXRegister = 0.0
+    var errorPresent = false
 
     // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
     private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {
@@ -44,14 +45,23 @@ class CalculatorBrain {
     
     func runProgram() -> Double {
         if let registerX = programStack.last as? Double { lastXRegister = registerX }  // save register X (display) before computing new results
+        var saveStack = programStack  // save in case of nan or inf
         let result = popOperandOffStack(&programStack)
-        pushOperand(result)
+        if result.isNaN || result.isInfinite {
+            // restore stack to pre-error state
+            saveStack.removeLast()  // last element is the operation causing the error
+            programStack = saveStack
+            errorPresent = true  // reset in CaclulatorViewController.restoreFromError
+        } else {
+            pushOperand(result)
+        }
         printStack()
         return result
     }
     
     func clearStack() {
         programStack = [Any](repeating: 0.0, count: Constants.stackSize)
+        lastXRegister = 0.0
         printStack()
     }
     

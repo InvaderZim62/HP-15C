@@ -76,8 +76,8 @@ class DisplayView: UIView {
     private func updateDisplay() {
         clearDisplay()  // start with all blank digits
         var modifiedDisplayString = displayString
-        if displayString == "nan." || displayString == "inf." {  // pws: inf. should display -9.999999999-99 blinking
-            modifiedDisplayString = " Error"
+        if displayString == "nan." || displayString == "inf." || displayString == "-inf."  {
+            modifiedDisplayString = " Error 0"
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }
