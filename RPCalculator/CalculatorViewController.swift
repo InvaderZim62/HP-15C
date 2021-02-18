@@ -26,6 +26,9 @@
 //     let lastDigit = displayString.removeLast()     // remove last digit and return it
 //     displayString.removeLast(n)                    // removes last n digits without returning them
 //
+//  To do...
+//  - save registers and stack to user defaults (restore at startup).
+//
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
@@ -58,7 +61,7 @@ class CalculatorViewController: UIViewController {
     var userIsEnteringExponent = false
     var decimalWasAlreadyEntered = false
     var buttonCoverViews = [UIButton: ButtonCoverView]()
-    var seed = 0
+    var seed = 0  // HP-15C initial seed is zero
     var lastRandomNumberGenerated = 0.0
     
     var prefixKey: PrefixKey? { didSet {
@@ -150,7 +153,6 @@ class CalculatorViewController: UIViewController {
         displayLabelAlphas.append(contentsOf: repeatElement(0, count: displayLabels.count))  // allocate the same sized array
         hideDisplayLabels()
         calculatorView.clearLabel = clearLabel
-        powerOnSetup()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -159,11 +161,6 @@ class CalculatorViewController: UIViewController {
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
         createButtonCovers()
-    }
-    
-    private func powerOnSetup() {
-        srand48(0)  // HP-15C initial seed is zero
-        lastRandomNumberGenerated = 0.0
     }
     
     private func hideDisplayLabels() {
@@ -549,7 +546,6 @@ class CalculatorViewController: UIViewController {
         displayView.turnOnIf(calculatorIsOn)
         if calculatorIsOn {
             unhideDisplayLabels()
-            powerOnSetup()
         } else {
             hideDisplayLabels()
         }
