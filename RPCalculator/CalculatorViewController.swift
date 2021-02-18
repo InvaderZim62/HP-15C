@@ -59,6 +59,7 @@ class CalculatorViewController: UIViewController {
     var decimalWasAlreadyEntered = false
     var buttonCoverViews = [UIButton: ButtonCoverView]()
     var seed = 0
+    var lastRandomNumberGenerated = 0.0
     
     var prefixKey: PrefixKey? { didSet {
         fLabel.alpha = 0
@@ -162,6 +163,7 @@ class CalculatorViewController: UIViewController {
     
     private func powerOnSetup() {
         srand48(0)  // HP-15C initial seed is zero
+        lastRandomNumberGenerated = 0.0
     }
     
     private func hideDisplayLabels() {
@@ -430,7 +432,7 @@ class CalculatorViewController: UIViewController {
             simulatePressingButton(sender)
             if restoreFromError() { return }
         }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == .STO || prefixKey == nil else { return }  // enter can only follow f, g, STO, or no prefix
+        guard prefixKey == .f || prefixKey == .g || prefixKey == .STO || prefixKey == .RCL || prefixKey == nil else { return }
         switch prefixKey {
         case .f:
             // RND# key pressed
@@ -439,6 +441,7 @@ class CalculatorViewController: UIViewController {
             let number = drand48()
             seed = Int(number * Double(Int32.max))  // regenerate my own seed to use next time (Note: Int.max gives same numbers for different seeds)
             brain.pushOperand(number)
+            lastRandomNumberGenerated = number
         case .g:
             prefixKey = nil
             // LSTx key pressed
@@ -453,6 +456,10 @@ class CalculatorViewController: UIViewController {
             } else {
                 return
             }
+        case .RCL:
+            prefixKey = nil
+            // RCL RAN# pressed (recall last random number)
+            brain.pushOperand(lastRandomNumberGenerated)
         default:
             // Enter key pressed
             if userIsEnteringExponent {
