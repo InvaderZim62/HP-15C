@@ -17,6 +17,10 @@ class CalculatorBrain {
     
     var lastXRegister = 0.0
     var errorPresent = false
+    
+    var xRegister: Double? {
+        return programStack.last as? Double
+    }
 
     // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
     private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {

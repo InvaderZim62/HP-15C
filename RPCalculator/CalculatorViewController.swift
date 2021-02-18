@@ -58,6 +58,7 @@ class CalculatorViewController: UIViewController {
     var userIsEnteringExponent = false
     var decimalWasAlreadyEntered = false
     var buttonCoverViews = [UIButton: ButtonCoverView]()
+    var seed = 0
     
     var prefixKey: PrefixKey? { didSet {
         fLabel.alpha = 0
@@ -148,6 +149,7 @@ class CalculatorViewController: UIViewController {
         displayLabelAlphas.append(contentsOf: repeatElement(0, count: displayLabels.count))  // allocate the same sized array
         hideDisplayLabels()
         calculatorView.clearLabel = clearLabel
+        powerOnSetup()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -156,6 +158,10 @@ class CalculatorViewController: UIViewController {
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
         createButtonCovers()
+    }
+    
+    private func powerOnSetup() {
+        srand48(0)  // HP-15C initial seed is zero
     }
     
     private func hideDisplayLabels() {
@@ -322,7 +328,7 @@ class CalculatorViewController: UIViewController {
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not include registers ".0" through ".9"
                 // store displayed number in register
-                enterPressed(UIButton())
+                if userIsStillTypingDigits { enterPressed(UIButton()) }
                 brain.storeResultsInRegister(digit)
             default:
                 break
@@ -420,16 +426,33 @@ class CalculatorViewController: UIViewController {
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterPressed(_ sender: UIButton) {
         if sender.titleLabel?.text != nil {
-            // only simulate if user pressed ENTER - not if code calling enterPressed(UIButton())
+            // only simulate button if user pressed ENTER - not if code called enterPressed(UIButton())
             simulatePressingButton(sender)
             if restoreFromError() { return }
         }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // enter can only follow f, g, or no prefix
+        guard prefixKey == .f || prefixKey == .g || prefixKey == .STO || prefixKey == nil else { return }  // enter can only follow f, g, STO, or no prefix
         switch prefixKey {
+        case .f:
+            // RND# key pressed
+            prefixKey = nil
+            srand48(seed)  // re-seed each time, so a manually stored seed will generate the same sequence each time
+            let number = drand48()
+            seed = Int(number * Double(Int32.max))  // regenerate my own seed to use next time (Note: Int.max gives same numbers for different seeds)
+            brain.pushOperand(number)
         case .g:
             prefixKey = nil
             // LSTx key pressed
             displayString = String(brain.lastXRegister)
+        case .STO:
+            prefixKey = nil
+            // STO RAN# pressed (store new seed)
+            if userIsStillTypingDigits { enterPressed(UIButton()) }
+            if var number = brain.xRegister {
+                number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
+                seed = Int(number * Double(Int32.max))
+            } else {
+                return
+            }
         default:
             // Enter key pressed
             if userIsEnteringExponent {
@@ -440,11 +463,11 @@ class CalculatorViewController: UIViewController {
                 if sign == " " { sign = "+" }
                 displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
             }
+            if let number = Double(displayString) {
+                brain.pushOperand(number)
+            }
         }
-        if let number = Double(displayString) {
-            brain.pushOperand(number)
-            runAndUpdateInterface()
-        }
+        runAndUpdateInterface()
         userIsStillTypingDigits = false
         userIsEnteringExponent = false
         decimalWasAlreadyEntered = false
@@ -459,14 +482,16 @@ class CalculatorViewController: UIViewController {
             prefixKey = nil
         } else if prefixKey == .g || !userIsStillTypingDigits {
             // clear all
-            displayString = "0.0000"
+            brain.pushOperand(0.0)
+            runAndUpdateInterface()
             brain.clearStack()
             userIsStillTypingDigits = false
             decimalWasAlreadyEntered = false
         } else {
             // remove last pressed digit
             if displayString.count == 1 {
-                displayString = "0.0000"
+                brain.pushOperand(0.0)  // pws: should this show the last number on the stack, instead of adding zero to the stack?
+                runAndUpdateInterface()
                 userIsStillTypingDigits = false
                 decimalWasAlreadyEntered = false
             } else {
@@ -512,11 +537,12 @@ class CalculatorViewController: UIViewController {
 
     @IBAction func onPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
-        _ = restoreFromError()  // ON is the only key that finishes performing its function if restoring from error
+        _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error
         calculatorIsOn = !calculatorIsOn
         displayView.turnOnIf(calculatorIsOn)
         if calculatorIsOn {
             unhideDisplayLabels()
+            powerOnSetup()
         } else {
             hideDisplayLabels()
         }
