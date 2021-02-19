@@ -417,7 +417,9 @@ class CalculatorViewController: UIViewController {
         if keyName == "SIN" || keyName == "COS" || keyName == "TAN" {
             keyName += trigMode.rawValue  // DEG adds D to trig name (ex. COSD), RAD adds nothing (ex. COS)
         }
+        let saveXRegister = brain.xRegister
         let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + keyName  // capture before clearing prefixKey in enterPressed
+        if prefixPlusOperation == "gyx" { brain.pushOperand(saveXRegister!) }  // push extra base number on stack before %, to allow adding result to it
         prefixKey = nil  // must come after previous line and before enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
         brain.pushOperation(prefixPlusOperation)

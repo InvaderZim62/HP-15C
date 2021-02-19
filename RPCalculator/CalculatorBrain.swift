@@ -189,6 +189,8 @@ class CalculatorBrain {
                         result = log(popOperandOffStack(&stack))  // natural log
                     case "10x":
                         result = log10(popOperandOffStack(&stack))  // log base 10
+                    case "yx":
+                        result = popOperandOffStack(&stack) * popOperandOffStack(&stack) * 0.01  // %
                     case "CHS":
                         result = abs(popOperandOffStack(&stack))  // absolute value
                     case "3":  // sent from digitPressed
