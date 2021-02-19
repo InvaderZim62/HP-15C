@@ -81,6 +81,7 @@ class CalculatorViewController: UIViewController {
     } }
     
     var trigMode = TrigMode.DEG { didSet {
+        brain.trigMode = trigMode
         switch trigMode {
         case .DEG:
             gradLabel.alpha = 0  // no display label for DEG
@@ -398,7 +399,7 @@ class CalculatorViewController: UIViewController {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // operation can only follow f, g, or no prefix
-        var keyName = sender.currentTitle!
+        let keyName = sender.currentTitle!
         if keyName == "CHS" && userIsEnteringExponent {  // if CHS and not entering exponent, pushOperation("nCHS"), below
             // change sign in front of exponent
             let exponent2 = String(displayString.removeLast())
@@ -414,13 +415,10 @@ class CalculatorViewController: UIViewController {
             prefixKey = .RCL
             return
         }
-        if keyName == "SIN" || keyName == "COS" || keyName == "TAN" {
-            keyName += trigMode.rawValue  // DEG adds D to trig name (ex. COSD), RAD adds nothing (ex. COS)
-        }
         let saveXRegister = brain.xRegister
         let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + keyName  // capture before clearing prefixKey in enterPressed
-        if prefixPlusOperation == "gyx" || prefixPlusOperation == "g1/x" {
-            brain.pushOperand(saveXRegister!)   // push extra copy of base number on stack before % and delta-%, to allow adding result to it
+        if prefixPlusOperation == "gyx" || prefixPlusOperation == "g1/x" {  // % or delta %
+            brain.pushOperand(saveXRegister!)   // push extra copy of base number on stack, to allow adding it to result of % or delta %
         }
         prefixKey = nil  // must come after previous line and before enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation

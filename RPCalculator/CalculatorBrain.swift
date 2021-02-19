@@ -20,8 +20,20 @@ struct Constants {
 
 class CalculatorBrain {
     
+    var trigMode = TrigMode.DEG
     var lastXRegister = 0.0
     var errorPresent = false
+    
+    var angleConversion: Double {
+        switch trigMode {
+        case .DEG:
+            return Constants.D2R
+        case .RAD:
+            return 1.0
+        case .GRAD:
+            return Constants.G2R
+        }
+    }
     
     var xRegister: Double? {
         get { return programStack.last as? Double }
@@ -117,24 +129,12 @@ class CalculatorBrain {
                         result = -popOperandOffStack(&stack) + popOperandOffStack(&stack)
                     case "+":
                         result = popOperandOffStack(&stack) + popOperandOffStack(&stack)
-                    case "SIND":
-                        result = sin(popOperandOffStack(&stack) * Constants.D2R)
-                    case "COSD":
-                        result = cos(popOperandOffStack(&stack) * Constants.D2R)
-                    case "TAND":
-                        result = tan(popOperandOffStack(&stack) * Constants.D2R)
-                    case "SINR":
-                        result = sin(popOperandOffStack(&stack))
-                    case "COSR":
-                        result = cos(popOperandOffStack(&stack))
-                    case "TANR":
-                        result = tan(popOperandOffStack(&stack))
-                    case "SING":
-                        result = sin(popOperandOffStack(&stack) * Constants.G2R)
-                    case "COSG":
-                        result = cos(popOperandOffStack(&stack) * Constants.G2R)
-                    case "TANG":
-                        result = tan(popOperandOffStack(&stack) * Constants.G2R)
+                    case "SIN":
+                        result = sin(popOperandOffStack(&stack) * angleConversion)
+                    case "COS":
+                        result = cos(popOperandOffStack(&stack) * angleConversion)
+                    case "TAN":
+                        result = tan(popOperandOffStack(&stack) * angleConversion)
                     case "√x":
                         result = sqrt(popOperandOffStack(&stack))
                     case "ex":
@@ -165,24 +165,12 @@ class CalculatorBrain {
                     switch operation {
                     case "STO":
                         result = Double(Int(popOperandOffStack(&stack)))  // int
-                    case "SIND":
-                        result = asin(popOperandOffStack(&stack)) / Constants.D2R  // arcsine in degrees
-                    case "COSD":
-                        result = acos(popOperandOffStack(&stack)) / Constants.D2R  // arccosine in degrees
-                    case "TAND":
-                        result = atan(popOperandOffStack(&stack)) / Constants.D2R  // arctangent in degrees
-                    case "SINR":
-                        result = asin(popOperandOffStack(&stack))  // arcsine in radians
-                    case "COSR":
-                        result = acos(popOperandOffStack(&stack))  // arccosine in radians
-                    case "TANR":
-                        result = atan(popOperandOffStack(&stack))  // arctangent in radians
-                    case "SING":
-                        result = asin(popOperandOffStack(&stack)) / Constants.G2R  // arcsine in gradians
-                    case "COSG":
-                        result = acos(popOperandOffStack(&stack)) / Constants.G2R  // arccosine in gradians
-                    case "TANG":
-                        result = atan(popOperandOffStack(&stack)) / Constants.G2R  // arctangent in gradians
+                    case "SIN":
+                        result = asin(popOperandOffStack(&stack)) / angleConversion  // arcsine
+                    case "COS":
+                        result = acos(popOperandOffStack(&stack)) / angleConversion  // arccosine
+                    case "TAN":
+                        result = atan(popOperandOffStack(&stack)) / angleConversion  // arctangent
                     case "√x":
                         result = pow(popOperandOffStack(&stack), 2)  // square
                     case "ex":
