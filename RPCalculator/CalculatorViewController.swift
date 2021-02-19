@@ -22,7 +22,7 @@
 //     Autoshrink: Minimum Font Size
 //         number: (smallest desired scalable size)
 //
-//  Usefull functions...
+//  Useful functions...
 //     let lastDigit = displayString.removeLast()     // remove last digit and return it
 //     displayString.removeLast(n)                    // removes last n digits without returning them
 //
@@ -163,6 +163,7 @@ class CalculatorViewController: UIViewController {
         createButtonCovers()
     }
     
+    // display labels: USER  f  g  BEGIN  GRAD  D.MY  C  PRGM
     private func hideDisplayLabels() {
         for (index, label) in displayLabels.enumerated() {
             displayLabelAlphas[index] = label.alpha  // save current setting for unhiding
@@ -522,6 +523,22 @@ class CalculatorViewController: UIViewController {
             brain.swapXyRegisters()
             runAndUpdateInterface()
         }
+        prefixKey = nil
+    }
+    
+    @IBAction func rollDownPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // roll down can only follow f, g, or no prefix
+        switch prefixKey {
+        case .g:
+            // roll stack up
+            brain.rollStack(directionDown: false)
+        default:
+            // roll stack down
+            brain.rollStack(directionDown: true)
+        }
+        runAndUpdateInterface()
         prefixKey = nil
     }
     

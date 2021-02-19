@@ -4,6 +4,11 @@
 //
 //  Created by Phil Stern on 2/5/21.
 //
+//  Useful functions...
+//     programStack = programStack.suffix(5)                                                      // only save last 5 elements of array
+//     programStack.insert(contentsOf: repeatElement(0.0, count: 5 - programStack.count), at: 0)  // pad front of array with 0.0, to total count = 5
+//     programStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)                      // swap last two elements of array
+//
 
 import Foundation
 
@@ -76,6 +81,17 @@ class CalculatorBrain {
     func swapXyRegisters() {
         programStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)  // swap last two elements
         printStack()
+    }
+    
+    // don't roll the dummy register at 0
+    func rollStack(directionDown: Bool) {
+        if directionDown {
+            let xRegister = programStack.removeLast()  // Note: programStack didSet pads beginning back to count = 5 after this
+            programStack.insert(xRegister, at: 2)      // that's why insert at 2 here, instead of 1
+        } else {
+            let tRegister = programStack.remove(at: 1)
+            programStack.append(tRegister)
+        }
     }
     
     func popOperandOffStack(_ stack: inout [Any]) -> Double {
