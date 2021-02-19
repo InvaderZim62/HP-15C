@@ -489,16 +489,12 @@ class CalculatorViewController: UIViewController {
         switch prefixKey {
         case .f:
             switch keyName {
-            case "R↓":
-                // roll stack down
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
-                brain.rollStack(directionDown: true)
             case "x≷y":
-                // clear storage registers (not stack)
+                // CLEAR REG key pressed (clear storage registers, not stack)
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 brain.clearStorageRegisters()
             case "←":
-                // clear prefix
+                // CLEAR PREFIX key pressed
                 prefixKey = nil
             default:
                 break
@@ -506,11 +502,11 @@ class CalculatorViewController: UIViewController {
         case .g:
             switch keyName {
             case "R↓":
-                // roll stack up
+                // R↑ key pressed (roll stack up)
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 brain.rollStack(directionDown: false)
             case "←":
-                // clear all
+                // CLx key pressed
                 brain.clearStack()
             default:
                 break
@@ -518,22 +514,25 @@ class CalculatorViewController: UIViewController {
         default:
             switch keyName {
             case "R↓":
-                // roll stack down
+                // R↓ key pressed (roll stack down)
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 brain.rollStack(directionDown: true)
             case "x≷y":
-                // swap x-y registers
+                // x≷y key pressed (swap x-y registers)
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 brain.swapXyRegisters()
             case "←":
-                // remove digit
-                if displayString.count == 1 || !userIsStillTypingDigits {
-                    // no digits left or not typing digits
-                    brain.xRegister = 0.0
-                } else {
+                // ← key pressed (remove digit/number)
+                if displayString.count == 1 {
+                    // no digits left
+                    brain.pushOperand(0.0)
+                } else if userIsStillTypingDigits {
                     // still typing digits
                     displayString = String(displayString.dropLast())
                     okToClearStillTyping = false
+                } else {
+                    // clear previously entered number
+                    brain.xRegister = 0.0
                 }
             default:
                 break

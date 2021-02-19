@@ -24,14 +24,10 @@ class CalculatorBrain {
     var errorPresent = false
     
     var xRegister: Double? {
-        get {
-            return programStack.last as? Double
-        }
-        set {
-            programStack[programStack.count - 1] = newValue!
-        }
+        get { return programStack.last as? Double }
+        set { programStack[programStack.count - 1] = newValue! }  // ok to assume programStack is not empty
     }
-
+    
     // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
     private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {
         didSet {
