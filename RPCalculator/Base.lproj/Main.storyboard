@@ -131,7 +131,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="rollDownPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="AJ1-L5-PRz"/>
+                                                            <action selector="stackManipulationPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="xcY-g1-llC"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MfT-tL-nrP">
@@ -177,7 +177,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="swapXyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="d6q-sI-zdQ"/>
+                                                            <action selector="stackManipulationPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="sUb-rH-2qN"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2OP-Ow-yxb">
@@ -222,7 +222,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="backArrowPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="1zf-eV-xVo"/>
+                                                            <action selector="stackManipulationPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="1Ep-MY-nCZ"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g2t-79-lvh">

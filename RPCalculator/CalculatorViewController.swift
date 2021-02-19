@@ -59,10 +59,13 @@ class CalculatorViewController: UIViewController {
     var calculatorIsOn = true
     var userIsStillTypingDigits = false
     var userIsEnteringExponent = false
-    var decimalWasAlreadyEntered = false
     var buttonCoverViews = [UIButton: ButtonCoverView]()
     var seed = 0  // HP-15C initial seed is zero
     var lastRandomNumberGenerated = 0.0
+    
+    var decimalWasAlreadyEntered: Bool {
+        return displayString.contains(".")
+    }
     
     var prefixKey: PrefixKey? { didSet {
         fLabel.alpha = 0
@@ -264,7 +267,7 @@ class CalculatorViewController: UIViewController {
         var digit = sender.currentTitle!
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
-        // handle digit after prefix key (return before handling lone digits)
+        // handle digit after prefix key
         switch prefixKey {
         case .f:
             prefixKey = nil
@@ -387,8 +390,6 @@ class CalculatorViewController: UIViewController {
                 }
                 userIsStillTypingDigits = true
             }
-            
-            if digit == "." { decimalWasAlreadyEntered = true }
         }
     }
     
@@ -475,70 +476,74 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
         userIsStillTypingDigits = false
         userIsEnteringExponent = false
-        decimalWasAlreadyEntered = false
     }
     
-    @IBAction func backArrowPressed(_ sender: UIButton) {
+    // manipulate stack or display
+    @IBAction func stackManipulationPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // back-arrow can only follow f, g, or no prefix
-        if prefixKey == .f {
-            // clear prefix
-            prefixKey = nil
-        } else if prefixKey == .g || !userIsStillTypingDigits {
-            // clear all
-            brain.pushOperand(0.0)
-            runAndUpdateInterface()
-            brain.clearStack()
-            userIsStillTypingDigits = false
-            decimalWasAlreadyEntered = false
-        } else {
-            // remove last pressed digit
-            if displayString.count == 1 {
-                brain.pushOperand(0.0)  // pws: should this show the last number on the stack, instead of adding zero to the stack?
-                runAndUpdateInterface()
-                userIsStillTypingDigits = false
-                decimalWasAlreadyEntered = false
-            } else {
-                if displayString.hasSuffix(".") {
-                    decimalWasAlreadyEntered = false
-                }
-                displayString = String(displayString.dropLast())  // remove last display digit
-            }
-        }
-        prefixKey = nil
-    }
-    
-    @IBAction func swapXyPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // back-arrow can only follow f, g, or no prefix
+        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // register keys can only follow f, g, or no prefix
+        let keyName = sender.currentTitle!
+        var okToClearStillTyping = true
+
         switch prefixKey {
         case .f:
-            // clear storage registers
-            brain.clearStorageRegisters()
+            switch keyName {
+            case "R↓":
+                // roll stack down
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                brain.rollStack(directionDown: true)
+            case "x≷y":
+                // clear storage registers (not stack)
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                brain.clearStorageRegisters()
+            case "←":
+                // clear prefix
+                prefixKey = nil
+            default:
+                break
+            }
+        case .g:
+            switch keyName {
+            case "R↓":
+                // roll stack up
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                brain.rollStack(directionDown: false)
+            case "←":
+                // clear all
+                brain.clearStack()
+            default:
+                break
+            }
         default:
-            // swap x-y registers
-            if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
-            brain.swapXyRegisters()
+            switch keyName {
+            case "R↓":
+                // roll stack down
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                brain.rollStack(directionDown: true)
+            case "x≷y":
+                // swap x-y registers
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                brain.swapXyRegisters()
+            case "←":
+                // remove digit
+                if displayString.count == 1 || !userIsStillTypingDigits {
+                    // no digits left or not typing digits
+                    brain.xRegister = 0.0
+                } else {
+                    // still typing digits
+                    displayString = String(displayString.dropLast())
+                    okToClearStillTyping = false
+                }
+            default:
+                break
+            }
+        }
+        if okToClearStillTyping {
+            userIsStillTypingDigits = false
             runAndUpdateInterface()
         }
-        prefixKey = nil
-    }
-    
-    @IBAction func rollDownPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // roll down can only follow f, g, or no prefix
-        switch prefixKey {
-        case .g:
-            // roll stack up
-            brain.rollStack(directionDown: false)
-        default:
-            // roll stack down
-            brain.rollStack(directionDown: true)
-        }
-        runAndUpdateInterface()
+        userIsEnteringExponent = false
         prefixKey = nil
     }
     
