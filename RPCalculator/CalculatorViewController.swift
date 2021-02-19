@@ -419,7 +419,9 @@ class CalculatorViewController: UIViewController {
         }
         let saveXRegister = brain.xRegister
         let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + keyName  // capture before clearing prefixKey in enterPressed
-        if prefixPlusOperation == "gyx" { brain.pushOperand(saveXRegister!) }  // push extra base number on stack before %, to allow adding result to it
+        if prefixPlusOperation == "gyx" || prefixPlusOperation == "g1/x" {
+            brain.pushOperand(saveXRegister!)   // push extra copy of base number on stack before % and delta-%, to allow adding result to it
+        }
         prefixKey = nil  // must come after previous line and before enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
         brain.pushOperation(prefixPlusOperation)

@@ -191,6 +191,9 @@ class CalculatorBrain {
                         result = log10(popOperandOffStack(&stack))  // log base 10
                     case "yx":
                         result = popOperandOffStack(&stack) * popOperandOffStack(&stack) * 0.01  // %
+                    case "1/x":
+                        let baseNumber = popOperandOffStack(&stack)
+                        result = (baseNumber / popOperandOffStack(&stack) - 1) * 100  // delta %
                     case "CHS":
                         result = abs(popOperandOffStack(&stack))  // absolute value
                     case "3":  // sent from digitPressed
