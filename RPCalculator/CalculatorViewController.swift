@@ -28,6 +28,7 @@
 //
 //  To do...
 //  - save registers and stack to user defaults (restore at startup).
+//  - fix: negative number doesn't allow exponent entry (ex. 4.1 EEX 02)
 //
 
 import UIKit
@@ -415,14 +416,10 @@ class CalculatorViewController: UIViewController {
             prefixKey = .RCL
             return
         }
-        let saveXRegister = brain.xRegister
-        let prefixPlusOperation = (prefixKey?.rawValue ?? "n") + keyName  // capture before clearing prefixKey in enterPressed
-        if prefixPlusOperation == "gyx" || prefixPlusOperation == "g1/x" {  // % or delta %
-            brain.pushOperand(saveXRegister!)   // push extra copy of base number on stack, to allow adding it to result of % or delta %
-        }
+        let savePrefixKey = (prefixKey?.rawValue ?? "n")
         prefixKey = nil  // must come after previous line and before enterPressed
         if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
-        brain.pushOperation(prefixPlusOperation)
+        brain.pushOperation(savePrefixKey + keyName)
         runAndUpdateInterface()
     }
 

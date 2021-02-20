@@ -68,13 +68,16 @@ class CalculatorBrain {
     func runProgram() -> Double {
         if let registerX = programStack.last as? Double { lastXRegister = registerX }  // save register X (display) before computing new results
         var saveStack = programStack  // save in case of nan or inf
-        let result = popOperandOffStack(&programStack)
+        let (result, secondResult) = popOperandOffStack(&programStack)
         if result.isNaN || result.isInfinite {
             // restore stack to pre-error state
             saveStack.removeLast()  // last element is the operation causing the error
             programStack = saveStack
             errorPresent = true  // reset in CaclulatorViewController.restoreFromError
         } else {
+            if secondResult != nil {
+                pushOperand(secondResult!)
+            }
             pushOperand(result)
         }
         printStack()
@@ -107,12 +110,13 @@ class CalculatorBrain {
         }
     }
     
-    func popOperandOffStack(_ stack: inout [Any]) -> Double {
-        var result = 0.0;
-        
+    func popOperandOffStack(_ stack: inout [Any]) -> (result: Double, secondResult: Double?) {
+        var result = 0.0
+        var secondResult: Double? = nil
+
         if let topOfStack = stack.popLast() {
             if topOfStack is Double {
-                return topOfStack as! Double
+                return (topOfStack as! Double, nil)
             } else if topOfStack is String {
                 let alternatePlusOperation = topOfStack as! String
                 let prefixKey = alternatePlusOperation.first
@@ -121,71 +125,76 @@ class CalculatorBrain {
                 if prefixKey == "n" {  // none (primary button functions)
                     switch operation {
                     case "÷":
-                        let divisor = popOperandOffStack(&stack)
-                        result = popOperandOffStack(&stack) / divisor  // let DisplayView hanndle divide by zero (result = "inf")
+                        let divisor = popOperandOffStack(&stack).result
+                        result = popOperandOffStack(&stack).result / divisor  // let DisplayView hanndle divide by zero (result = "inf")
                     case "×":
-                        result = popOperandOffStack(&stack) * popOperandOffStack(&stack)
+                        result = popOperandOffStack(&stack).result * popOperandOffStack(&stack).result
                     case "–":
-                        result = -popOperandOffStack(&stack) + popOperandOffStack(&stack)
+                        result = -popOperandOffStack(&stack).result + popOperandOffStack(&stack).result
                     case "+":
-                        result = popOperandOffStack(&stack) + popOperandOffStack(&stack)
+                        result = popOperandOffStack(&stack).result + popOperandOffStack(&stack).result
                     case "SIN":
-                        result = sin(popOperandOffStack(&stack) * angleConversion)
+                        result = sin(popOperandOffStack(&stack).result * angleConversion)
                     case "COS":
-                        result = cos(popOperandOffStack(&stack) * angleConversion)
+                        result = cos(popOperandOffStack(&stack).result * angleConversion)
                     case "TAN":
-                        result = tan(popOperandOffStack(&stack) * angleConversion)
+                        result = tan(popOperandOffStack(&stack).result * angleConversion)
                     case "√x":
-                        result = sqrt(popOperandOffStack(&stack))
+                        result = sqrt(popOperandOffStack(&stack).result)
                     case "ex":
-                        result = exp(popOperandOffStack(&stack))
+                        result = exp(popOperandOffStack(&stack).result)
                     case "10x":
-                        result = pow(10, popOperandOffStack(&stack))
+                        result = pow(10, popOperandOffStack(&stack).result)
                     case "yx":
-                        let power = popOperandOffStack(&stack)
-                        result = pow(popOperandOffStack(&stack), power)
+                        let power = popOperandOffStack(&stack).result
+                        result = pow(popOperandOffStack(&stack).result, power)
                     case "1/x":
-                        result = 1 / popOperandOffStack(&stack)
+                        result = 1 / popOperandOffStack(&stack).result
                     case "CHS":
-                        result = -popOperandOffStack(&stack)
+                        result = -popOperandOffStack(&stack).result
                     default:
                         break
                     }
                 } else if prefixKey == "f" {  // functions above button (orange)
                     switch operation {
                     case "STO":
-                        let number = popOperandOffStack(&stack)
+                        let number = popOperandOffStack(&stack).result
                         result = number - Double(Int(number))  // frac (decimal portion of number)
                     case "3":  // sent from digitPressed
-                        result = popOperandOffStack(&stack) * Constants.D2R  // convert to radians
+                        result = popOperandOffStack(&stack).result * Constants.D2R  // convert to radians
                     default:
                         break
                     }
                 } else if prefixKey == "g" {  // functions below button (blue)
                     switch operation {
                     case "STO":
-                        result = Double(Int(popOperandOffStack(&stack)))  // int
+                        result = Double(Int(popOperandOffStack(&stack).result))  // int
                     case "SIN":
-                        result = asin(popOperandOffStack(&stack)) / angleConversion  // arcsine
+                        result = asin(popOperandOffStack(&stack).result) / angleConversion  // arcsine
                     case "COS":
-                        result = acos(popOperandOffStack(&stack)) / angleConversion  // arccosine
+                        result = acos(popOperandOffStack(&stack).result) / angleConversion  // arccosine
                     case "TAN":
-                        result = atan(popOperandOffStack(&stack)) / angleConversion  // arctangent
+                        result = atan(popOperandOffStack(&stack).result) / angleConversion  // arctangent
                     case "√x":
-                        result = pow(popOperandOffStack(&stack), 2)  // square
+                        result = pow(popOperandOffStack(&stack).result, 2)  // square
                     case "ex":
-                        result = log(popOperandOffStack(&stack))  // natural log
+                        result = log(popOperandOffStack(&stack).result)  // natural log
                     case "10x":
-                        result = log10(popOperandOffStack(&stack))  // log base 10
+                        result = log10(popOperandOffStack(&stack).result)  // log base 10
                     case "yx":
-                        result = popOperandOffStack(&stack) * popOperandOffStack(&stack) * 0.01  // %
+                        let percent = popOperandOffStack(&stack).result * 0.01
+                        let baseNumber = popOperandOffStack(&stack).result
+                        result = percent * baseNumber  // %
+                        secondResult = baseNumber
                     case "1/x":
-                        let baseNumber = popOperandOffStack(&stack)
-                        result = (baseNumber / popOperandOffStack(&stack) - 1) * 100  // delta %
+                        let secondNumber = popOperandOffStack(&stack).result
+                        let baseNumber = popOperandOffStack(&stack).result
+                        result = (secondNumber - baseNumber) / baseNumber * 100  // delta %
+                        secondResult = baseNumber
                     case "CHS":
-                        result = abs(popOperandOffStack(&stack))  // absolute value
+                        result = abs(popOperandOffStack(&stack).result)  // absolute value
                     case "3":  // sent from digitPressed
-                        result = popOperandOffStack(&stack) / Constants.D2R  // convert to degrees
+                        result = popOperandOffStack(&stack).result / Constants.D2R  // convert to degrees
                     default:
                         break
                     }
@@ -193,7 +202,7 @@ class CalculatorBrain {
             }
         }
         
-        return result;
+        return (result, secondResult)
     }
     
     func storeResultsInRegister(_ name: String) {
