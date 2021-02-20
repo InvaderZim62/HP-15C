@@ -160,6 +160,12 @@ class CalculatorBrain {
                     case "STO":
                         let number = popOperandOffStack(&stack).result
                         result = number - Double(Int(number))  // frac (decimal portion of number)
+                    case "1":  // sent from digitPressed
+                        let radius = popOperandOffStack(&stack).result
+                        let angle = popOperandOffStack(&stack).result
+                        // convert to rectangular coordinates
+                        result = radius * cos(angle * angleConversion)  // x
+                        secondResult = radius * sin(angle * angleConversion)  // y
                     case "3":  // sent from digitPressed
                         result = popOperandOffStack(&stack).result * Constants.D2R  // convert to radians
                     default:
@@ -194,11 +200,11 @@ class CalculatorBrain {
                     case "CHS":
                         result = abs(popOperandOffStack(&stack).result)  // absolute value
                     case "1":  // sent from digitPressed
-                        let xValue = popOperandOffStack(&stack).result
-                        let yValue = popOperandOffStack(&stack).result
+                        let x = popOperandOffStack(&stack).result
+                        let y = popOperandOffStack(&stack).result
                         // convert to polar coordinates
-                        result = sqrt(xValue * xValue + yValue * yValue)  // radius
-                        secondResult = atan2(yValue, xValue) / angleConversion  // angle
+                        result = sqrt(x * x + y * y)  // radius
+                        secondResult = atan2(y, x) / angleConversion  // angle
                     case "3":  // sent from digitPressed
                         result = popOperandOffStack(&stack).result / Constants.D2R  // convert to degrees
                     default:

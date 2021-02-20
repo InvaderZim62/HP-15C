@@ -274,6 +274,12 @@ class CalculatorViewController: UIViewController {
         case .f:
             prefixKey = nil
             switch digit {
+            case "1":
+                // →R pressed (convert to rectangular coordinates)
+                let tempButton = UIButton()
+                tempButton.setTitle("1", for: .normal)
+                prefixKey = .f
+                operationPressed(tempButton)  // better handled as operation
             case "3":
                 // →RAD pressed
                 let tempButton = UIButton()
@@ -295,7 +301,7 @@ class CalculatorViewController: UIViewController {
             prefixKey = nil
             switch digit {
             case "1":
-            // →P pressed (convert to polar coordinates)
+                // →P pressed (convert to polar coordinates)
                 let tempButton = UIButton()
                 tempButton.setTitle("1", for: .normal)
                 prefixKey = .g
