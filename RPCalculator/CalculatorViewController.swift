@@ -28,7 +28,6 @@
 //
 //  To do...
 //  - save registers and stack to user defaults (restore at startup).
-//  - fix: negative number doesn't allow exponent entry (ex. 4.1 EEX 02)
 //
 
 import UIKit
@@ -413,13 +412,21 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // operation can only follow f, g, or no prefix
         let keyName = sender.currentTitle!
-        if keyName == "CHS" && userIsEnteringExponent {  // if CHS and not entering exponent, pushOperation("nCHS"), below
-            // change sign in front of exponent
-            let exponent2 = String(displayString.removeLast())
-            let exponent1 = String(displayString.removeLast())
-            var sign = String(displayString.removeLast())
-            sign = sign == " " ? "-" : " "  // toggle sign
-            displayString += sign + exponent1 + exponent2
+        if keyName == "CHS" {
+            if userIsEnteringExponent {  // if CHS and not entering exponent, pushOperation("nCHS"), below
+                // change sign in front of exponent
+                let exponent2 = String(displayString.removeLast())
+                let exponent1 = String(displayString.removeLast())
+                var sign = String(displayString.removeLast())
+                sign = sign == " " ? "-" : " "  // toggle sign
+                displayString += sign + exponent1 + exponent2
+            } else {
+                if displayString.first == "-" {
+                    displayString.removeFirst()
+                } else {
+                    displayString = "-" + displayString
+                }
+            }
             return
         } else if keyName == "STO" {
             prefixKey = .STO
