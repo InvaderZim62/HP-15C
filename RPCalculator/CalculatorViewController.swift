@@ -294,6 +294,12 @@ class CalculatorViewController: UIViewController {
         case .g:
             prefixKey = nil
             switch digit {
+            case "1":
+            // →P pressed (convert to polar coordinates)
+                let tempButton = UIButton()
+                tempButton.setTitle("1", for: .normal)
+                prefixKey = .g
+                operationPressed(tempButton)  // better handled as operation
             case "3":
                 // →DEG pressed
                 let tempButton = UIButton()

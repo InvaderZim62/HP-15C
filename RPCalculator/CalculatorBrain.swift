@@ -193,6 +193,12 @@ class CalculatorBrain {
                         secondResult = baseNumber
                     case "CHS":
                         result = abs(popOperandOffStack(&stack).result)  // absolute value
+                    case "1":  // sent from digitPressed
+                        let xValue = popOperandOffStack(&stack).result
+                        let yValue = popOperandOffStack(&stack).result
+                        // convert to polar coordinates
+                        result = sqrt(xValue * xValue + yValue * yValue)  // radius
+                        secondResult = atan2(yValue, xValue) / angleConversion  // angle
                     case "3":  // sent from digitPressed
                         result = popOperandOffStack(&stack).result / Constants.D2R  // convert to degrees
                     default:
