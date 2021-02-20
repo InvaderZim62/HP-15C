@@ -210,10 +210,11 @@ class CalculatorViewController: UIViewController {
             // superscript -1
             buttonCoverView.blueLabel.attributedText = superscriptLastNCharactersOf(gText, n: 2, font: buttonCoverView.blueLabel.font)
         case "÷", "×", "–", "+":
-            // override font size 17 (set in ButtonCoverView)
-            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(22)
+            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(22)  // increase from 17 (set in ButtonCoverView)
         case "·":
-            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(30)
+            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(30)  // increase from 17
+        case "√x", "EEX":  // gText: x², π
+            buttonCoverView.blueLabel.font = buttonCoverView.blueLabel.font.withSize(15)  // increase from 12
         default:
             break
         }
