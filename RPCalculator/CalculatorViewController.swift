@@ -507,6 +507,8 @@ class CalculatorViewController: UIViewController {
         switch prefixKey {
         case .f:
             switch keyName {
+            case "GSB":
+                brain.clearAll()
             case "x≷y":
                 // CLEAR REG key pressed (clear storage registers, not stack)
                 if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
@@ -525,7 +527,7 @@ class CalculatorViewController: UIViewController {
                 brain.rollStack(directionDown: false)
             case "←":
                 // CLx key pressed
-                brain.clearStack()
+                brain.xRegister = 0.0
             default:
                 break
             }

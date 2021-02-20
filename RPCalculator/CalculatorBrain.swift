@@ -84,7 +84,8 @@ class CalculatorBrain {
         return result
     }
     
-    func clearStack() {
+    func clearAll() {
+        clearStorageRegisters()
         programStack = [Any](repeating: 0.0, count: Constants.stackSize)
         lastXRegister = 0.0
         printStack()
