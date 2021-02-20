@@ -420,14 +420,15 @@ class CalculatorViewController: UIViewController {
                 var sign = String(displayString.removeLast())
                 sign = sign == " " ? "-" : " "  // toggle sign
                 displayString += sign + exponent1 + exponent2
-            } else {
+                return
+            } else if userIsStillTypingDigits {  // if user not typing digits, push operation "nCHS", below
                 if displayString.first == "-" {
                     displayString.removeFirst()
                 } else {
                     displayString = "-" + displayString
                 }
+                return
             }
-            return
         } else if keyName == "STO" {
             prefixKey = .STO
             return
