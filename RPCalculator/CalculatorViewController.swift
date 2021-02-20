@@ -541,16 +541,20 @@ class CalculatorViewController: UIViewController {
                 brain.swapXyRegisters()
             case "←":
                 // ← key pressed (remove digit/number)
-                if displayString.count == 1 {
-                    // no digits left
-                    brain.pushOperand(0.0)
-                } else if userIsStillTypingDigits {
-                    // still typing digits
-                    displayString = String(displayString.dropLast())
-                    okToClearStillTyping = false
+                if userIsEnteringExponent {
+                    return
                 } else {
-                    // clear previously entered number
-                    brain.xRegister = 0.0
+                    if displayString.count == 1 {
+                        // no digits left
+                        brain.pushOperand(0.0)
+                    } else if userIsStillTypingDigits {
+                        // still typing digits
+                        displayString = String(displayString.dropLast())
+                        okToClearStillTyping = false
+                    } else {
+                        // clear previously entered number
+                        brain.xRegister = 0.0
+                    }
                 }
             default:
                 break
