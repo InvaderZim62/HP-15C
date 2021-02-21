@@ -224,10 +224,12 @@ class CalculatorBrain {
                         result = sqrt(x * x + y * y)  // radius
                         secondResult = atan2(y, x) / angleConversion  // angle
                     case "2":  // sent from digitPressed
-                        let hoursMinuteSeconds = popOperandOffStack(&stack).result  // convert to decimal hours
-                        let hours = Int(hoursMinuteSeconds)
-                        let minutes = Int((hoursMinuteSeconds - Double(hours)) * 100)
-                        let seconds = ((hoursMinuteSeconds - Double(hours)) * 100 - Double(minutes)) * 100
+                        // convert to decimal hours
+                        let hoursMinuteSeconds = popOperandOffStack(&stack).result  // ex. hoursMinutesSeconds = 1.1404200
+                        let hours = Int(hoursMinuteSeconds)  // ex. hours = 1
+                        let decimal = Int(round((hoursMinuteSeconds - Double(hours)) * 10000000))  // ex. decimal = 1404200
+                        let minutes = Int(decimal / 100000)  // ex. minutes = 14
+                        let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
                         result = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
                     case "3":  // sent from digitPressed
                         result = popOperandOffStack(&stack).result / Constants.D2R  // convert to degrees

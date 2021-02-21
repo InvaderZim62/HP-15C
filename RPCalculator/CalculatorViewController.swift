@@ -28,7 +28,8 @@
 //
 //  To do...
 //  - save registers and stack to user defaults (restore at startup).
-//  - implement RND button (round mantissa to displayed digits)
+//  - implement RND key (round mantissa to displayed digits)
+//  - implement HYP and HYP-1 keys
 //
 
 import UIKit
