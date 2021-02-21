@@ -31,6 +31,9 @@
 //  To do...
 //  - save registers and stack to user defaults (restore at startup).
 //  - implement RND key (round mantissa to displayed digits)
+//  - consider making prefixKey non-optional with default = .n, instead of nil.  Change all switch prefixKey
+//    default sections to .n, and add a default section to set prefixKey = .n
+//  - consider displaying Error, for undefined key combinations (ex. f-Fix-SIN, or f-HYP-4)
 //
 
 import UIKit
@@ -44,8 +47,8 @@ enum PrefixKey: String {
     case ENG
     case STO
     case RCL
-    case H  // hyperbolc trig function
-    case h  // inverse hyperbolic trig function
+    case HYP = "H"  // hyperbolc trig function
+    case HYP1 = "h"  // inverse hyperbolic trig function
 }
 
 enum TrigMode: String {
@@ -377,6 +380,9 @@ class CalculatorViewController: UIViewController {
             default:
                 break
             }
+        case .HYP, .HYP1:
+            prefixKey = nil
+            break
         default:
             // no prefitKey section
             if digit == "EEX" {
@@ -428,7 +434,7 @@ class CalculatorViewController: UIViewController {
     @IBAction func operationPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == .H || prefixKey == .h || prefixKey == nil else { return }
+        guard prefixKey == .f || prefixKey == .g || prefixKey == .HYP || prefixKey == .HYP1 || prefixKey == nil else { return }
         let keyName = sender.currentTitle!
         if keyName == "CHS" {
             if userIsEnteringExponent {  // if CHS and not entering exponent, pushOperation("nCHS"), below
@@ -612,9 +618,9 @@ class CalculatorViewController: UIViewController {
         case "GTO":
             switch prefixKey {
             case .f:
-                prefixKey = .H
+                prefixKey = .HYP
             case .g:
-                prefixKey = .h
+                prefixKey = .HYP1
             default:
                 break
             }
