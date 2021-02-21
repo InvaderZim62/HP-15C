@@ -313,6 +313,12 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle("1", for: .normal)
                 prefixKey = .g
                 operationPressed(tempButton)  // better handled as operation
+            case "2":
+                // →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
+                let tempButton = UIButton()
+                tempButton.setTitle("2", for: .normal)
+                prefixKey = .g
+                operationPressed(tempButton)  // better handled as operation
             case "3":
                 // →DEG pressed
                 let tempButton = UIButton()

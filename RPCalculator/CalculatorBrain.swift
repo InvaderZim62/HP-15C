@@ -183,7 +183,6 @@ class CalculatorBrain {
                         let hours = Int(decimalHours)
                         let minutes = Int((decimalHours - Double(hours)) * 60)
                         let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
-//                        let hundredThousandSeconds = Int(seconds * 100000)
                         result = Double(hours) + Double(minutes) / 100 + seconds / 10000
                     case "3":  // sent from digitPressed
                         result = popOperandOffStack(&stack).result * Constants.D2R  // convert to radians
@@ -224,6 +223,12 @@ class CalculatorBrain {
                         // convert to polar coordinates
                         result = sqrt(x * x + y * y)  // radius
                         secondResult = atan2(y, x) / angleConversion  // angle
+                    case "2":  // sent from digitPressed
+                        let hoursMinuteSeconds = popOperandOffStack(&stack).result  // convert to decimal hours
+                        let hours = Int(hoursMinuteSeconds)
+                        let minutes = Int((hoursMinuteSeconds - Double(hours)) * 100)
+                        let seconds = ((hoursMinuteSeconds - Double(hours)) * 100 - Double(minutes)) * 100
+                        result = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
                     case "3":  // sent from digitPressed
                         result = popOperandOffStack(&stack).result / Constants.D2R  // convert to degrees
                     default:
