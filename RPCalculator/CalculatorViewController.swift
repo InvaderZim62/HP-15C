@@ -28,6 +28,7 @@
 //
 //  To do...
 //  - save registers and stack to user defaults (restore at startup).
+//  - implement RND button (round mantissa to displayed digits)
 //
 
 import UIKit
