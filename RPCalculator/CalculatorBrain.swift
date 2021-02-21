@@ -47,6 +47,7 @@ class CalculatorBrain {
             mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
         }
         mantissa = mantissa.replacingOccurrences(of: ".", with: "")
+        if mantissa.count < 10 { mantissa += repeatElement("0", count: 10 - mantissa.count) }
         return mantissa
     }
     
@@ -177,6 +178,13 @@ class CalculatorBrain {
                         // convert to rectangular coordinates
                         result = radius * cos(angle * angleConversion)  // x
                         secondResult = radius * sin(angle * angleConversion)  // y
+                    case "2":  // sent from digitPressed
+                        let decimalHours = popOperandOffStack(&stack).result  // convert to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
+                        let hours = Int(decimalHours)
+                        let minutes = Int((decimalHours - Double(hours)) * 60)
+                        let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
+//                        let hundredThousandSeconds = Int(seconds * 100000)
+                        result = Double(hours) + Double(minutes) / 100 + seconds / 10000
                     case "3":  // sent from digitPressed
                         result = popOperandOffStack(&stack).result * Constants.D2R  // convert to radians
                     default:
