@@ -7,11 +7,13 @@
 //  click.wav obtained from: https://fresound.org/people/kwahmah_02/sounds/256116
 //  file is in the public domain (CC0 1.0 Universal)
 //
-//  I changed all button control events from Touch Up Inside to Touch Down, by doing the following...
-//  First, control drag all buttons to their appropriate IBAction in the code (defaults to Touch
-//  Up Inside).  Then Right-click (two-finger-touch) each button in Interface Builder to bring up
-//  the connections menu.  Control-drag from the little circle to the right of Touch Down (under
-//  Send Events) to the appropriate IBAction.  Cancel (click on x) the event for Touch Up Inside.
+//  I used Action "Touch Down" for all buttons, by doing the following...
+//  - create an IBAction by control-draging the first button into the code, selecting
+//    Touch Down (below the Type drop-down field), rather then the default Touch Up Inside
+//  - right-click (two-finger-touch) the remaining buttons in Interface Builder to bring
+//    up the connections menu
+//  - control-drag from the little circle to the right of Touch Down (under Send Events)
+//    to the existing IBAction
 //
 //  I made the "hp" and "15C" labels scale with the HP Logo Container View in Interface Builder
 //  by using the following settings...
@@ -29,7 +31,6 @@
 //  To do...
 //  - save registers and stack to user defaults (restore at startup).
 //  - implement RND key (round mantissa to displayed digits)
-//  - implement HYP and HYP-1 keys
 //
 
 import UIKit
@@ -43,6 +44,8 @@ enum PrefixKey: String {
     case ENG
     case STO
     case RCL
+    case H  // hyperbolc trig function
+    case h  // inverse hyperbolic trig function
 }
 
 enum TrigMode: String {
@@ -425,7 +428,7 @@ class CalculatorViewController: UIViewController {
     @IBAction func operationPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // operation can only follow f, g, or no prefix
+        guard prefixKey == .f || prefixKey == .g || prefixKey == .H || prefixKey == .h || prefixKey == nil else { return }
         let keyName = sender.currentTitle!
         if keyName == "CHS" {
             if userIsEnteringExponent {  // if CHS and not entering exponent, pushOperation("nCHS"), below
@@ -596,18 +599,28 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
     }
     
-    @IBAction func fPressed(_ sender: UIButton) {
+    @IBAction func prefixPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // f can only follow f, g, or no prefix
-        prefixKey = .f
-    }
-    
-    @IBAction func gPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // g can only follow f, g, or no prefix
-        prefixKey = .g
+        let keyName = sender.currentTitle!
+        
+        switch keyName {
+        case "f":
+            prefixKey = .f
+        case "g":
+            prefixKey = .g
+        case "GTO":
+            switch prefixKey {
+            case .f:
+                prefixKey = .H
+            case .g:
+                prefixKey = .h
+            default:
+                break
+            }
+        default:
+            break
+        }
     }
 
     @IBAction func onPressed(_ sender: UIButton) {

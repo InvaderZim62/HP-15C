@@ -134,7 +134,8 @@ class CalculatorBrain {
                 let prefixKey = alternatePlusOperation.first
                 let operation = alternatePlusOperation.dropFirst()
                 
-                if prefixKey == "n" {  // none (primary button functions)
+                switch prefixKey {
+                case "n":  // none (primary button functions)
                     switch operation {
                     case "÷":
                         let divisor = popOperandOffStack(&stack).result
@@ -167,7 +168,7 @@ class CalculatorBrain {
                     default:
                         break
                     }
-                } else if prefixKey == "f" {  // functions above button (orange)
+                case "f":  // functions above button (orange)
                     switch operation {
                     case "STO":
                         let number = popOperandOffStack(&stack).result
@@ -189,7 +190,7 @@ class CalculatorBrain {
                     default:
                         break
                     }
-                } else if prefixKey == "g" {  // functions below button (blue)
+                case "g":  // functions below button (blue)
                     switch operation {
                     case "STO":
                         result = Double(Int(popOperandOffStack(&stack).result))  // int
@@ -236,10 +237,33 @@ class CalculatorBrain {
                     default:
                         break
                     }
+                case "H":  // hyperbolic trig function
+                    switch operation {
+                    case "SIN":
+                        result = sinh(popOperandOffStack(&stack).result * angleConversion)
+                    case "COS":
+                        result = cosh(popOperandOffStack(&stack).result * angleConversion)
+                    case "TAN":
+                        result = tanh(popOperandOffStack(&stack).result * angleConversion)
+                    default:
+                        break
+                    }
+                case "h":  // inverse hyperbolic trig function
+                    switch operation {
+                    case "SIN":
+                        result = asinh(popOperandOffStack(&stack).result) / angleConversion
+                    case "COS":
+                        result = acosh(popOperandOffStack(&stack).result) / angleConversion
+                    case "TAN":
+                        result = atanh(popOperandOffStack(&stack).result) / angleConversion
+                    default:
+                        break
+                    }
+                default:
+                    break
                 }
             }
         }
-        
         return (result, secondResult)
     }
     

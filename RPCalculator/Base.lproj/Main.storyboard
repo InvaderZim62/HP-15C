@@ -80,6 +80,9 @@
                                                         <state key="normal" title="GTO">
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
+                                                        <connections>
+                                                            <action selector="prefixPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="4rX-XQ-SdH"/>
+                                                        </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6a5-D3-Dg0">
                                                         <rect key="frame" x="0.0" y="129.33333333333334" width="46" height="39.666666666666657"/>
@@ -99,7 +102,7 @@
                                                             <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="fPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="1jJ-4p-RZM"/>
+                                                            <action selector="prefixPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="1jJ-4p-RZM"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -145,7 +148,7 @@
                                                             <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="gPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="sAN-cC-buO"/>
+                                                            <action selector="prefixPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="PUo-tJ-ojM"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
