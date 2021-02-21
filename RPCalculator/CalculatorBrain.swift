@@ -40,6 +40,16 @@ class CalculatorBrain {
         set { programStack[programStack.count - 1] = newValue! }  // ok to assume programStack is not empty
     }
     
+    // matissa (in this case) is all the significant digits of the displayed number, without the decimal point or exponent
+    var displayMantissa: String {
+        var mantissa = String(xRegister!)
+        if let ne = mantissa.firstIndex(of: "e") {
+            mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
+        }
+        mantissa = mantissa.replacingOccurrences(of: ".", with: "")
+        return mantissa
+    }
+    
     // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
     private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {
         didSet {

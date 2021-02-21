@@ -337,7 +337,7 @@ class CalculatorViewController: UIViewController {
             prefixKey = nil
             if let decimalPlaces = Int(digit) {
                 // number after FIX pressed
-                displayView.format = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantisa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+                displayView.format = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             }
         case .STO:
@@ -504,7 +504,7 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         guard prefixKey == .f || prefixKey == .g || prefixKey == nil else { return }  // register keys can only follow f, g, or no prefix
         let keyName = sender.currentTitle!
-        var okToClearStillTyping = true
+        var okToClearStillTypingFlag = true
 
         switch prefixKey {
         case .f:
@@ -518,6 +518,11 @@ class CalculatorViewController: UIViewController {
             case "←":
                 // CLEAR PREFIX key pressed
                 prefixKey = nil
+                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                // CLEAR PREFIX key also displays mantissa, until button released
+                displayString = brain.displayMantissa
+                sender.addTarget(self, action: #selector(clearPrefixButtonReleased(_:)), for: .touchUpInside)
+                return
             default:
                 break
             }
@@ -554,7 +559,7 @@ class CalculatorViewController: UIViewController {
                     } else if userIsStillTypingDigits {
                         // still typing digits
                         displayString = String(displayString.dropLast())
-                        okToClearStillTyping = false
+                        okToClearStillTypingFlag = false
                     } else {
                         // clear previously entered number
                         brain.xRegister = 0.0
@@ -564,12 +569,17 @@ class CalculatorViewController: UIViewController {
                 break
             }
         }
-        if okToClearStillTyping {
+        if okToClearStillTypingFlag {
             userIsStillTypingDigits = false
             runAndUpdateInterface()
         }
         userIsEnteringExponent = false
         prefixKey = nil
+    }
+
+    @objc private func clearPrefixButtonReleased(_ button: UIButton) {
+        button.removeTarget(nil, action: nil, for: .touchUpInside)
+        runAndUpdateInterface()
     }
     
     @IBAction func fPressed(_ sender: UIButton) {
@@ -601,12 +611,16 @@ class CalculatorViewController: UIViewController {
     
     // MARK: - Simulated button
     
+    // All button actions trigger on Touch Down (set up in Interface Builder).  SimulatePressingButton
+    // plays a click sound and darkens the button text, then creates a temporary target for Touch Up
+    // Inside, which gets called when the button is released (calling simulateReleasingButton).
     private func simulatePressingButton(_ button: UIButton) {
         playClickSound()
-        buttonCoverViews[button]?.whiteLabel.textColor = .darkGray  // pws: consider creating a function in ButtonCoverView (this line only)
+        buttonCoverViews[button]?.whiteLabel.textColor = .darkGray
         button.addTarget(self, action: #selector(simulateReleasingButton(_:)), for: .touchUpInside)
     }
-
+    
+    // When the button is released, reset button text to normal color, and remove this target for Touch Up Inside.
     @objc private func simulateReleasingButton(_ button: UIButton) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {  // delay before restoring color, otherwise it is unnoticeable
             self.buttonCoverViews[button]?.whiteLabel.textColor = CoverConst.whiteColor
