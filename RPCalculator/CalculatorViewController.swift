@@ -27,6 +27,7 @@
 //  Useful functions...
 //     let lastDigit = displayString.removeLast()     // remove last digit and return it
 //     displayString.removeLast(n)                    // removes last n digits without returning them
+//     displayString = String(format: displayView.format.string, 0.0)  // write number to display in current format
 //
 //  To do...
 //  - save registers and stack to user defaults (restore at startup).
@@ -255,7 +256,6 @@ class CalculatorViewController: UIViewController {
         } else {
             displayString = potentialDisplayString + (potentialDisplayString.contains(".") ? "" : ".")  // make sure at least one decimal point
         }
-//        print("numerical result: \(numericalResult), displayString: \(displayString)")
     }
     
     private func restoreFromError() -> Bool {
@@ -557,7 +557,12 @@ class CalculatorViewController: UIViewController {
                 brain.rollStack(directionDown: false)
             case "←":
                 // CLx key pressed
-                brain.xRegister = 0.0
+                displayString = String(format: displayView.format.string, 0.0)  // display 0.0
+                if !userIsStillTypingDigits { brain.popXRegister() }  // pop last number off stack, unless still typing digits
+                userIsStillTypingDigits = false
+                userIsEnteringExponent = false
+                prefixKey = nil
+                return  // return, or prior number will be displayed
             default:
                 break
             }
@@ -576,17 +581,14 @@ class CalculatorViewController: UIViewController {
                 if userIsEnteringExponent {
                     return
                 } else {
-                    if displayString.count == 1 {
-                        // no digits left
-                        brain.pushOperand(0.0)
-                    } else if userIsStillTypingDigits {
-                        // still typing digits
+                    if !userIsStillTypingDigits {
+                        // clear previously entered number (display 0.0)
+                        brain.xRegister = 0.0
+                    } else if displayString.count > 1 {
+                        // remove one digit
                         displayString = String(displayString.dropLast())
                         okToClearStillTypingFlag = false
-                    } else {
-                        // clear previously entered number
-                        brain.xRegister = 0.0
-                    }
+                    }  // else last digit removed (display prior number)
                 }
             default:
                 break

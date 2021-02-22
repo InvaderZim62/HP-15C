@@ -76,6 +76,11 @@ class CalculatorBrain {
         programStack.append(operation)
     }
     
+    func popXRegister() {
+        programStack.removeLast()
+        printStack()
+    }
+    
     func runProgram() -> Double {
         if let registerX = programStack.last as? Double { lastXRegister = registerX }  // save register X (display) before computing new results
         var saveStack = programStack  // save in case of nan or inf
@@ -122,7 +127,7 @@ class CalculatorBrain {
         }
     }
     
-    func popOperandOffStack(_ stack: inout [Any]) -> (result: Double, secondResult: Double?) {
+    private func popOperandOffStack(_ stack: inout [Any]) -> (result: Double, secondResult: Double?) {
         var result = 0.0
         var secondResult: Double? = nil
 
