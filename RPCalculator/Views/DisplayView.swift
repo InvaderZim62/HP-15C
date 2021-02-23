@@ -71,17 +71,19 @@ class DisplayView: UIView {
         digitViews.forEach { $0.clear() }
     }
     
-    // set the digit character for each of the digitViews, drawn from modifiedDisplayString
-    // set the trailingDecimal or trailingComma boolean to true for the digitView preceding the decimal point or comma
+    // set digit character for each digitView, drawn from modifiedDisplayString
+    // set trailingDecimal or trailingComma boolean to true for digitView preceding decimal point or comma
     private func updateDisplay() {
         clearDisplay()  // start with all blank digits
+        // handle errors and sign of displayed number
         var modifiedDisplayString = displayString
-        if displayString == "nan." || displayString == "inf." || displayString == "-inf."  {
+        if displayString == "nan." || displayString == "inf." || displayString == "-inf."  {  // also handled in Brain.runProgram
             print(displayString.dropLast())
             modifiedDisplayString = " Error 0"  // pws: +/-inf should show +/-9.9999999-99 blinking, rather than Error
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }
+        // set data for each digitView
         var displayIndex = 0
         var stringIndex = 0
         while displayIndex < numberOfDigits + 1 {  // look one more, in case decimal past last digit

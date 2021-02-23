@@ -256,6 +256,14 @@ class CalculatorViewController: UIViewController {
         }
     }
     
+    private func invalidKeySequenceEntered() {
+        displayString = "Error"
+        brain.errorPresent = true
+        prefixKey = nil
+        userIsEnteringDigits = false
+        userIsEnteringExponent = false
+    }
+    
     private func restoreFromError() -> Bool {
         if brain.errorPresent {
             brain.errorPresent = false
@@ -268,7 +276,7 @@ class CalculatorViewController: UIViewController {
     
     // MARK: - Button actions
 
-    // digit keys: 0-9, period, EEX
+    // digit keys: 0-9, ·, EEX
     @IBAction func digitPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -394,6 +402,8 @@ class CalculatorViewController: UIViewController {
                 // number after FIX pressed
                 displayView.format = .fixed(decimalPlaces)
                 runAndUpdateInterface()
+            } else {
+                invalidKeySequenceEntered()
             }
         case .SCI:
             prefixKey = nil
@@ -401,16 +411,18 @@ class CalculatorViewController: UIViewController {
                 // number after FIX pressed
                 displayView.format = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
+            } else {
+                invalidKeySequenceEntered()
             }
         case .STO:
             prefixKey = nil
             switch digit {
-            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not include registers ".0" through ".9"
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not implement registers ".0" through ".9"
                 // store displayed number in register
                 if userIsEnteringDigits { enterPressed(UIButton()) }
                 brain.storeResultsInRegister(digit)
             default:
-                break
+                invalidKeySequenceEntered()
             }
         case .RCL:
             prefixKey = nil
@@ -420,48 +432,55 @@ class CalculatorViewController: UIViewController {
                 displayString = String(brain.recallNumberFromStorageRegister(digit))
                 enterPressed(UIButton())
             default:
-                break
+                invalidKeySequenceEntered()
             }
         default:
-            prefixKey = nil
+            invalidKeySequenceEntered()
         }
     }
     
     // perform operation pressed (button title), and display results
-    // operation keys: /, x, -, +, sqrt, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL
+    // operation keys: /, x, -, +, √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL
     @IBAction func operationPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        guard prefixKey == .f || prefixKey == .g || prefixKey == .HYP || prefixKey == .HYP1 || prefixKey == nil else { return }
         let keyName = sender.currentTitle!
         
-        switch keyName {
-        case "CHS":
-            if userIsEnteringExponent {
-                // change sign of exponent, during entry
-                let exponent2 = String(displayString.removeLast())
-                let exponent1 = String(displayString.removeLast())
-                var sign = String(displayString.removeLast())
-                sign = sign == " " ? "-" : " "  // toggle sign
-                displayString += sign + exponent1 + exponent2
+        switch prefixKey {
+        case .none:
+            switch keyName {
+            case "CHS":
+                if userIsEnteringExponent {
+                    // change sign of exponent, during entry
+                    let exponent2 = String(displayString.removeLast())
+                    let exponent1 = String(displayString.removeLast())
+                    var sign = String(displayString.removeLast())
+                    sign = sign == " " ? "-" : " "  // toggle sign
+                    displayString += sign + exponent1 + exponent2
+                    return
+                } else if userIsEnteringDigits {
+                    // change sign of mantissa, during entry
+                    if displayString.first == "-" {
+                        displayString.removeFirst()
+                    } else {
+                        displayString = "-" + displayString
+                    }
+                    return
+                }  // else CHS pressed with existing number on display (push "nCHS" onto stack, below)
+            case "STO":
+                prefixKey = .STO
                 return
-            } else if userIsEnteringDigits {
-                // change sign of mantissa, during entry
-                if displayString.first == "-" {
-                    displayString.removeFirst()
-                } else {
-                    displayString = "-" + displayString
-                }
+            case "RCL":
+                prefixKey = .RCL
                 return
-            }  // else CHS pressed with existing number on display (push "nCHS" onto stack, below)
-        case "STO":
-            prefixKey = .STO
-            return
-        case "RCL":
-            prefixKey = .RCL
-            return
-        default:
+            default:
+                break
+            }
+        case .f, .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)
             break
+        default:  // .FIX, .SCI, .ENG, .STO, .RCL (not allowed to precede operation key)
+            invalidKeySequenceEntered()
+            return
         }
         // push operation onto stack (with prefixKey)
         let savePrefixKey = (prefixKey?.rawValue ?? "n")
@@ -489,9 +508,7 @@ class CalculatorViewController: UIViewController {
                 if sign == " " { sign = "+" }
                 displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
             }
-            if let number = Double(displayString) {
-                brain.pushOperand(number)
-            }
+            brain.pushOperand(Double(displayString)!)
         case .f:
             // RND# pressed
             prefixKey = nil
@@ -527,7 +544,7 @@ class CalculatorViewController: UIViewController {
     }
     
     // manipulate stack or display
-    // stack manipulation keys: GSB, R-down-arrow, x<>y, left-arrow
+    // stack manipulation keys: GSB, R↓, x≷y, ←
     @IBAction func stackManipulationPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -561,7 +578,8 @@ class CalculatorViewController: UIViewController {
                 }
             default:
                 break
-            }        case .f:
+            }
+        case .f:
             switch keyName {
             case "GSB":
                 brain.clearAll()
@@ -598,6 +616,7 @@ class CalculatorViewController: UIViewController {
                 break
             }
         default:
+            invalidKeySequenceEntered()
             return
         }
         if okToClearStillTypingFlag {
@@ -619,22 +638,36 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         let keyName = sender.currentTitle!
         
-        switch keyName {
-        case "f":
-            prefixKey = .f
-        case "g":
-            prefixKey = .g
-        case "GTO":
-            switch prefixKey {
-            case .f:
+        switch prefixKey {
+        case .none:
+            switch keyName {
+            case "f":
+                prefixKey = .f
+            case "g":
+                prefixKey = .g
+            default:  // GTO (TBD)
+                break
+            }
+        case .f:
+            switch keyName {
+            case "g":
+                prefixKey = .g
+            case "GTO":
                 prefixKey = .HYP
-            case .g:
+            default:
+                break
+            }
+        case .g:
+            switch keyName {
+            case "f":
+                prefixKey = .f
+            case "GTO":
                 prefixKey = .HYP1
             default:
                 break
             }
         default:
-            break
+            invalidKeySequenceEntered()
         }
     }
 
