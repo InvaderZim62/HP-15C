@@ -30,14 +30,15 @@
 //     displayString = String(format: displayView.format.string, 0.0)  // write number to display in current format
 //
 //  To do...
-//  - save registers and stack to user defaults (restore at startup).
+//  - save registers and stack to user defaults (restore at startup)
+//  - implement ENG notation
 //  - implement RND key (round mantissa to displayed digits)
 //
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
 
-enum PrefixKey: String {
+enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
     case FIX
@@ -73,10 +74,10 @@ class CalculatorViewController: UIViewController {
         return displayString.contains(".")
     }
     
-    var prefixKey: PrefixKey? { didSet {
+    var prefix: Prefix? { didSet {
         fLabel.alpha = 0
         gLabel.alpha = 0
-        switch prefixKey {
+        switch prefix {
         case .f:
             fLabel.alpha = 1  // show "f" on display
         case .g:
@@ -258,7 +259,7 @@ class CalculatorViewController: UIViewController {
     private func invalidKeySequenceEntered() {
         displayString = "Error"
         brain.errorPresent = true
-        prefixKey = nil
+        prefix = nil
         userIsEnteringDigits = false
         userIsEnteringExponent = false
     }
@@ -276,13 +277,13 @@ class CalculatorViewController: UIViewController {
     // MARK: - Button actions
 
     // digit keys: 0-9, ·, EEX
-    @IBAction func digitPressed(_ sender: UIButton) {
+    @IBAction func digitKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         var digit = sender.currentTitle!
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
-        switch prefixKey {
+        switch prefix {
         case .none:
             // digit pressed (without prefix)
             // handle EEX first
@@ -329,58 +330,58 @@ class CalculatorViewController: UIViewController {
                 userIsEnteringDigits = true
             }
         case .f:
-            prefixKey = nil
+            prefix = nil
             switch digit {
             case "1":
                 // →R pressed (convert to rectangular coordinates)
                 let tempButton = UIButton()
                 tempButton.setTitle("1", for: .normal)
-                prefixKey = .f
-                operationPressed(tempButton)  // better handled as operation
+                prefix = .f
+                operationKeyPressed(tempButton)  // better handled as operation
             case "2":
                 // →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
                 let tempButton = UIButton()
                 tempButton.setTitle("2", for: .normal)
-                prefixKey = .f
-                operationPressed(tempButton)  // better handled as operation
+                prefix = .f
+                operationKeyPressed(tempButton)  // better handled as operation
             case "3":
                 // →RAD pressed
                 let tempButton = UIButton()
                 tempButton.setTitle("3", for: .normal)
-                prefixKey = .f
-                operationPressed(tempButton)  // better handled as operation
+                prefix = .f
+                operationKeyPressed(tempButton)  // better handled as operation
             case "7":
                 // FIX pressed
-                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
-                prefixKey = .FIX  // wait for next digit
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                prefix = .FIX  // wait for next digit
             case "8":
                 // SCI pressed
-                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
-                prefixKey = .SCI  // wait for next digit
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                prefix = .SCI  // wait for next digit
             default:
                 break
             }
         case .g:
-            prefixKey = nil
+            prefix = nil
             switch digit {
             case "1":
                 // →P pressed (convert to polar coordinates)
                 let tempButton = UIButton()
                 tempButton.setTitle("1", for: .normal)
-                prefixKey = .g
-                operationPressed(tempButton)  // better handled as operation
+                prefix = .g
+                operationKeyPressed(tempButton)  // better handled as operation
             case "2":
                 // →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
                 let tempButton = UIButton()
                 tempButton.setTitle("2", for: .normal)
-                prefixKey = .g
-                operationPressed(tempButton)  // better handled as operation
+                prefix = .g
+                operationKeyPressed(tempButton)  // better handled as operation
             case "3":
                 // →DEG pressed
                 let tempButton = UIButton()
                 tempButton.setTitle("3", for: .normal)
-                prefixKey = .g
-                operationPressed(tempButton)  // better handled as operation
+                prefix = .g
+                operationKeyPressed(tempButton)  // better handled as operation
             case "7":
                 trigMode = .DEG
             case "8":
@@ -389,14 +390,14 @@ class CalculatorViewController: UIViewController {
                 trigMode = .GRAD
             case "EEX":
                 // pi pressed
-                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 displayString = "3.141592654"
-                enterPressed(UIButton())
+                enterKeyPressed(UIButton())
             default:
                 break
             }
         case .FIX:
-            prefixKey = nil
+            prefix = nil
             if let decimalPlaces = Int(digit) {
                 // number after FIX pressed
                 displayView.format = .fixed(decimalPlaces)
@@ -405,7 +406,7 @@ class CalculatorViewController: UIViewController {
                 invalidKeySequenceEntered()
             }
         case .SCI:
-            prefixKey = nil
+            prefix = nil
             if let decimalPlaces = Int(digit) {
                 // number after FIX pressed
                 displayView.format = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
@@ -413,39 +414,40 @@ class CalculatorViewController: UIViewController {
             } else {
                 invalidKeySequenceEntered()
             }
+//        case ENG:  // TBD
         case .STO:
-            prefixKey = nil
+            prefix = nil
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not implement registers ".0" through ".9"
                 // store displayed number in register
-                if userIsEnteringDigits { enterPressed(UIButton()) }
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }
                 brain.storeResultsInRegister(digit)
             default:
                 invalidKeySequenceEntered()
             }
         case .RCL:
-            prefixKey = nil
+            prefix = nil
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // recall register, show in display
                 displayString = String(brain.recallNumberFromStorageRegister(digit))
-                enterPressed(UIButton())
+                enterKeyPressed(UIButton())
             default:
                 invalidKeySequenceEntered()
             }
-        default:
+        default:  // .HYP, .HYP1 (not allowed to precede stack manipulation key)
             invalidKeySequenceEntered()
         }
     }
     
     // perform operation pressed (button title), and display results
     // operation keys: /, x, -, +, √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL
-    @IBAction func operationPressed(_ sender: UIButton) {
+    @IBAction func operationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = sender.currentTitle!
         
-        switch prefixKey {
+        switch prefix {
         case .none:
             switch keyName {
             case "CHS":
@@ -467,10 +469,10 @@ class CalculatorViewController: UIViewController {
                     return
                 }  // else CHS pressed with existing number on display (push "nCHS" onto stack, below)
             case "STO":
-                prefixKey = .STO
+                prefix = .STO
                 return
             case "RCL":
-                prefixKey = .RCL
+                prefix = .RCL
                 return
             default:
                 break
@@ -481,22 +483,22 @@ class CalculatorViewController: UIViewController {
             invalidKeySequenceEntered()
             return
         }
-        // push operation onto stack (with prefixKey)
-        let savePrefixKey = (prefixKey?.rawValue ?? "n")
-        prefixKey = nil  // must come after previous line and before enterPressed
-        if userIsEnteringDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
-        brain.pushOperation(savePrefixKey + keyName)
+        // push operation onto stack (with prefix)
+        let savePrefix = (prefix?.rawValue ?? "n")
+        prefix = nil  // must come after previous line and before enterPressed
+        if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
+        brain.pushOperation(savePrefix + keyName)
         runAndUpdateInterface()
     }
 
     // push digits from display onto stack when enter key is pressed
-    @IBAction func enterPressed(_ sender: UIButton) {
+    @IBAction func enterKeyPressed(_ sender: UIButton) {
         if sender.titleLabel?.text != nil {
             // only simulate button if user pressed ENTER - not if code called enterPressed(UIButton())
             simulatePressingButton(sender)
             if restoreFromError() { return }
         }
-        switch prefixKey {
+        switch prefix {
         case .none:
             // Enter pressed
             if userIsEnteringExponent {
@@ -510,20 +512,20 @@ class CalculatorViewController: UIViewController {
             brain.pushOperand(Double(displayString)!)
         case .f:
             // RND# pressed
-            prefixKey = nil
+            prefix = nil
             srand48(seed)  // re-seed each time, so a manually stored seed will generate the same sequence each time
             let number = drand48()
             seed = Int(number * Double(Int32.max))  // regenerate my own seed to use next time (Note: Int.max gives same numbers for different seeds)
             brain.pushOperand(number)
             lastRandomNumberGenerated = number
         case .g:
-            prefixKey = nil
+            prefix = nil
             // LSTx pressed
             displayString = String(brain.lastXRegister)
         case .STO:
-            prefixKey = nil
+            prefix = nil
             // STO RAN# pressed (store new seed)
-            if userIsEnteringDigits { enterPressed(UIButton()) }
+            if userIsEnteringDigits { enterKeyPressed(UIButton()) }
             if var number = brain.xRegister {
                 number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
                 seed = Int(number * Double(Int32.max))
@@ -531,7 +533,7 @@ class CalculatorViewController: UIViewController {
                 return
             }
         case .RCL:
-            prefixKey = nil
+            prefix = nil
             // RCL RAN# pressed (recall last random number)
             brain.pushOperand(lastRandomNumberGenerated)
         default:
@@ -544,22 +546,22 @@ class CalculatorViewController: UIViewController {
     
     // manipulate stack or display
     // stack manipulation keys: GSB, R↓, x≷y, ←
-    @IBAction func stackManipulationPressed(_ sender: UIButton) {
+    @IBAction func stackManipulationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = sender.currentTitle!
         var okToClearStillTypingFlag = true
 
-        switch prefixKey {
+        switch prefix {
         case .none:
             switch keyName {
             case "R↓":
                 // R↓ key pressed (roll stack down)
-                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 brain.rollStack(directionDown: true)
             case "x≷y":
                 // x≷y key pressed (swap x-y registers)
-                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 brain.swapXyRegisters()
             case "←":
                 // ← key pressed (remove digit/number)
@@ -584,12 +586,12 @@ class CalculatorViewController: UIViewController {
                 brain.clearAll()
             case "x≷y":
                 // CLEAR REG key pressed (clear storage registers, not stack)
-                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 brain.clearStorageRegisters()
             case "←":
                 // CLEAR PREFIX key pressed
-                prefixKey = nil
-                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                prefix = nil
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 // CLEAR PREFIX key also displays mantissa, until button released
                 displayString = brain.displayMantissa
                 sender.addTarget(self, action: #selector(clearPrefixButtonReleased(_:)), for: .touchUpInside)
@@ -601,7 +603,7 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "R↓":
                 // R↑ key pressed (roll stack up)
-                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 brain.rollStack(directionDown: false)
             case "←":
                 // CLx key pressed
@@ -609,12 +611,12 @@ class CalculatorViewController: UIViewController {
                 if !userIsEnteringDigits { brain.popXRegister() }  // pop last number off stack, unless still typing digits
                 userIsEnteringDigits = false
                 userIsEnteringExponent = false
-                prefixKey = nil
+                prefix = nil
                 return  // return, or prior number will be displayed
             default:
                 break
             }
-        default:
+        default:  // .FIX, .SCI, .ENG, .STO, .RCL, .HYP, .HYP1 (not allowed to precede stack manipulation key)
             invalidKeySequenceEntered()
             return
         }
@@ -623,7 +625,7 @@ class CalculatorViewController: UIViewController {
             runAndUpdateInterface()
         }
         userIsEnteringExponent = false
-        prefixKey = nil
+        prefix = nil
     }
 
     @objc private func clearPrefixButtonReleased(_ button: UIButton) {
@@ -631,53 +633,53 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
     }
     
-    // prefix keys: f, g, GTO (assigned to prefixPressed)
-    @IBAction func prefixPressed(_ sender: UIButton) {
+    // prefix keys: f, g, GTO
+    @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = sender.currentTitle!
         
-        switch prefixKey {
+        switch prefix {
         case .none:
             switch keyName {
             case "f":
-                prefixKey = .f
+                prefix = .f
             case "g":
-                prefixKey = .g
-            default:  // GTO (TBD)
+                prefix = .g
+            default:  // GTO (not implmented)
                 break
             }
         case .f:
             switch keyName {
             case "g":
-                prefixKey = .g
+                prefix = .g
             case "GTO":
-                prefixKey = .HYP
+                prefix = .HYP
             default:
                 break
             }
         case .g:
             switch keyName {
             case "f":
-                prefixKey = .f
+                prefix = .f
             case "GTO":
-                prefixKey = .HYP1
+                prefix = .HYP1
             default:
                 break
             }
         case .STO, .RCL:
             switch keyName {
             case "f":
-                break  // leave prefixKey = .STO/.RCL, to allow Enter to store/recall random seed
+                break  // leave prefix = .STO/.RCL, to allow Enter to store/recall random seed
             default:
                 invalidKeySequenceEntered()
             }
-        default:
+        default:  // .FIX, .SCI, .ENG, .HYP, .HYP1 (not allowed to precede prefix key)
             invalidKeySequenceEntered()
         }
     }
 
-    @IBAction func onPressed(_ sender: UIButton) {
+    @IBAction func onKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error
         calculatorIsOn = !calculatorIsOn
