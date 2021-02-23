@@ -61,7 +61,7 @@ class DisplayView: UIView {
             let digitView = DigitView(frame: CGRect(x: digitViewWidth * CGFloat(index) + leftInset,
                                                     y: topInset, width: digitViewWidth, height: bounds.height - topInset - bottomInset))
             digitView.backgroundColor = .clear
-//            if index == 1 { digitView.backgroundColor = .gray }  // show size of digitView
+//            if index == 1 { digitView.backgroundColor = .gray }  // show size of digitView during development
             addSubview(digitView)
             digitViews.append(digitView)
         }
@@ -77,7 +77,8 @@ class DisplayView: UIView {
         clearDisplay()  // start with all blank digits
         var modifiedDisplayString = displayString
         if displayString == "nan." || displayString == "inf." || displayString == "-inf."  {
-            modifiedDisplayString = " Error 0"
+            print(displayString.dropLast())
+            modifiedDisplayString = " Error 0"  // pws: +/-inf should show +/-9.9999999-99 blinking, rather than Error
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }

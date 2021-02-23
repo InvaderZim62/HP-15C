@@ -64,7 +64,7 @@ class CalculatorViewController: UIViewController {
     var displayLabels = [UILabel]()
     var displayLabelAlphas = [CGFloat]()
     var calculatorIsOn = true
-    var userIsStillTypingDigits = false
+    var userIsEnteringDigits = false
     var userIsEnteringExponent = false
     var buttonCoverViews = [UIButton: ButtonCoverView]()
     var seed = 0  // HP-15C initial seed is zero
@@ -268,7 +268,7 @@ class CalculatorViewController: UIViewController {
     
     // MARK: - Button actions
 
-    // digits: numbers 0-9, period, EEX key
+    // digit keys: 0-9, period, EEX
     @IBAction func digitPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -277,9 +277,10 @@ class CalculatorViewController: UIViewController {
         
         switch prefixKey {
         case .none:
-            // digit pressed
-            if digit == "EEX" {  // Note: EEX is connected to digitPressed for pi (g-EEX), below
-                if userIsStillTypingDigits {
+            // digit pressed (without prefix)
+            // handle EEX first
+            if digit == "EEX" {  // Note: EEX is considered digitPressed for pi (g-EEX), below
+                if userIsEnteringDigits {
                     userIsEnteringExponent = true
                 } else {
                     return
@@ -287,7 +288,7 @@ class CalculatorViewController: UIViewController {
             }
             
             // add digit to display
-            if userIsStillTypingDigits {
+            if userIsEnteringDigits {
                 if displayString == "0" {
                     if digit == "." {
                         displayString += digit  // append decimal to leading zero
@@ -318,7 +319,7 @@ class CalculatorViewController: UIViewController {
                 } else {
                     displayString = digit
                 }
-                userIsStillTypingDigits = true
+                userIsEnteringDigits = true
             }
         case .f:
             prefixKey = nil
@@ -343,11 +344,11 @@ class CalculatorViewController: UIViewController {
                 operationPressed(tempButton)  // better handled as operation
             case "7":
                 // FIX pressed
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 prefixKey = .FIX  // wait for next digit
             case "8":
                 // SCI pressed
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 prefixKey = .SCI  // wait for next digit
             default:
                 break
@@ -381,7 +382,7 @@ class CalculatorViewController: UIViewController {
                 trigMode = .GRAD
             case "EEX":
                 // pi pressed
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 displayString = "3.141592654"
                 enterPressed(UIButton())
             default:
@@ -406,7 +407,7 @@ class CalculatorViewController: UIViewController {
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not include registers ".0" through ".9"
                 // store displayed number in register
-                if userIsStillTypingDigits { enterPressed(UIButton()) }
+                if userIsEnteringDigits { enterPressed(UIButton()) }
                 brain.storeResultsInRegister(digit)
             default:
                 break
@@ -427,6 +428,7 @@ class CalculatorViewController: UIViewController {
     }
     
     // perform operation pressed (button title), and display results
+    // operation keys: /, x, -, +, sqrt, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL
     @IBAction func operationPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -443,7 +445,7 @@ class CalculatorViewController: UIViewController {
                 sign = sign == " " ? "-" : " "  // toggle sign
                 displayString += sign + exponent1 + exponent2
                 return
-            } else if userIsStillTypingDigits {
+            } else if userIsEnteringDigits {
                 // change sign of mantissa, during entry
                 if displayString.first == "-" {
                     displayString.removeFirst()
@@ -464,7 +466,7 @@ class CalculatorViewController: UIViewController {
         // push operation onto stack (with prefixKey)
         let savePrefixKey = (prefixKey?.rawValue ?? "n")
         prefixKey = nil  // must come after previous line and before enterPressed
-        if userIsStillTypingDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
+        if userIsEnteringDigits { enterPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
         brain.pushOperation(savePrefixKey + keyName)
         runAndUpdateInterface()
     }
@@ -505,7 +507,7 @@ class CalculatorViewController: UIViewController {
         case .STO:
             prefixKey = nil
             // STO RAN# pressed (store new seed)
-            if userIsStillTypingDigits { enterPressed(UIButton()) }
+            if userIsEnteringDigits { enterPressed(UIButton()) }
             if var number = brain.xRegister {
                 number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
                 seed = Int(number * Double(Int32.max))
@@ -520,11 +522,12 @@ class CalculatorViewController: UIViewController {
             return
         }
         runAndUpdateInterface()
-        userIsStillTypingDigits = false
+        userIsEnteringDigits = false
         userIsEnteringExponent = false
     }
     
     // manipulate stack or display
+    // stack manipulation keys: GSB, R-down-arrow, x<>y, left-arrow
     @IBAction func stackManipulationPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -536,18 +539,18 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "R↓":
                 // R↓ key pressed (roll stack down)
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 brain.rollStack(directionDown: true)
             case "x≷y":
                 // x≷y key pressed (swap x-y registers)
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 brain.swapXyRegisters()
             case "←":
                 // ← key pressed (remove digit/number)
                 if userIsEnteringExponent {
                     return
                 } else {
-                    if !userIsStillTypingDigits {
+                    if !userIsEnteringDigits {
                         // clear previously entered number (display 0.0)
                         brain.xRegister = 0.0
                     } else if displayString.count > 1 {
@@ -564,12 +567,12 @@ class CalculatorViewController: UIViewController {
                 brain.clearAll()
             case "x≷y":
                 // CLEAR REG key pressed (clear storage registers, not stack)
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 brain.clearStorageRegisters()
             case "←":
                 // CLEAR PREFIX key pressed
                 prefixKey = nil
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 // CLEAR PREFIX key also displays mantissa, until button released
                 displayString = brain.displayMantissa
                 sender.addTarget(self, action: #selector(clearPrefixButtonReleased(_:)), for: .touchUpInside)
@@ -581,13 +584,13 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "R↓":
                 // R↑ key pressed (roll stack up)
-                if userIsStillTypingDigits { enterPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { enterPressed(UIButton()) }  // push current digits onto stack
                 brain.rollStack(directionDown: false)
             case "←":
                 // CLx key pressed
                 displayString = String(format: displayView.format.string, 0.0)  // display 0.0
-                if !userIsStillTypingDigits { brain.popXRegister() }  // pop last number off stack, unless still typing digits
-                userIsStillTypingDigits = false
+                if !userIsEnteringDigits { brain.popXRegister() }  // pop last number off stack, unless still typing digits
+                userIsEnteringDigits = false
                 userIsEnteringExponent = false
                 prefixKey = nil
                 return  // return, or prior number will be displayed
@@ -598,7 +601,7 @@ class CalculatorViewController: UIViewController {
             return
         }
         if okToClearStillTypingFlag {
-            userIsStillTypingDigits = false
+            userIsEnteringDigits = false
             runAndUpdateInterface()
         }
         userIsEnteringExponent = false
@@ -610,6 +613,7 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
     }
     
+    // prefix keys: f, g, GTO
     @IBAction func prefixPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
