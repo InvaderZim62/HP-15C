@@ -32,7 +32,6 @@
 //  To do...
 //  - save registers and stack to user defaults (restore at startup).
 //  - implement RND key (round mantissa to displayed digits)
-//  - consider displaying Error, for undefined key combinations (ex. f-Fix-SIN, or f-HYP-4)
 //
 
 import UIKit
@@ -632,7 +631,7 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
     }
     
-    // prefix keys: f, g, GTO
+    // prefix keys: f, g, GTO (assigned to prefixPressed)
     @IBAction func prefixPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -665,6 +664,13 @@ class CalculatorViewController: UIViewController {
                 prefixKey = .HYP1
             default:
                 break
+            }
+        case .STO, .RCL:
+            switch keyName {
+            case "f":
+                break  // leave prefixKey = .STO/.RCL, to allow Enter to store/recall random seed
+            default:
+                invalidKeySequenceEntered()
             }
         default:
             invalidKeySequenceEntered()
