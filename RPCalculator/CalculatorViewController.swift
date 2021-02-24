@@ -49,8 +49,8 @@ enum DisplayFormat {
             return "%.\(decimalPlaces)f"
         case .scientific(let decimalPlaces):
             return "%.\(decimalPlaces)e"
-        case .engineering(let decimalPlaces):
-            return "%.\(decimalPlaces)e"
+        case .engineering(let aditionalDigits):
+            return "%.\(aditionalDigits)e"
         }
     }
 }
@@ -259,7 +259,19 @@ class CalculatorViewController: UIViewController {
     // run program and set display string (switch to scientific notation, if fixed format won't fit)
     private func runAndUpdateInterface() {
         let numericalResult = brain.runProgram()
-        let potentialDisplayString = String(format: displayFormat.string, numericalResult)
+        var potentialDisplayString = String(format: displayFormat.string, numericalResult)
+        // for engineering notation, adjust mantissa so that exponent is a factor of 3
+        if case .engineering(let additionalDigits) = displayFormat {
+            let components = potentialDisplayString.components(separatedBy: "e")
+            var mantissa = Double(components[0])!
+            var exponent = Int(components[1])!
+            while abs(exponent) % 3 > 0 {
+                mantissa *= 10
+                exponent -= 1
+            }
+            let mantissaLength = additionalDigits + (potentialDisplayString.first == "-" ? 1 : 0) + 2
+            potentialDisplayString = String(mantissa).prefix(mantissaLength) + String(format: "e%+03d", exponent)
+        }
         let displayConvertedBackToNumber = Double(potentialDisplayString)
         // determine length in display, knowing displayView will combine decimal point with digit and add a space in front of positive numbers
         let lengthInDisplay = potentialDisplayString.replacingOccurrences(of: ".", with: "").count + (potentialDisplayString.first == "-" ? 0 : 1)
@@ -376,6 +388,10 @@ class CalculatorViewController: UIViewController {
                 // SCI pressed
                 if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 prefix = .SCI  // wait for next digit
+            case "9":
+                // ENG pressed
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                prefix = .ENG  // wait for next digit
             default:
                 break
             }
@@ -428,6 +444,15 @@ class CalculatorViewController: UIViewController {
             if let decimalPlaces = Int(digit) {
                 // number after SCI pressed
                 displayFormat = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+                runAndUpdateInterface()
+            } else {
+                invalidKeySequenceEntered()
+            }
+        case .ENG:
+            prefix = nil
+            if let decimalPlaces = Int(digit) {
+                // number after ENG pressed
+                displayFormat = .engineering(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             } else {
                 invalidKeySequenceEntered()
