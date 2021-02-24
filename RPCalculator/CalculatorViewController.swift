@@ -382,15 +382,12 @@ class CalculatorViewController: UIViewController {
                 operationKeyPressed(tempButton)  // better handled as operation
             case "7":
                 // FIX pressed
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 prefix = .FIX  // wait for next digit
             case "8":
                 // SCI pressed
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 prefix = .SCI  // wait for next digit
             case "9":
                 // ENG pressed
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 prefix = .ENG  // wait for next digit
             default:
                 break
@@ -434,6 +431,7 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             if let decimalPlaces = Int(digit) {
                 // number after FIX pressed
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 displayFormat = .fixed(decimalPlaces)
                 runAndUpdateInterface()
             } else {
@@ -443,6 +441,7 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             if let decimalPlaces = Int(digit) {
                 // number after SCI pressed
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
                 displayFormat = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             } else {
@@ -450,9 +449,10 @@ class CalculatorViewController: UIViewController {
             }
         case .ENG:
             prefix = nil
-            if let decimalPlaces = Int(digit) {
+            if let additionalDigits = Int(digit) {
                 // number after ENG pressed
-                displayFormat = .engineering(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                displayFormat = .engineering(min(additionalDigits, 6))  // 1 sign + 1 significant + 6 additional + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             } else {
                 invalidKeySequenceEntered()
