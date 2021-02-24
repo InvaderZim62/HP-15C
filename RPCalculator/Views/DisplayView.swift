@@ -17,28 +17,10 @@
 
 import UIKit
 
-enum DisplayFormat {
-    case fixed(Int)  // (decimal places)
-    case scientific(Int)  // (decimal places)
-    case engineering(Int)  // (display digits) similar to scientific, except exponent is always a multiple of three
-    
-    var string: String {
-        switch self {
-        case .fixed(let decimalPlaces):
-            return "%.\(decimalPlaces)f"
-        case .scientific(let decimalPlaces):
-            return "%.\(decimalPlaces)e"
-        default:
-            return "%g"
-        }
-    }
-}
-
 class DisplayView: UIView {
     
     var numberOfDigits = 0 { didSet { createDigitViews() } }
     var displayString = "" { didSet { updateDisplay() } }
-    var format = DisplayFormat.fixed(4)  // pws: consider moving this up to CalculatorViewController
 
     private var digitViews = [DigitView]()
     private var exponentWasFound = false

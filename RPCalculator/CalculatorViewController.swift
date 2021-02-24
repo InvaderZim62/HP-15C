@@ -27,7 +27,7 @@
 //  Useful functions...
 //     let lastDigit = displayString.removeLast()     // remove last digit and return it
 //     displayString.removeLast(n)                    // removes last n digits without returning them
-//     displayString = String(format: displayView.format.string, 0.0)  // write number to display in current format
+//     displayString = String(format: displayFormat.string, 0.0)  // write number to display in current format
 //
 //  To do...
 //  - save registers and stack to user defaults (restore at startup)
@@ -37,6 +37,23 @@
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
+
+enum DisplayFormat {
+    case fixed(Int)  // (decimal places)
+    case scientific(Int)  // (decimal places)
+    case engineering(Int)  // (display digits) similar to scientific, except exponent is always a multiple of three
+    
+    var string: String {
+        switch self {
+        case .fixed(let decimalPlaces):
+            return "%.\(decimalPlaces)f"
+        case .scientific(let decimalPlaces):
+            return "%.\(decimalPlaces)e"
+        case .engineering(let decimalPlaces):
+            return "%.\(decimalPlaces)e"
+        }
+    }
+}
 
 enum Prefix: String {
     case f  // function above button (orange)
@@ -61,6 +78,7 @@ class CalculatorViewController: UIViewController {
     var brain = CalculatorBrain()
     var player: AVAudioPlayer?
     var displayString = "" { didSet { displayView.displayString = displayString } }
+    var displayFormat = DisplayFormat.fixed(4)
     var displayLabels = [UILabel]()
     var displayLabelAlphas = [CGFloat]()
     var calculatorIsOn = true
@@ -241,7 +259,7 @@ class CalculatorViewController: UIViewController {
     // run program and set display string (switch to scientific notation, if fixed format won't fit)
     private func runAndUpdateInterface() {
         let numericalResult = brain.runProgram()
-        let potentialDisplayString = String(format: displayView.format.string, numericalResult)
+        let potentialDisplayString = String(format: displayFormat.string, numericalResult)
         let displayConvertedBackToNumber = Double(potentialDisplayString)
         // determine length in display, knowing displayView will combine decimal point with digit and add a space in front of positive numbers
         let lengthInDisplay = potentialDisplayString.replacingOccurrences(of: ".", with: "").count + (potentialDisplayString.first == "-" ? 0 : 1)
@@ -400,7 +418,7 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             if let decimalPlaces = Int(digit) {
                 // number after FIX pressed
-                displayView.format = .fixed(decimalPlaces)
+                displayFormat = .fixed(decimalPlaces)
                 runAndUpdateInterface()
             } else {
                 invalidKeySequenceEntered()
@@ -408,13 +426,12 @@ class CalculatorViewController: UIViewController {
         case .SCI:
             prefix = nil
             if let decimalPlaces = Int(digit) {
-                // number after FIX pressed
-                displayView.format = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+                // number after SCI pressed
+                displayFormat = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             } else {
                 invalidKeySequenceEntered()
             }
-//        case ENG:  // TBD
         case .STO:
             prefix = nil
             switch digit {
@@ -607,7 +624,7 @@ class CalculatorViewController: UIViewController {
                 brain.rollStack(directionDown: false)
             case "←":
                 // CLx key pressed
-                displayString = String(format: displayView.format.string, 0.0)  // display 0.0
+                displayString = String(format: displayFormat.string, 0.0)  // display 0.0
                 if !userIsEnteringDigits { brain.popXRegister() }  // pop last number off stack, unless still typing digits
                 userIsEnteringDigits = false
                 userIsEnteringExponent = false
