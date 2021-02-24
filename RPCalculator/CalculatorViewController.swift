@@ -275,7 +275,7 @@ class CalculatorViewController: UIViewController {
         let displayConvertedBackToNumber = Double(potentialDisplayString)
         // determine length in display, knowing displayView will combine decimal point with digit and add a space in front of positive numbers
         let lengthInDisplay = potentialDisplayString.replacingOccurrences(of: ".", with: "").count + (potentialDisplayString.first == "-" ? 0 : 1)
-        if lengthInDisplay > displayView.numberOfDigits {
+        if case .fixed = displayFormat, lengthInDisplay > displayView.numberOfDigits {
             // fixed format won't fit, temporarily switch to scientific notation with 6 decimal places
             displayString = String(format: DisplayFormat.scientific(6).string, numericalResult)
         } else if displayConvertedBackToNumber == 0 && numericalResult != 0 {
