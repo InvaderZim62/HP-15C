@@ -41,16 +41,16 @@ import AVFoundation  // needed for AVAudioPlayer
 enum DisplayFormat {
     case fixed(Int)  // (decimal places)
     case scientific(Int)  // (decimal places)
-    case engineering(Int)  // (display digits) similar to scientific, except exponent is always a multiple of three
+    case engineering(Int)  // (additional digits) similar to scientific, except exponent is always a multiple of three
     
-    var string: String {
+    var string: String {  // usage: String(format: displayFormat.string, number)
         switch self {
         case .fixed(let decimalPlaces):
             return "%.\(decimalPlaces)f"
         case .scientific(let decimalPlaces):
             return "%.\(decimalPlaces)e"
         case .engineering(let aditionalDigits):
-            return "%.\(aditionalDigits)e"
+            return "%.\(aditionalDigits)e"  // engineering format can't be done through string alone (see runAndUpdateInterface)
         }
     }
 }
@@ -259,6 +259,7 @@ class CalculatorViewController: UIViewController {
     // run program and set display string (switch to scientific notation, if fixed format won't fit)
     private func runAndUpdateInterface() {
         let numericalResult = brain.runProgram()
+        
         var potentialDisplayString = String(format: displayFormat.string, numericalResult)
         // for engineering notation, adjust mantissa so that exponent is a factor of 3
         if case .engineering(let additionalDigits) = displayFormat {
@@ -270,7 +271,8 @@ class CalculatorViewController: UIViewController {
                 exponent -= 1
             }
             let mantissaLength = additionalDigits + (potentialDisplayString.first == "-" ? 1 : 0) + 2
-            potentialDisplayString = String(mantissa).prefix(mantissaLength) + String(format: "e%+03d", exponent)
+            let mantissaString = String(mantissa).padding(toLength: mantissaLength, withPad: "0", startingAt: 0)
+            potentialDisplayString = mantissaString.prefix(mantissaLength) + String(format: "e%+03d", exponent)  // 2-digit exponent, including sign
         }
         let displayConvertedBackToNumber = Double(potentialDisplayString)
         // determine length in display, knowing displayView will combine decimal point with digit and add a space in front of positive numbers
