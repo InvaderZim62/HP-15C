@@ -282,7 +282,14 @@ class CalculatorViewController: UIViewController {
             // fixed format rounded to zero, temporarily switch to scientific notation with 6 decimal places
             displayString = String(format: DisplayFormat.scientific(6).string, numericalResult)
         } else {
-            displayString = potentialDisplayString + (potentialDisplayString.contains(".") ? "" : ".")  // make sure at least one decimal point
+            let components = potentialDisplayString.components(separatedBy: "e")  // ex. 1.234e+01 (2 components) or 0.1234 (1 component)
+            if components.count == 1 {
+                // fixed format (no "e")
+                displayString = potentialDisplayString + (potentialDisplayString.contains(".") ? "" : ".")  // add decimal point to end, if none
+            } else {
+                // scientific or engineering format (with "e")
+                displayString = components[0] + (components[0].contains(".") ? "" : ".") + "e" + components[1]  // add decimal point before "e", if none
+            }
         }
     }
     
