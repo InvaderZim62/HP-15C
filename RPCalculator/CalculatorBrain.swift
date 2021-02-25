@@ -18,11 +18,53 @@ struct Constants {
     static let G2R = Double.pi / 200  // gradians to radians
 }
 
-class CalculatorBrain {
+class CalculatorBrain: Codable {
     
     var trigMode = TrigMode.DEG
     var lastXRegister = 0.0
     var errorPresent = false
+
+    var xRegister: Double? {
+        get { return programStack.last as? Double }
+        set { programStack[programStack.count - 1] = newValue! }  // ok to assume programStack is not empty
+    }
+
+    // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
+    private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {
+        didSet {
+            // truncate stack to last 5 elements, then pad front with repeat of 0th element if size < 5
+            programStack = programStack.suffix(Constants.stackSize)
+            programStack.insert(contentsOf: repeatElement(programStack[0], count: Constants.stackSize - programStack.count), at: 0)
+        }
+    }
+    
+    private var storageRegisters = [String: Double]()  // [register name: number]
+
+    // MARK: - Codable
+
+    private enum CodingKeys: String, CodingKey { case trigMode, lastXRegister, errorPresent, xRegister, programStack }
+    
+    init() { }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.trigMode = try container.decode(TrigMode.self, forKey: .trigMode)
+        self.lastXRegister = try container.decode(Double.self, forKey: .lastXRegister)
+        self.errorPresent = try container.decode(Bool.self, forKey: .errorPresent)
+        self.xRegister = try container.decodeIfPresent(Double.self, forKey: .xRegister)
+        self.programStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .programStack)) as? [Any] ?? []
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.trigMode, forKey: .trigMode)
+        try container.encode(self.lastXRegister, forKey: .lastXRegister)
+        try container.encode(self.errorPresent, forKey: .errorPresent)
+        try container.encodeIfPresent(self.xRegister, forKey: .xRegister)
+        try container.encode(JSONSerialization.data(withJSONObject: programStack), forKey: .programStack)
+    }
+
+    // MARK: - Computed properties
     
     var angleConversion: Double {
         switch trigMode {
@@ -34,13 +76,8 @@ class CalculatorBrain {
             return Constants.G2R
         }
     }
-    
-    var xRegister: Double? {
-        get { return programStack.last as? Double }
-        set { programStack[programStack.count - 1] = newValue! }  // ok to assume programStack is not empty
-    }
-    
-    // matissa (in this case) is all the significant digits of the displayed number, without the decimal point or exponent
+
+    // mantissa (in this case) is all the significant digits of the displayed number, without the decimal point or exponent
     var displayMantissa: String {
         var mantissa = String(xRegister!)
         if let ne = mantissa.firstIndex(of: "e") {
@@ -50,17 +87,6 @@ class CalculatorBrain {
         if mantissa.count < 10 { mantissa += repeatElement("0", count: 10 - mantissa.count) }
         return mantissa
     }
-    
-    // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
-    private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {
-        didSet {
-            // truncate stack to last 5 elements, then pad front with repeat of 0th element if size < 5
-            programStack = programStack.suffix(Constants.stackSize)
-            programStack.insert(contentsOf: repeatElement(programStack[0], count: Constants.stackSize - programStack.count), at: 0)
-        }
-    }
-    
-    private var storageRegisters = [String: Double]()  // [register name: number]
     
     // MARK: - Start of code
     

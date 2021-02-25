@@ -30,15 +30,14 @@
 //     displayString = String(format: displayFormat.string, 0.0)  // write number to display in current format
 //
 //  To do...
-//  - save registers and stack to user defaults (restore at startup)
-//  - implement ENG notation
+//  - entering pi only pushed the display (not full digits)
 //  - implement RND key (round mantissa to displayed digits)
 //
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
 
-enum DisplayFormat {
+enum DisplayFormat: Codable {  // pws: move to its own file?
     case fixed(Int)  // (decimal places)
     case scientific(Int)  // (decimal places)
     case engineering(Int)  // (additional digits) similar to scientific, except exponent is always a multiple of three
@@ -51,6 +50,35 @@ enum DisplayFormat {
             return "%.\(decimalPlaces)e"
         case .engineering(let aditionalDigits):
             return "%.\(aditionalDigits)e"  // engineering format can't be done through string alone (see runAndUpdateInterface)
+        }
+    }
+    
+    // MARK: - Codable
+    
+    private enum CodingKeys: String, CodingKey { case fixed, scientific, engineering }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let value = try? container.decode(Int.self, forKey: .fixed) {
+            self = .fixed(value)
+        } else if let value = try? container.decode(Int.self, forKey: .scientific) {
+            self = .fixed(value)
+        } else if let value = try? container.decode(Int.self, forKey: .engineering) {
+            self = .fixed(value)
+        } else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: container.codingPath, debugDescription: "Data doesn't match"))
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .fixed(let decimalPlaces):
+            try container.encode(decimalPlaces, forKey: .fixed)
+        case .scientific(let decimalPlaces):
+            try container.encode(decimalPlaces, forKey: .scientific)
+        case .engineering(let aditionalDigits):
+            try container.encode(aditionalDigits, forKey: .engineering)
         }
     }
 }
@@ -67,7 +95,7 @@ enum Prefix: String {
     case HYP1 = "h"  // inverse hyperbolic trig function
 }
 
-enum TrigMode: String {
+enum TrigMode: String, Codable {
     case DEG = "D"  // default
     case RAD = "R"
     case GRAD = "G"  // 90 degrees = 100 gradians
@@ -80,7 +108,7 @@ class CalculatorViewController: UIViewController {
     var displayString = "" { didSet { displayView.displayString = displayString } }
     var displayFormat = DisplayFormat.fixed(4)
     var displayLabels = [UILabel]()
-    var displayLabelAlphas = [CGFloat]()
+    var savedDisplayLabelAlphas = [CGFloat]()  // save for turning calculator Off/On
     var calculatorIsOn = true
     var userIsEnteringDigits = false
     var userIsEnteringExponent = false
@@ -90,6 +118,10 @@ class CalculatorViewController: UIViewController {
     
     var decimalWasAlreadyEntered: Bool {
         return displayString.contains(".")
+    }
+    
+    var displayLabelAlphas: [CGFloat] {
+        return displayLabels.map { $0.alpha }
     }
     
     var prefix: Prefix? { didSet {
@@ -117,6 +149,7 @@ class CalculatorViewController: UIViewController {
             gradLabel.alpha = 1
             gradLabel.text = "GRAD"
         }
+        saveDefaults()
     } }
     
     // dictionary of button labels going from left to right, top to bottom
@@ -179,31 +212,54 @@ class CalculatorViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         displayLabels = [userLabel, fLabel, gLabel, beginLabel, gradLabel, dmyLabel, cLabel, prgmLabel]
-        displayLabelAlphas.append(contentsOf: repeatElement(0, count: displayLabels.count))  // allocate the same sized array
         hideDisplayLabels()
         calculatorView.clearLabel = clearLabel
     }
     
     override func viewWillAppear(_ animated: Bool) {
         displayView.numberOfDigits = 11  // one digit for sign
-        displayString = "0.0000"
+        getDefaults()  // call in viewWillAppear, so displayString can set displayView
+        brain.printStack()
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
         createButtonCovers()
     }
-    
-    // display labels: USER  f  g  BEGIN  GRAD  D.MY  C  PRGM
-    private func hideDisplayLabels() {
-        for (index, label) in displayLabels.enumerated() {
-            displayLabelAlphas[index] = label.alpha  // save current setting for unhiding
-            displayLabels[index].alpha = 0  // use alpha, instead of isHidden, to maintain stackView layout
+
+    private func saveDefaults() {  // pws: save seed, lastRandomNumberGenerated?
+        let defaults = UserDefaults.standard
+        if let data = try? JSONEncoder().encode(displayFormat) {
+            defaults.set(data, forKey: "displayFormat")
+        }
+        defaults.set(displayString, forKey: "displayString")
+        defaults.set(gradLabel.text, forKey: "gradLabelText")
+        defaults.setValue(displayLabelAlphas, forKey: "displayLabelAlphas")
+        if let data = try? JSONEncoder().encode(brain) {
+            defaults.set(data, forKey: "brain")
         }
     }
     
-    private func unhideDisplayLabels() {
-        for (index, alpha) in displayLabelAlphas.enumerated() {
-            displayLabels[index].alpha = alpha
+    private func getDefaults() {
+        let defaults = UserDefaults.standard
+        if let data = defaults.data(forKey: "displayFormat") {
+            displayFormat = try! JSONDecoder().decode(DisplayFormat.self, from: data)
         }
+        displayString = defaults.string(forKey: "displayString") ?? String(format: displayFormat.string, 0.0)
+        gradLabel.text = defaults.string(forKey: "gradLabelText") ?? gradLabel.text
+        savedDisplayLabelAlphas = defaults.array(forKey: "displayLabelAlphas") as? [CGFloat] ?? displayLabelAlphas
+        restoreDisplayLabels()
+        if let data = defaults.data(forKey: "brain") {
+            brain = try! JSONDecoder().decode(CalculatorBrain.self, from: data)
+        }
+    }
+    
+    // display labels: USER  f  g  BEGIN  GRAD  D.MY  C  PRGM
+    private func hideDisplayLabels() {
+        savedDisplayLabelAlphas = displayLabelAlphas  // save current setting for unhiding
+        displayLabels.forEach { $0.alpha = 0 }  // use alpha, instead of isHidden, to maintain stackView layout
+    }
+    
+    private func restoreDisplayLabels() {
+        displayLabels.enumerated().forEach { displayLabels[$0.offset].alpha = savedDisplayLabelAlphas[$0.offset] }
     }
 
     // create all text for the buttons using ButtonCoverViews, placed over button locations from Autolayout
@@ -293,6 +349,7 @@ class CalculatorViewController: UIViewController {
                 displayString = components[0] + (components[0].contains(".") ? "" : ".") + "e" + components[1]  // add decimal point before "e", if none
             }
         }
+        saveDefaults()
     }
     
     private func invalidKeySequenceEntered() {
@@ -736,7 +793,7 @@ class CalculatorViewController: UIViewController {
         calculatorIsOn = !calculatorIsOn
         displayView.turnOnIf(calculatorIsOn)
         if calculatorIsOn {
-            unhideDisplayLabels()
+            restoreDisplayLabels()
         } else {
             hideDisplayLabels()
         }
