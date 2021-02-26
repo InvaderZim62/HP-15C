@@ -335,38 +335,28 @@ class CalculatorViewController: UIViewController {
         switch prefix {
         case .none:
             // digit pressed (without prefix)
-            // handle EEX first
-            if digit == "EEX" {  // Note: EEX is considered digitPressed for pi (g-EEX), below
+            if digit == "EEX" {  // Note: EEX is considered a digit for pi (g-EEX), below
                 if userIsEnteringDigits {
                     userIsEnteringExponent = true
-                } else {
-                    return
-                }
-            }
-            
-            // add digit to display
-            if userIsEnteringDigits {
+                    let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                    displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
+                }  // else ignore EEX
+            } else if userIsEnteringDigits {
+                // add digit to display
                 if displayString == "0" {
                     if digit == "." {
                         displayString += digit  // append decimal to leading zero
                     } else if digit != "0" {
-                        displayString = digit  // replace leading zero with digit
+                        displayString = digit  // replace leading zero with digit (don't allow multiple leading zeroes)
                     }
-                } else {
-                    if !(digit == "." && decimalWasAlreadyEntered) {  // only allow one decimal point per number
-                        if userIsEnteringExponent {
-                            if digit == "EEX" {  // pws: doesn't guard against mantissa that overlaps exponent
-                                let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
-                                displayString = displayString.padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
-                            } else {
-                                // slide second digit of exponent left and put new digit in its place
-                                let exponent2 = String(displayString.removeLast())
-                                displayString.removeLast(1)
-                                displayString += exponent2 + digit
-                            }
-                        } else {
-                            displayString += digit  // append entered digit to display
-                        }
+                } else if !(digit == "." && decimalWasAlreadyEntered) {  // only allow one decimal point per number
+                    if userIsEnteringExponent {
+                        // slide second digit of exponent left and put new digit in its place
+                        let exponent2 = String(displayString.removeLast())
+                        displayString.removeLast(1)
+                        displayString += exponent2 + digit
+                    } else {
+                        displayString += digit  // append entered digit to display
                     }
                 }
             } else {
