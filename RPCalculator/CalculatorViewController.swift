@@ -30,7 +30,6 @@
 //     displayString = String(format: displayFormat.string, 0.0)  // write number to display in current format
 //
 //  To do...
-//  - entering pi only pushed the display (not full digits)
 //  - implement RND key (round mantissa to displayed digits)
 //
 
@@ -442,7 +441,8 @@ class CalculatorViewController: UIViewController {
             case "EEX":
                 // pi pressed
                 if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
-                displayString = "3.141592654"
+                displayString = String(180 * Constants.D2R)  // 3.141592653589793
+                userIsEnteringDigits = true
                 enterKeyPressed(UIButton())
             default:
                 break
@@ -571,7 +571,7 @@ class CalculatorViewController: UIViewController {
                 if sign == " " { sign = "+" }
                 displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
             }
-            brain.pushOperand(Double(displayString)!)
+            brain.pushOperand(userIsEnteringDigits ? Double(displayString)! : brain.xRegister! )
         case .f:
             // RND# pressed
             prefix = nil
