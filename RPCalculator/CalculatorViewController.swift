@@ -28,9 +28,11 @@
 //     let lastDigit = displayString.removeLast()     // remove last digit and return it
 //     displayString.removeLast(n)                    // removes last n digits without returning them
 //     displayString = String(format: displayFormat.string, 0.0)  // write number to display in current format
+//     displayString = displayString.padding(toLength: 9, withPad: " ", startingAt: 0) + "00"  // pad end of string with blanks
 //
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
+//  - implement programming
 //
 
 import UIKit
@@ -51,7 +53,7 @@ enum Prefix: String {
 enum TrigMode: String, Codable {
     case DEG = "D"  // default
     case RAD = "R"
-    case GRAD = "G"  // 90 degrees = 100 gradians
+    case GRAD = "G"  // 100 gradians = 90 degrees
 }
 
 class CalculatorViewController: UIViewController {
@@ -64,9 +66,9 @@ class CalculatorViewController: UIViewController {
     var savedDisplayLabelAlphas = [CGFloat]()  // save for turning calculator Off/On
     var calculatorIsOn = true
     var userIsEnteringDigits = false
-    var userIsEnteringExponent = false
-    var buttonCoverViews = [UIButton: ButtonCoverView]()
-    var seed = 0  // HP-15C initial seed is zero
+    var userIsEnteringExponent = false  // userIsEnteringExponent and userIsEnteringDigits can be true at the same time
+    var buttonCoverViews = [UIButton: ButtonCoverView]()  // overlays buttons to provide text above and inside buttons
+    var seed = 0  // HP-15C initial random number seed is zero
     var lastRandomNumberGenerated = 0.0
     
     var decimalWasAlreadyEntered: Bool {
@@ -78,7 +80,7 @@ class CalculatorViewController: UIViewController {
     }
     
     var prefix: Prefix? { didSet {
-        fLabel.alpha = 0
+        fLabel.alpha = 0  // use alpha, instead of isHidden, to maintain stackView layout
         gLabel.alpha = 0
         switch prefix {
         case .f:
@@ -86,7 +88,7 @@ class CalculatorViewController: UIViewController {
         case .g:
             gLabel.alpha = 1  // show "g" on display
         default:
-            break
+            break  // don't show "f" or "g" on display
         }
     } }
     
@@ -107,7 +109,7 @@ class CalculatorViewController: UIViewController {
     
     // dictionary of button labels going from left to right, top to bottom
     // dictionary key is the primary button label (must agree with storyboard)
-    var buttonText = [  // [nText: (fText, gText)]
+    var buttonText = [  // [nText: (fText, gText)]  ie. normal text, f-prefix text, g-prefix text
         "√x": ("A", "x²"),
         "ex": ("B", "LN"),
         "10x": ("C", "LOG"),  // superscripting 10^x occurs in superscriptLastNCharactersOf, below
@@ -123,7 +125,7 @@ class CalculatorViewController: UIViewController {
         "SIN": ("DIM", "SIN-1"),
         "COS": ("(i)", "COS-1"),
         "TAN": ("I", "TAN-1"),
-        "EEX": ("RESULT", "π"),  // pi is option p
+        "EEX": ("RESULT", "π"),  // enter pi using option p
         "4": ("x≷", "SF"),
         "5": ("DSE", "CF"),
         "6": ("ISG", "F?"),
@@ -143,7 +145,7 @@ class CalculatorViewController: UIViewController {
         "·": ("y\u{0302},r", "s"),  // \u{0302} puts ^ above y
         "Σ+": ("L.R.", "Σ-"),
         "+": ("Py,x", "Cy,x"),
-        "E\nN\nT\nE\nR": ("RAN #", "LST x")  // ENTER
+        "E\nN\nT\nE\nR": ("RAN #", "LST x")  // ENTER (written vertically)
     ]
 
     @IBOutlet weak var displayView: DisplayView!
@@ -156,7 +158,7 @@ class CalculatorViewController: UIViewController {
     @IBOutlet weak var dmyLabel: UILabel!
     @IBOutlet weak var cLabel: UILabel!
     @IBOutlet weak var prgmLabel: UILabel!
-    @IBOutlet weak var logoCircleView: UIView!  // used to make view round in viewDidLoad
+    @IBOutlet weak var logoCircleView: UIView!  // used to make view round in viewWillAppear
     @IBOutlet weak var calculatorView: CalculatorView!  // used to draw bracket around CLEAR label
     @IBOutlet weak var clearLabel: UILabel!  // used to anchor line drawing in calculatorView
     
@@ -171,14 +173,14 @@ class CalculatorViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         displayView.numberOfDigits = 11  // one digit for sign
-        getDefaults()  // call in viewWillAppear, so displayString can set displayView
+        getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
         brain.printStack()
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
         createButtonCovers()
     }
 
-    private func saveDefaults() {  // pws: save seed, lastRandomNumberGenerated?
+    private func saveDefaults() {  // pws: should I save seed and lastRandomNumberGenerated?
         let defaults = UserDefaults.standard
         if let data = try? JSONEncoder().encode(displayFormat) {
             defaults.set(data, forKey: "displayFormat")
@@ -244,11 +246,11 @@ class CalculatorViewController: UIViewController {
             // superscript -1
             buttonCoverView.blueLabel.attributedText = superscriptLastNCharactersOf(gText, n: 2, font: buttonCoverView.blueLabel.font)
         case "÷", "×", "–", "+":
-            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(22)  // increase from 17 (set in ButtonCoverView)
+            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(22)  // default size 17 (set in ButtonCoverView)
         case "·":
-            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(30)  // increase from 17
+            buttonCoverView.whiteLabel.font = buttonCoverView.whiteLabel.font.withSize(30)  // default size 17
         case "√x", "EEX":  // gText: x², π
-            buttonCoverView.blueLabel.font = buttonCoverView.blueLabel.font.withSize(15)  // increase from 12
+            buttonCoverView.blueLabel.font = buttonCoverView.blueLabel.font.withSize(15)  // default size 12
         default:
             break
         }
@@ -306,7 +308,7 @@ class CalculatorViewController: UIViewController {
     }
     
     private func invalidKeySequenceEntered() {
-        displayString = "Error"
+        displayString = "Error"  // not sure what the real HP-15C displays
         brain.errorPresent = true
         prefix = nil
         userIsEnteringDigits = false
@@ -324,8 +326,14 @@ class CalculatorViewController: UIViewController {
     }
     
     // MARK: - Button actions
+    
+    // Note: It's somewhat arbitrary which action each button is assigned to (digitKeyPressed, operationKeyPressed,
+    // stackManipulationKeyPressed).  Obvious ones are enterKeyPressed, prefixKeyPressed, and onKeyPressed.  In some
+    // cases, the prefix function of the key is not well suited to the same action as the primary function of the key
+    // (ex. f-1, f-2, f-3, g-1, g-2, g-3).  In those cases, it is passed to another action using a temporary button.
 
-    // digit keys: 0-9, ·, EEX
+    // update display with digit pressed
+    // digit keys: 0-9, ·, EEX  (Note: EEX is considered a digit key for pi)
     @IBAction func digitKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -335,7 +343,7 @@ class CalculatorViewController: UIViewController {
         switch prefix {
         case .none:
             // digit pressed (without prefix)
-            if digit == "EEX" {  // Note: EEX is considered a digit for pi (g-EEX), below
+            if digit == "EEX" {
                 if userIsEnteringDigits {
                     userIsEnteringExponent = true
                     let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
@@ -492,7 +500,7 @@ class CalculatorViewController: UIViewController {
         }
     }
     
-    // perform operation pressed (button title), and display results
+    // perform operation pressed, and display results
     // operation keys: /, x, -, +, √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL
     @IBAction func operationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
@@ -644,7 +652,7 @@ class CalculatorViewController: UIViewController {
                 // CLEAR PREFIX key pressed
                 prefix = nil
                 if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
-                // CLEAR PREFIX key also displays mantissa, until button released
+                // CLEAR PREFIX key also displays mantissa, until button is released
                 displayString = brain.displayMantissa
                 sender.addTarget(self, action: #selector(clearPrefixButtonReleased(_:)), for: .touchUpInside)
                 return
@@ -685,6 +693,7 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
     }
     
+    // set prefix to .f (for "f"), .g (for "g"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
     // prefix keys: f, g, GTO
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
@@ -731,6 +740,7 @@ class CalculatorViewController: UIViewController {
         }
     }
 
+    // hide/unhide display (emulating ON key)
     @IBAction func onKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error

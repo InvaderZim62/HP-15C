@@ -13,7 +13,7 @@
 import Foundation
 
 struct Constants {
-    static let stackSize = 5  // dummy, T, Z, Y, X (dummy needed to allow operand to temporarily push onto stack)
+    static let stackSize = 5  // dummy, T, Z, Y, X (dummy needed to allow operation to temporarily push onto stack)
     static let D2R = Double.pi / 180
     static let G2R = Double.pi / 200  // gradians to radians
 }
@@ -26,7 +26,7 @@ class CalculatorBrain: Codable {
 
     var xRegister: Double? {
         get { return programStack.last as? Double }
-        set { programStack[programStack.count - 1] = newValue! }  // ok to assume programStack is not empty
+        set { programStack[programStack.count - 1] = newValue! }  // ok to assume programStack is not empty (count > 0)
     }
 
     // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
