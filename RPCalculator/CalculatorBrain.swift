@@ -29,7 +29,7 @@ class CalculatorBrain: Codable {
         set { programStack[programStack.count - 1] = newValue! }  // ok to assume programStack is not empty (count > 0)
     }
 
-    // programStack is array of Any, to accomodate mixture of Double (operands) and String (operations)
+    // programStack is array of Any, to accommodate mixture of Double (operands) and String (operations)
     private var programStack = [Any](repeating: 0.0, count: Constants.stackSize) {
         didSet {
             // truncate stack to last 5 elements, then pad front with repeat of 0th element if size < 5
@@ -115,7 +115,7 @@ class CalculatorBrain: Codable {
             // restore stack to pre-error state
             saveStack.removeLast()  // last element is the operation causing the error
             programStack = saveStack
-            errorPresent = true  // reset in CaclulatorViewController.restoreFromError
+            errorPresent = true  // reset in CalculatorViewController.restoreFromError
         } else {
             if secondResult != nil {
                 pushOperand(secondResult!)
@@ -170,7 +170,7 @@ class CalculatorBrain: Codable {
                     switch operation {
                     case "÷":
                         let divisor = popOperandOffStack(&stack).result
-                        result = popOperandOffStack(&stack).result / divisor  // let DisplayView hanndle divide by zero (result = "inf")
+                        result = popOperandOffStack(&stack).result / divisor  // let DisplayView handle divide by zero (result = "inf")
                     case "×":
                         result = popOperandOffStack(&stack).result * popOperandOffStack(&stack).result
                     case "–":

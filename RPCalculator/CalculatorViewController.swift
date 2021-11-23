@@ -4,11 +4,11 @@
 //
 //  Created by Phil Stern on 2/4/21.
 //
-//  click.wav obtained from: https://fresound.org/people/kwahmah_02/sounds/256116
+//  click.wav obtained from: https://freesound.org/people/kwahmah_02/sounds/256116
 //  file is in the public domain (CC0 1.0 Universal)
 //
 //  I used Action "Touch Down" for all buttons, by doing the following...
-//  - create an IBAction by control-draging the first button into the code, selecting
+//  - create an IBAction by control-dragging the first button into the code, selecting
 //    Touch Down (below the Type drop-down field), rather then the default Touch Up Inside
 //  - right-click (two-finger-touch) the remaining buttons in Interface Builder to bring
 //    up the connections menu
@@ -46,7 +46,7 @@ enum Prefix: String {
     case ENG
     case STO
     case RCL
-    case HYP = "H"  // hyperbolc trig function
+    case HYP = "H"  // hyperbolic trig function
     case HYP1 = "h"  // inverse hyperbolic trig function
 }
 

@@ -18,8 +18,8 @@ enum DisplayFormat: Codable {  // pws: move to its own file?
             return "%.\(decimalPlaces)f"
         case .scientific(let decimalPlaces):
             return "%.\(decimalPlaces)e"
-        case .engineering(let aditionalDigits):
-            return "%.\(aditionalDigits)e"  // engineering format can't be done through string alone (see runAndUpdateInterface)
+        case .engineering(let additionalDigits):
+            return "%.\(additionalDigits)e"  // engineering format can't be done through string alone (see runAndUpdateInterface)
         }
     }
     
