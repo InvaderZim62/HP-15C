@@ -47,8 +47,8 @@ enum DisplayFormat: Codable {  // pws: move to its own file?
             try container.encode(decimalPlaces, forKey: .fixed)
         case .scientific(let decimalPlaces):
             try container.encode(decimalPlaces, forKey: .scientific)
-        case .engineering(let aditionalDigits):
-            try container.encode(aditionalDigits, forKey: .engineering)
+        case .engineering(let additionalDigits):
+            try container.encode(additionalDigits, forKey: .engineering)
         }
     }
 }
