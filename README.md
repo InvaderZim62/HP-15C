@@ -8,5 +8,5 @@ so I created this one for myself.  It only includes the basics (no programming, 
 or complex numbers).
 
 ![HP-15C real](https://github.com/InvaderZim62/HP-15C/assets/34785252/735b87c2-83e4-4166-8e8f-c491a5797939)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;
 <img width="444" alt="HP-15C" src="https://github.com/InvaderZim62/HP-15C/assets/34785252/dbde09fc-d7fa-49a3-b39d-e69471f035ff">
