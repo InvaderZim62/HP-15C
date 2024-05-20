@@ -580,12 +580,12 @@ class CalculatorViewController: UIViewController {
             brain.pushOperand(number)
             lastRandomNumberGenerated = number
         case .g:
-            prefix = nil
             // LSTx pressed
+            prefix = nil
             displayString = String(brain.lastXRegister)
         case .STO:
-            prefix = nil
             // STO RAN# pressed (store new seed)
+            prefix = nil
             if userIsEnteringDigits { enterKeyPressed(UIButton()) }
             if var number = brain.xRegister {
                 number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
@@ -594,8 +594,8 @@ class CalculatorViewController: UIViewController {
                 return
             }
         case .RCL:
-            prefix = nil
             // RCL RAN# pressed (recall last random number)
+            prefix = nil
             brain.pushOperand(lastRandomNumberGenerated)
         default:
             return
@@ -708,7 +708,7 @@ class CalculatorViewController: UIViewController {
                 prefix = .f
             case "g":
                 prefix = .g
-            default:  // GTO (not implmented)
+            default:  // GTO (not implemented)
                 break
             }
         case .f:
