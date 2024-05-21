@@ -12,7 +12,7 @@
 //     |  |  |  |  |  |
 //      -- .  -- .  -- .
 //
-//  Decimal point is drawn with prior digit.
+//  Decimal point is drawn with digit to its left.
 //
 
 import UIKit
@@ -61,7 +61,7 @@ class DisplayView: UIView {
         var modifiedDisplayString = displayString
         if displayString == "nan." || displayString == "inf." || displayString == "-inf."  {  // also handled in Brain.runProgram
             print(displayString.dropLast())
-            modifiedDisplayString = " Error 0"  // pws: +/-inf should show +/-9.9999999-99 blinking, rather than Error
+            modifiedDisplayString = "  Error  0"  // pws: +/-inf should show +/-9.9999999-99 blinking, rather than Error
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }
@@ -73,7 +73,7 @@ class DisplayView: UIView {
                 let index = modifiedDisplayString.index(modifiedDisplayString.startIndex, offsetBy: stringIndex)
                 let character = modifiedDisplayString[index]
                 if character == "." {
-                    displayIndex -= 1  // add decimal point to prior digitView
+                    displayIndex -= 1  // add decimal point to prior digitView (displayIndex will be one behind string index)
                     digitViews[displayIndex].trailingDecimal = true
                     var commaIndex = displayIndex - 3
                     while commaIndex > 0 {

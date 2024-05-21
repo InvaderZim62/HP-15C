@@ -11,8 +11,8 @@
 //   --            --     --            --     --            --     --
 //
 //  Note: The real HP-15C has a rectangular dash in the first position for the minus sign (versus using a
-//  complete digit with only the middleCross drawn for a minus sign).  That also means, words like Error
-//  start at the second digit.
+//  complete digit with only the middleCross drawn for a minus sign).  Error starts at digit 2 (two leading
+//  blanks).
 //
 
 import UIKit
