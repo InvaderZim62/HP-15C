@@ -59,7 +59,7 @@ enum TrigMode: String, Codable {
 class CalculatorViewController: UIViewController {
     
     var brain = CalculatorBrain()
-    var player: AVAudioPlayer?
+    var clickSoundPlayer: AVAudioPlayer?
     var displayString = "" { didSet { displayView.displayString = displayString } }
     var displayFormat = DisplayFormat.fixed(4)
     var displayLabels = [UILabel]()
@@ -169,6 +169,7 @@ class CalculatorViewController: UIViewController {
         displayLabels = [userLabel, fLabel, gLabel, beginLabel, gradLabel, dmyLabel, cLabel, prgmLabel]
         hideDisplayLabels()
         calculatorView.clearLabel = clearLabel
+        setupClickSoundPlayer()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -286,7 +287,6 @@ class CalculatorViewController: UIViewController {
             potentialDisplayString = mantissaString.prefix(mantissaLength) + String(format: "e%+03d", exponent)  // 2-digit exponent, including sign
         }
         let displayConvertedBackToNumber = Double(potentialDisplayString)
-        // determine length in display, knowing displayView will combine decimal point with digit and add a space in front of positive numbers
         var digitsLeftOfDecimal = displayView.numberOfDigits
         if let nd = potentialDisplayString.range(of: ".")?.lowerBound {
             digitsLeftOfDecimal = String(potentialDisplayString[potentialDisplayString.startIndex..<nd]).count
@@ -767,7 +767,7 @@ class CalculatorViewController: UIViewController {
     // plays a click sound and darkens the button text, then creates a temporary target for Touch Up
     // Inside, which gets called when the button is released (calling simulateReleasingButton).
     private func simulatePressingButton(_ button: UIButton) {
-        playClickSound()
+        clickSoundPlayer?.play()
         buttonCoverViews[button]?.whiteLabel.textColor = .darkGray
         button.addTarget(self, action: #selector(simulateReleasingButton(_:)), for: .touchUpInside)
     }
@@ -780,16 +780,14 @@ class CalculatorViewController: UIViewController {
         }
     }
     
-    private func playClickSound() {
+    private func setupClickSoundPlayer() {
         guard let url = Bundle.main.url(forResource: "click", withExtension: "wav") else { return }
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
             
-            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.wav.rawValue)
-            guard let player = player else { return }
-            player.play()
-            
+            clickSoundPlayer = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.wav.rawValue)
+//            clickSoundPlayer?.delegate = self  // to receive call to audioPlayerDidFinishPlaying
         } catch let error {
             print(error.localizedDescription)
         }
