@@ -365,7 +365,7 @@ class CalculatorViewController: UIViewController {
                     } else if digit != "0" {
                         displayString = digit  // replace leading zero with digit (don't allow multiple leading zeroes)
                     }
-                } else if !(digit == "." && decimalWasAlreadyEntered) {  // only allow one decimal point per number
+                } else if !(digit == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {  // only allow one decimal point per number
                     if userIsEnteringExponent {
                         // slide second digit of exponent left and put new digit in its place
                         let exponent2 = String(displayString.removeLast())
