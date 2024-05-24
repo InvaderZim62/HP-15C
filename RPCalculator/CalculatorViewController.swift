@@ -33,6 +33,8 @@
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
 //  - implement programming
+//  - allow entering multiple leading 0's
+//  - insert commas every 3 digits while entering number (not just after enter pressed)
 //
 
 import UIKit
@@ -286,30 +288,26 @@ class CalculatorViewController: UIViewController {
             let mantissaString = String(mantissa).padding(toLength: mantissaLength, withPad: "0", startingAt: 0)
             potentialDisplayString = mantissaString.prefix(mantissaLength) + String(format: "e%+03d", exponent)  // 2-digit exponent, including sign
         }
-        let displayConvertedBackToNumber = Double(potentialDisplayString)
-        var digitsLeftOfDecimal = displayView.numberOfDigits
-        if let nd = potentialDisplayString.range(of: ".")?.lowerBound {
-            digitsLeftOfDecimal = String(potentialDisplayString[potentialDisplayString.startIndex..<nd]).count
-            if potentialDisplayString.first != "-" {
-                digitsLeftOfDecimal += 1  // leave space in front of positive numbers
-            }
+        var digitsLeftOfDecimal = potentialDisplayString.components(separatedBy: ".")[0].count
+        if potentialDisplayString.first != "-" {
+            digitsLeftOfDecimal += 1  // leave space in front of positive numbers
         }
-        if case .fixed(let fixed) = displayFormat {
+        let displayConvertedBackToNumber = Double(potentialDisplayString)
+        if case .fixed(let decimalPlaces) = displayFormat {
             // fixed format
             if digitsLeftOfDecimal > displayView.numberOfDigits {
                 // doesn't fit, temporarily switch to scientific notation
-                displayString = String(format: DisplayFormat.scientific(fixed).string, numericalResult)
+                displayString = String(format: DisplayFormat.scientific(decimalPlaces).string, numericalResult)
             } else if displayConvertedBackToNumber == 0 && numericalResult != 0 {
                 // rounds to zero, temporarily switch to scientific notation
-                displayString = String(format: DisplayFormat.scientific(fixed).string, numericalResult)
+                displayString = String(format: DisplayFormat.scientific(decimalPlaces).string, numericalResult)
             } else {
                 // all good
-                displayString = potentialDisplayString + (potentialDisplayString.contains(".") ? "" : ".")  // add decimal point to end, if missing
+                displayString = potentialDisplayString
             }
         } else {
             // scientific or engineering format
-            let components = potentialDisplayString.components(separatedBy: "e")  // ex. 1.234e+01 (2 components) or 0.1234 (1 component)
-            displayString = components[0] + (components[0].contains(".") ? "" : ".") + "e" + components[1]  // add decimal point before "e", if none
+            displayString = potentialDisplayString
         }
         saveDefaults()
     }
@@ -565,7 +563,7 @@ class CalculatorViewController: UIViewController {
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterKeyPressed(_ sender: UIButton) {
         if sender.titleLabel?.text != nil {
-            // only simulate button if user pressed ENTER - not if code called enterPressed(UIButton())
+            // user pressed enter (not code) - make sound
             simulatePressingButton(sender)
             if restoreFromError() { return }
         }
