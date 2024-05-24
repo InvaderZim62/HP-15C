@@ -294,21 +294,22 @@ class CalculatorViewController: UIViewController {
                 digitsLeftOfDecimal += 1  // leave space in front of positive numbers
             }
         }
-        if case .fixed = displayFormat, digitsLeftOfDecimal > displayView.numberOfDigits {
-            // fixed format won't fit, temporarily switch to scientific notation with 6 decimal places
-            displayString = String(format: DisplayFormat.scientific(6).string, numericalResult)
-        } else if displayConvertedBackToNumber == 0 && numericalResult != 0 {
-            // fixed format rounded to zero, temporarily switch to scientific notation with 6 decimal places
-            displayString = String(format: DisplayFormat.scientific(6).string, numericalResult)
-        } else {
-            let components = potentialDisplayString.components(separatedBy: "e")  // ex. 1.234e+01 (2 components) or 0.1234 (1 component)
-            if components.count == 1 {
-                // fixed format (no "e")
-                displayString = potentialDisplayString + (potentialDisplayString.contains(".") ? "" : ".")  // add decimal point to end, if none
+        if case .fixed(let fixed) = displayFormat {
+            // fixed format
+            if digitsLeftOfDecimal > displayView.numberOfDigits {
+                // doesn't fit, temporarily switch to scientific notation
+                displayString = String(format: DisplayFormat.scientific(fixed).string, numericalResult)
+            } else if displayConvertedBackToNumber == 0 && numericalResult != 0 {
+                // rounds to zero, temporarily switch to scientific notation
+                displayString = String(format: DisplayFormat.scientific(fixed).string, numericalResult)
             } else {
-                // scientific or engineering format (with "e")
-                displayString = components[0] + (components[0].contains(".") ? "" : ".") + "e" + components[1]  // add decimal point before "e", if none
+                // all good
+                displayString = potentialDisplayString + (potentialDisplayString.contains(".") ? "" : ".")  // add decimal point to end, if missing
             }
+        } else {
+            // scientific or engineering format
+            let components = potentialDisplayString.components(separatedBy: "e")  // ex. 1.234e+01 (2 components) or 0.1234 (1 component)
+            displayString = components[0] + (components[0].contains(".") ? "" : ".") + "e" + components[1]  // add decimal point before "e", if none
         }
         saveDefaults()
     }
