@@ -351,11 +351,14 @@ class CalculatorViewController: UIViewController {
         case .none:
             // digit pressed (without prefix)
             if digit == "EEX" {
-                if userIsEnteringDigits {
-                    userIsEnteringExponent = true
-                    let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
-                    displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
-                }  // else ignore EEX
+                userIsEnteringExponent = true
+                if !userIsEnteringDigits {
+                    // EEX pressed by itself, set mantissa to 1 (exponent will be 00)
+                    userIsEnteringDigits = true
+                    displayString = "1"
+                }
+                let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
             } else if userIsEnteringDigits {
                 // add digit to display
                 if displayString == "0" {
