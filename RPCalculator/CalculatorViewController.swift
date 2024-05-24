@@ -34,7 +34,6 @@
 //  - implement RND key (round mantissa to displayed digits)
 //  - implement programming
 //  - allow entering multiple leading 0's
-//  - insert commas every 3 digits while entering number (not just after enter pressed)
 //
 
 import UIKit
@@ -372,7 +371,9 @@ class CalculatorViewController: UIViewController {
                         displayString.removeLast(1)
                         displayString += exponent2 + digit
                     } else {
+                        //--------------------------------------------------------
                         displayString += digit  // append entered digit to display
+                        //--------------------------------------------------------
                     }
                 }
             } else {

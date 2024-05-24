@@ -59,15 +59,18 @@ class DisplayView: UIView {
         clearDisplay()  // start with all blank digits
         // handle errors and sign of displayed number
         var modifiedDisplayString = displayString
+        var errorDisplayed = false
         if displayString == "nan." || displayString == "inf." || displayString == "-inf."  {  // also handled in Brain.runProgram
             print(displayString.dropLast())
             modifiedDisplayString = "  Error  0"  // pws: +/-inf should show +/-9.9999999-99 blinking, rather than Error
+            errorDisplayed = true
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }
         // set data for each digitView
         var displayIndex = 0
         var stringIndex = 0
+        var decimalIndex = modifiedDisplayString.count - 1
         while displayIndex < numberOfDigits + 1 {  // look one more, in case decimal past last digit
             if stringIndex < modifiedDisplayString.count {
                 let index = modifiedDisplayString.index(modifiedDisplayString.startIndex, offsetBy: stringIndex)
@@ -75,11 +78,7 @@ class DisplayView: UIView {
                 if character == "." {
                     displayIndex -= 1  // add decimal point to prior digitView (displayIndex will be one behind string index)
                     digitViews[displayIndex].trailingDecimal = true
-                    var commaIndex = displayIndex - 3
-                    while commaIndex > 0 {
-                        digitViews[commaIndex].trailingComma = true
-                        commaIndex -= 3
-                    }
+                    decimalIndex = displayIndex
                 } else if character == "e" {
                     exponentWasFound = true
                     displayIndex = 7  // will increment to 8, below
@@ -90,6 +89,14 @@ class DisplayView: UIView {
             }
             displayIndex += 1
             stringIndex += 1
+        }
+        // add commas every three digits before decimal point (or end of number, if no decimal point)
+        if !errorDisplayed {
+            var commaIndex = decimalIndex - 3
+            while commaIndex > 0 {
+                digitViews[commaIndex].trailingComma = true
+                commaIndex -= 3
+            }
         }
     }
 }
