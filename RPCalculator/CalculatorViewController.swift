@@ -441,7 +441,7 @@ class CalculatorViewController: UIViewController {
             case "EEX":
                 // pi pressed
                 if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
-                displayString = String(180 * Constants.D2R)  // 3.141592653589793
+                displayString = String(Double.pi)  // 3.141592653589793
                 userIsEnteringDigits = true
                 enterKeyPressed(UIButton())
             default:
@@ -557,7 +557,7 @@ class CalculatorViewController: UIViewController {
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterKeyPressed(_ sender: UIButton) {
         if sender.titleLabel?.text != nil {
-            // user pressed enter (not code) - make sound
+            // user (not code) pressed enter - make sound
             simulatePressingButton(sender)
             if restoreFromError() { return }
         }
@@ -572,7 +572,7 @@ class CalculatorViewController: UIViewController {
                 if sign == " " { sign = "+" }
                 displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
             }
-            brain.pushOperand(userIsEnteringDigits ? Double(displayString)! : brain.xRegister! )
+            brain.pushOperand(userIsEnteringDigits ? Double(displayString)! : brain.xRegister!)
         case .f:
             // RND# pressed
             prefix = nil
@@ -584,7 +584,7 @@ class CalculatorViewController: UIViewController {
         case .g:
             // LSTx pressed
             prefix = nil
-            displayString = String(brain.lastXRegister)
+            brain.pushOperand(brain.lastXRegister)
         case .STO:
             // STO RAN# pressed (store new seed)
             prefix = nil
