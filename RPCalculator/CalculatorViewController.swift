@@ -33,7 +33,6 @@
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
 //  - implement programming
-//  - allow entering multiple leading 0's
 //
 
 import UIKit
@@ -357,14 +356,8 @@ class CalculatorViewController: UIViewController {
                 let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
                 displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
             } else if userIsEnteringDigits {
-                // add digit to display
-                if displayString == "0" {
-                    if digit == "." {
-                        displayString += digit  // append decimal to leading zero
-                    } else if digit != "0" {
-                        displayString = digit  // replace leading zero with digit (don't allow multiple leading zeroes)
-                    }
-                } else if !(digit == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {  // only allow one decimal point per number
+                // add digit to display (only one decimal per number, and none in exponent)
+                if !(digit == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {
                     if userIsEnteringExponent {
                         // slide second digit of exponent left and put new digit in its place
                         let exponent2 = String(displayString.removeLast())
