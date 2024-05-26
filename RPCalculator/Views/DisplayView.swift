@@ -91,7 +91,7 @@ class DisplayView: UIView {
             stringIndex += 1
         }
         // add commas every three digits before decimal point (or end of number, if no decimal point)
-        if !errorDisplayed {
+        if !errorDisplayed && decimalIndex < numberOfDigits {  // note: decimalIndex = 16, when pressing f-left-arrow (PREFIX)
             var commaIndex = decimalIndex - 3
             while commaIndex > 0 {
                 digitViews[commaIndex].trailingComma = true

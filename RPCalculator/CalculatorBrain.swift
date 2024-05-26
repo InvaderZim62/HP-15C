@@ -77,7 +77,7 @@ class CalculatorBrain: Codable {
         }
     }
 
-    // mantissa (in this case) is all the significant digits of the displayed number, without the decimal point or exponent
+    // mantissa (in this case) is all digits of displayed number, without punctuation ("e", ".", ",")
     var displayMantissa: String {
         var mantissa = String(xRegister!)
         if let ne = mantissa.firstIndex(of: "e") {

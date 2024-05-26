@@ -653,9 +653,9 @@ class CalculatorViewController: UIViewController {
                 brain.clearStorageRegisters()
             case "←":
                 // CLEAR PREFIX key pressed
+                // display mantissa (all numeric digits with no punctuation), until button is released
                 prefix = nil
                 if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
-                // CLEAR PREFIX key also displays mantissa, until button is released
                 displayString = brain.displayMantissa
                 sender.addTarget(self, action: #selector(clearPrefixButtonReleased(_:)), for: .touchUpInside)
                 return
