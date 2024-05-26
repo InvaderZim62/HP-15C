@@ -77,9 +77,9 @@ class CalculatorBrain: Codable {
         }
     }
 
-    // mantissa (in this case) is all digits of displayed number, without punctuation ("e", ".", ",")
+    // mantissa (in this case) is all digits of displayed number, without punctuation ("-", "e", ".", ",")
     var displayMantissa: String {
-        var mantissa = String(xRegister!)
+        var mantissa = String(abs(xRegister!))
         if let ne = mantissa.firstIndex(of: "e") {
             mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
         }
