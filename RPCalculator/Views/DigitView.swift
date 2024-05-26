@@ -27,6 +27,8 @@ struct DigitConst {
 
 class DigitView: UIView {
     
+    override var description: String { return "\(digit)\(trailingDecimal ? "." : "")\(trailingComma ? "," : "")" }
+
     var digit: Character = " " { didSet { setNeedsDisplay() } }
     var trailingDecimal = false
     var trailingComma = false

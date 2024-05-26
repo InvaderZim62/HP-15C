@@ -60,7 +60,7 @@ class DisplayView: UIView {
         // handle errors and sign of displayed number
         var modifiedDisplayString = displayString
         var errorDisplayed = false
-        if displayString == "nan." || displayString == "inf." || displayString == "-inf."  {  // also handled in Brain.runProgram
+        if displayString == "nan" || displayString == "inf" || displayString == "-inf"  {  // also handled in Brain.runProgram
             print(displayString.dropLast())
             modifiedDisplayString = "  Error  0"  // pws: +/-inf should show +/-9.9999999-99 blinking, rather than Error
             errorDisplayed = true

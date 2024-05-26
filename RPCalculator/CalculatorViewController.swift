@@ -33,6 +33,12 @@
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
 //  - implement programming
+//  - some numbers don't allow entering exponent EEX (ex. 12345678 EEX doesn't, 1234567 EEX does, 1.2345678 EEX does)
+//  - p59 rounding displayed scientific numbers not implemented
+//  - p61 swapping "." and "," in displaying number is not implemented
+//
+//  Make program more like real calculator...
+//  - put digits in the x-register as they are added to the display (push stack up when first starting to add digits)
 //
 
 import UIKit
@@ -270,9 +276,9 @@ class CalculatorViewController: UIViewController {
     
     // run program and set display string (switch to scientific notation, if fixed format won't fit)
     private func runAndUpdateInterface() {
-        let numericalResult = brain.runProgram()
+        let numericalResult = brain.runProgram()  // may be +Inf or -Inf
         
-        var potentialDisplayString = String(format: displayFormat.string, numericalResult)
+        var potentialDisplayString = String(format: displayFormat.string, numericalResult)  // may be "inf" or "-inf"
         // for engineering notation, adjust mantissa so that exponent is a factor of 3
         if case .engineering(let additionalDigits) = displayFormat {
             let components = potentialDisplayString.components(separatedBy: "e")
@@ -572,7 +578,9 @@ class CalculatorViewController: UIViewController {
                 if sign == " " { sign = "+" }
                 displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
             }
+            //---------------------------------------------------------------------------------
             brain.pushOperand(userIsEnteringDigits ? Double(displayString)! : brain.xRegister!)
+            //---------------------------------------------------------------------------------
         case .f:
             // RND# pressed
             prefix = nil
