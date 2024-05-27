@@ -63,6 +63,10 @@ class DisplayView: UIView {
             print(displayString.dropLast())
             modifiedDisplayString = "  Error  0"  // pws: +/-inf should show +/-9.9999999-99 blinking, rather than Error
             errorDisplayed = true
+        } else if displayString == "+overflow" {
+            modifiedDisplayString = " 9.999999 99"
+        } else if displayString == "-overflow" {
+            modifiedDisplayString = "-9.999999 99"
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }

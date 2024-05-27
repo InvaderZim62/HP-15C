@@ -36,6 +36,7 @@
 //  - some numbers don't allow entering exponent EEX (ex. 12345678 EEX doesn't, 1234567 EEX does, 1.2345678 EEX does)
 //  - p59 rounding displayed scientific numbers not implemented
 //  - p61 swapping "." and "," in displaying number is not implemented
+//  - make display blink when +/-overflow (9.999999 99)
 //
 //  Make program more like real calculator...
 //  - put digits in the x-register as they are added to the display (push stack up when first starting to add digits)
@@ -279,6 +280,9 @@ class CalculatorViewController: UIViewController {
         let numericalResult = brain.runProgram()  // may be +Inf or -Inf
         
         var potentialDisplayString = String(format: displayFormat.string, numericalResult)  // may be "inf" or "-inf"
+        if !numericalResult.description.contains("inf") && abs(numericalResult) > 9.999999999e99 {
+            potentialDisplayString = numericalResult > 0 ? "+overflow" : "-overflow"
+        }
         // for engineering notation, adjust mantissa so that exponent is a factor of 3
         if case .engineering(let additionalDigits) = displayFormat {
             let components = potentialDisplayString.components(separatedBy: "e")
