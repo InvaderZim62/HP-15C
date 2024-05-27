@@ -359,7 +359,8 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = true
                     displayString = "1"
                 }
-                let paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                var paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                if displayString.prefix(1) == "-" { paddingLength += 1 }  // negative sign pushes numbers to right
                 displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
             } else if userIsEnteringDigits {
                 // add digit to display (only one decimal per number, and none in exponent)
