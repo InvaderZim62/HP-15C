@@ -21,6 +21,7 @@ class DisplayView: UIView {
     
     var numberOfDigits = 0 { didSet { createDigitViews() } }
     var displayString = "" { didSet { updateDisplay() } }
+    var showCommas = true
 
     private var digitViews = [DigitView]()
     private var exponentWasFound = false
@@ -53,8 +54,6 @@ class DisplayView: UIView {
         digitViews.forEach { $0.clear() }
     }
     
-    // set digit character for each digitView, drawn from modifiedDisplayString
-    // set trailingDecimal or trailingComma boolean to true for digitView preceding decimal point or comma
     private func updateDisplay() {
         clearDisplay()  // start with all blank digits
         // handle errors and sign of displayed number
@@ -70,7 +69,6 @@ class DisplayView: UIView {
         // set data for each digitView
         var displayIndex = 0
         var stringIndex = 0
-        var decimalIndex = modifiedDisplayString.count - 1
         while displayIndex < numberOfDigits + 1 {  // look one more, in case decimal past last digit
             if stringIndex < modifiedDisplayString.count {
                 let index = modifiedDisplayString.index(modifiedDisplayString.startIndex, offsetBy: stringIndex)
@@ -78,7 +76,6 @@ class DisplayView: UIView {
                 if character == "." {
                     displayIndex -= 1  // add decimal point to prior digitView (displayIndex will be one behind string index)
                     digitViews[displayIndex].trailingDecimal = true
-                    decimalIndex = displayIndex
                 } else if character == "e" {
                     exponentWasFound = true
                     displayIndex = 7  // will increment to 8, below
@@ -90,9 +87,18 @@ class DisplayView: UIView {
             displayIndex += 1
             stringIndex += 1
         }
-        // add commas every three digits before decimal point (or end of number, if no decimal point)
-        if !errorDisplayed && decimalIndex < numberOfDigits {  // note: decimalIndex = 16, when pressing f-left-arrow (PREFIX)
-            var commaIndex = decimalIndex - 3
+        // add commas every three digits before decimal point (or end of number,
+        // if no decimal point), except when showing mantissa (PREFIX)
+        if !errorDisplayed && showCommas {
+            var endIndex: Int
+            if let i = modifiedDisplayString.firstIndex(of: ".") {
+                endIndex = modifiedDisplayString.distance(from: modifiedDisplayString.startIndex, to: i) - 1  // ex. "1234.0" -> "1,234.0"
+            } else if let i = modifiedDisplayString.dropFirst().firstIndex(of: " ") {
+                endIndex = modifiedDisplayString.distance(from: modifiedDisplayString.startIndex, to: i) - 1  // ex. "1234  05" -> "1,234  05"
+            } else {
+                endIndex = min(modifiedDisplayString.count - 1, numberOfDigits - 4)                           // ex. "1234" -> "1,234"
+            }
+            var commaIndex = endIndex - 3
             while commaIndex > 0 {
                 digitViews[commaIndex].trailingComma = true
                 commaIndex -= 3

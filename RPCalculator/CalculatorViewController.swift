@@ -665,6 +665,7 @@ class CalculatorViewController: UIViewController {
                 // display mantissa (all numeric digits with no punctuation), until button is released
                 prefix = nil
                 if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                displayView.showCommas = false
                 displayString = brain.displayMantissa
                 sender.addTarget(self, action: #selector(clearPrefixButtonReleased(_:)), for: .touchUpInside)
                 return
@@ -702,6 +703,7 @@ class CalculatorViewController: UIViewController {
 
     @objc private func clearPrefixButtonReleased(_ button: UIButton) {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
+        displayView.showCommas = true
         runAndUpdateInterface()
     }
     
