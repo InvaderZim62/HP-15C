@@ -571,12 +571,12 @@ class CalculatorViewController: UIViewController {
         case .none:
             // Enter pressed
             if userIsEnteringExponent {
-                // convert "1.2345    01" to "1.2345E+01", before trying to convert to number
+                // convert "1.2345    01" to "1.2345e+01", before trying to convert to number
                 let exponent2 = String(displayString.removeLast())
                 let exponent1 = String(displayString.removeLast())
                 var sign = String(displayString.removeLast())
                 if sign == " " { sign = "+" }
-                displayString = displayString.replacingOccurrences(of: " ", with: "") + "E" + sign + exponent1 + exponent2
+                displayString = displayString.replacingOccurrences(of: " ", with: "") + "e" + sign + exponent1 + exponent2
             }
             //---------------------------------------------------------------------------------
             brain.pushOperand(userIsEnteringDigits ? Double(displayString)! : brain.xRegister!)
