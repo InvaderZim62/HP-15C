@@ -37,6 +37,7 @@
 //  - p59 rounding displayed scientific numbers not implemented
 //  - p61 swapping "." and "," in displaying number is not implemented
 //  - make display blink when +/-overflow (9.999999 99)
+//  - p61 implement underflow (displays 0.0)
 //
 //  Make program more like real calculator...
 //  - put digits in the x-register as they are added to the display (push stack up when first starting to add digits)
@@ -86,18 +87,20 @@ class CalculatorViewController: UIViewController {
         return displayLabels.map { $0.alpha }
     }
     
-    var prefix: Prefix? { didSet {
-        fLabel.alpha = 0  // use alpha, instead of isHidden, to maintain stackView layout
-        gLabel.alpha = 0
-        switch prefix {
-        case .f:
-            fLabel.alpha = 1  // show "f" on display
-        case .g:
-            gLabel.alpha = 1  // show "g" on display
-        default:
-            break  // don't show "f" or "g" on display
+    var prefix: Prefix? {
+        didSet {
+            fLabel.alpha = 0  // use alpha, instead of isHidden, to maintain stackView layout
+            gLabel.alpha = 0
+            switch prefix {
+            case .f:
+                fLabel.alpha = 1  // show "f" on display
+            case .g:
+                gLabel.alpha = 1  // show "g" on display
+            default:
+                break  // don't show "f" or "g" on display
+            }
         }
-    } }
+    }
     
     var trigMode = TrigMode.DEG { didSet {
         brain.trigMode = trigMode
@@ -277,9 +280,11 @@ class CalculatorViewController: UIViewController {
     
     // run program and set display string (switch to scientific notation, if fixed format won't fit)
     private func runAndUpdateInterface() {
-        let numericalResult = brain.runProgram()  // may be +Inf or -Inf
-        
-        var potentialDisplayString = String(format: displayFormat.string, numericalResult)  // may be "inf" or "-inf"
+        //--------------------------------------
+        let numericalResult = brain.runProgram()  // may be +Inf, -Inf, or NaN
+        //--------------------------------------
+
+        var potentialDisplayString = String(format: displayFormat.string, numericalResult)  // may be "inf", "-inf", or "nan"
         if !numericalResult.description.contains("inf") && abs(numericalResult) > 9.999999999e99 {
             potentialDisplayString = numericalResult > 0 ? "+overflow" : "-overflow"
         }
@@ -519,11 +524,11 @@ class CalculatorViewController: UIViewController {
     @IBAction func operationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        let keyName = sender.currentTitle!
+        let operation = sender.currentTitle!
         
         switch prefix {
         case .none:
-            switch keyName {
+            switch operation {
             case "CHS":
                 if userIsEnteringExponent {
                     // change sign of exponent, during entry
@@ -558,10 +563,12 @@ class CalculatorViewController: UIViewController {
             return
         }
         // push operation onto stack (with prefix)
-        let savePrefix = (prefix?.rawValue ?? "n")
+        let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
         prefix = nil  // must come after previous line and before enterPressed
         if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
-        brain.pushOperation(savePrefix + keyName)
+        //----------------------------------------------
+        brain.pushOperation(oneLetterPrefix + operation)
+        //----------------------------------------------
         runAndUpdateInterface()
     }
 

@@ -110,7 +110,9 @@ class CalculatorBrain: Codable {
     func runProgram() -> Double {
         if let registerX = programStack.last as? Double { lastXRegister = registerX }  // save register X (display) before computing new results
         var saveStack = programStack  // save in case of nan or inf
-        let (result, secondResult) = popOperandOffStack(&programStack)
+        //------------------------------------------------------------
+        let (result, secondResult) = popOperandOffStack(&programStack)  // call recursively, until results obtained
+        //------------------------------------------------------------
         if result.isNaN || result.isInfinite {
             // restore stack to pre-error state
             saveStack.removeLast()  // last element is the operation causing the error
@@ -161,9 +163,9 @@ class CalculatorBrain: Codable {
             if topOfStack is Double {
                 return (topOfStack as! Double, nil)
             } else if topOfStack is String {
-                let alternatePlusOperation = topOfStack as! String
-                let prefixKey = alternatePlusOperation.first
-                let operation = alternatePlusOperation.dropFirst()
+                let prefixAndOperation = topOfStack as! String
+                let prefixKey = prefixAndOperation.first  // prefix is always one letter
+                let operation = prefixAndOperation.dropFirst()
                 
                 switch prefixKey {
                 case "n":  // none (primary button functions)
@@ -202,61 +204,74 @@ class CalculatorBrain: Codable {
                 case "f":  // functions above button (orange)
                     switch operation {
                     case "STO":
+                        // FRAC - decimal portion of number
                         let number = popOperandOffStack(&stack).result
-                        result = number - Double(Int(number))  // frac (decimal portion of number)
+                        result = number - Double(Int(number))
                     case "1":  // sent from digitPressed
+                        // →R - convert polar coordinates to rectangular
                         let radius = popOperandOffStack(&stack).result
                         let angle = popOperandOffStack(&stack).result
-                        // convert to rectangular coordinates
                         result = radius * cos(angle * angleConversion)  // x
                         secondResult = radius * sin(angle * angleConversion)  // y
                     case "2":  // sent from digitPressed
-                        let decimalHours = popOperandOffStack(&stack).result  // convert to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
+                        // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
+                        let decimalHours = popOperandOffStack(&stack).result
                         let hours = Int(decimalHours)
                         let minutes = Int((decimalHours - Double(hours)) * 60)
                         let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
                         result = Double(hours) + Double(minutes) / 100 + seconds / 10000
                     case "3":  // sent from digitPressed
-                        result = popOperandOffStack(&stack).result * Constants.D2R  // convert to radians
+                        // →RAD - convert to radians
+                        result = popOperandOffStack(&stack).result * Constants.D2R
                     default:
                         break
                     }
                 case "g":  // functions below button (blue)
                     switch operation {
                     case "STO":
-                        result = Double(Int(popOperandOffStack(&stack).result))  // int
+                        // INT
+                        result = Double(Int(popOperandOffStack(&stack).result))
                     case "SIN":
-                        result = asin(popOperandOffStack(&stack).result) / angleConversion  // arcsine
+                        // SIN-1 (arcsin)
+                        result = asin(popOperandOffStack(&stack).result) / angleConversion
                     case "COS":
-                        result = acos(popOperandOffStack(&stack).result) / angleConversion  // arccosine
+                        // COS-1 (arccos)
+                        result = acos(popOperandOffStack(&stack).result) / angleConversion
                     case "TAN":
-                        result = atan(popOperandOffStack(&stack).result) / angleConversion  // arctangent
+                        // TAN-1 (arctan)
+                        result = atan(popOperandOffStack(&stack).result) / angleConversion
                     case "√x":
-                        result = pow(popOperandOffStack(&stack).result, 2)  // square
+                        // x²
+                        result = pow(popOperandOffStack(&stack).result, 2)
                     case "ex":
-                        result = log(popOperandOffStack(&stack).result)  // natural log
+                        // LN (natural log)
+                        result = log(popOperandOffStack(&stack).result)
                     case "10x":
-                        result = log10(popOperandOffStack(&stack).result)  // log base 10
+                        // LOG (log base 10)
+                        result = log10(popOperandOffStack(&stack).result)
                     case "yx":
+                        // %
                         let percent = popOperandOffStack(&stack).result * 0.01
                         let baseNumber = popOperandOffStack(&stack).result
                         result = percent * baseNumber  // %
                         secondResult = baseNumber
                     case "1/x":
+                        // 𝝙% (delta %)
                         let secondNumber = popOperandOffStack(&stack).result
                         let baseNumber = popOperandOffStack(&stack).result
-                        result = (secondNumber - baseNumber) / baseNumber * 100  // delta %
+                        result = (secondNumber - baseNumber) / baseNumber * 100
                         secondResult = baseNumber
                     case "CHS":
-                        result = abs(popOperandOffStack(&stack).result)  // absolute value
+                        // ABS (absolute value)
+                        result = abs(popOperandOffStack(&stack).result)
                     case "1":  // sent from digitPressed
+                        // →P - convert rectangular coordinates to polar
                         let x = popOperandOffStack(&stack).result
                         let y = popOperandOffStack(&stack).result
-                        // convert to polar coordinates
                         result = sqrt(x * x + y * y)  // radius
                         secondResult = atan2(y, x) / angleConversion  // angle
                     case "2":  // sent from digitPressed
-                        // convert to decimal hours
+                        // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
                         let hoursMinuteSeconds = popOperandOffStack(&stack).result  // ex. hoursMinutesSeconds = 1.1404200
                         let hours = Int(hoursMinuteSeconds)  // ex. hours = 1
                         let decimal = Int(round((hoursMinuteSeconds - Double(hours)) * 10000000))  // ex. decimal = 1404200
@@ -264,7 +279,8 @@ class CalculatorBrain: Codable {
                         let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
                         result = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
                     case "3":  // sent from digitPressed
-                        result = popOperandOffStack(&stack).result / Constants.D2R  // convert to degrees
+                        // →DEG - convert to degrees
+                        result = popOperandOffStack(&stack).result / Constants.D2R
                     default:
                         break
                     }

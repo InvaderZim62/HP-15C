@@ -61,7 +61,7 @@ class DisplayView: UIView {
         var errorDisplayed = false
         if displayString == "nan" || displayString == "inf" || displayString == "-inf"  {  // also handled in Brain.runProgram
             print(displayString.dropLast())
-            modifiedDisplayString = "  Error  0"  // pws: +/-inf should show +/-9.9999999-99 blinking, rather than Error
+            modifiedDisplayString = "  Error  0"
             errorDisplayed = true
         } else if displayString == "+overflow" {
             modifiedDisplayString = " 9.999999 99"
