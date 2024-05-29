@@ -596,26 +596,6 @@ class CalculatorViewController: UIViewController {
         userIsEnteringExponent = false
         stackLift = false
     }
-    
-    // operation:
-    //    if userIsEnteringDigits {
-    //        if stackLift {          // stackLift = true after enter, false after operation
-    //            endDisplayEntry()
-    //        } else {
-    //            brain.pushOperand(Double(displayString)!)
-    //        }
-    //    }
-    //    brain.pushOperation(oneLetterPrefix + operation)
-    //    runAndUpdateInterface()
-    // enter:
-    //    brain.pushOperand(Double(displayString)!)
-    //    brain.pushOperand(Double(displayString)!)
-    // works: (1 + 2) * (3 + 4) => 1 enter 2 + 3 enter 4 + x
-    //                  digitEntry           t           t f
-    //                  stackLift            T           T F
-    // works: (1 + 2) * 7       => 1 enter 2 + 7 x
-    //                  digitEntry           t
-    //                  stackLift            T   F
 
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterKeyPressed(_ sender: UIButton) {
