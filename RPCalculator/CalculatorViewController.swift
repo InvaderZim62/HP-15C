@@ -73,7 +73,7 @@ class CalculatorViewController: UIViewController {
     var displayLabels = [UILabel]()
     var savedDisplayLabelAlphas = [CGFloat]()  // save for turning calculator Off/On
     var calculatorIsOn = true
-    var stackLift = false  // true between pressing enter and an operation (determines overwriting or pushing xRegister)
+    var liftStack = true  // false between pressing enter and an operation (determines overwriting or pushing xRegister)
     var userIsEnteringDigits = false
     var userIsEnteringExponent = false  // userIsEnteringExponent and userIsEnteringDigits can be true at the same time
     var buttonCoverViews = [UIButton: ButtonCoverView]()  // overlays buttons to provide text above and inside buttons
@@ -573,15 +573,15 @@ class CalculatorViewController: UIViewController {
             return
         }
         if userIsEnteringDigits {
-            if stackLift {
-                // operation follows enter; ex. 1 enter 2 +
-                endDisplayEntry()  // overwrite xRegister with display
-            } else {
+            if liftStack {
                 // operation doesn't follow enter; ex. pi 3 -, or 4 sqrt 3 x
                 brain.pushOperand(Double(displayString)!)  // push up xRegister before overwriting
                 brain.printStack()
+            } else {
+                // operation follows enter; ex. 1 enter 2 +
+                endDisplayEntry()  // overwrite xRegister with display
             }
-        }  // else user not entering digits; ex. pi pi +
+        }  // else complete number already in xRegister; ex. pi pi +
         
         brain.lastXRegister = brain.xRegister!  // save xRegister before pushing operation onto stack
         
@@ -594,7 +594,7 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
-        stackLift = false
+        liftStack = true
     }
 
     // push digits from display onto stack when enter key is pressed
@@ -651,7 +651,7 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
-        stackLift = true
+        liftStack = false
     }
     
     // manipulate stack or display
