@@ -508,6 +508,7 @@ class CalculatorViewController: UIViewController {
                 // store displayed number in register
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.storeResultsInRegister(digit)
+                runAndUpdateInterface()
             default:
                 invalidKeySequenceEntered()
             }
@@ -519,6 +520,7 @@ class CalculatorViewController: UIViewController {
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayString = String(brain.recallNumberFromStorageRegister(digit))
                 brain.pushOperand(Double(displayString)!)
+                runAndUpdateInterface()
             default:
                 invalidKeySequenceEntered()
             }
