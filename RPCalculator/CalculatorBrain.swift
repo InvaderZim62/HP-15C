@@ -47,7 +47,7 @@ class CalculatorBrain: Codable {
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case trigMode, lastXRegister, errorPresent, xRegister, programStack }
+    private enum CodingKeys: String, CodingKey { case trigMode, lastXRegister, errorPresent, xRegister, programStack, storageRegisters }
     
     init() { }
 
@@ -58,6 +58,7 @@ class CalculatorBrain: Codable {
         self.errorPresent = try container.decode(Bool.self, forKey: .errorPresent)
         self.xRegister = try container.decodeIfPresent(Double.self, forKey: .xRegister)
         self.programStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .programStack)) as? [Any] ?? []
+        self.storageRegisters = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .storageRegisters)) as? [String: Double] ?? [:]
     }
     
     func encode(to encoder: Encoder) throws {
@@ -67,6 +68,7 @@ class CalculatorBrain: Codable {
         try container.encode(self.errorPresent, forKey: .errorPresent)
         try container.encodeIfPresent(self.xRegister, forKey: .xRegister)
         try container.encode(JSONSerialization.data(withJSONObject: programStack), forKey: .programStack)
+        try container.encode(JSONSerialization.data(withJSONObject: storageRegisters), forKey: .storageRegisters)
     }
 
     // MARK: - Computed properties
