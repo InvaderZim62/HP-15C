@@ -25,8 +25,13 @@ class CalculatorBrain: Codable {
     var errorPresent = false
 
     var xRegister: Double? {
-        get { return programStack.last as? Double }
-        set { programStack[programStack.count - 1] = newValue! }  // ok to assume programStack is not empty (count > 0)
+        get {
+            return programStack.last as? Double
+        }
+        set {
+            programStack[programStack.count - 1] = newValue!  // ok to assume programStack is not empty (count > 0)
+            printStack()
+        }
     }
 
     // programStack is array of Any, to accommodate mixture of Double (operands) and String (operations)
@@ -108,7 +113,6 @@ class CalculatorBrain: Codable {
     }
     
     func runProgram() -> Double {
-        if let registerX = programStack.last as? Double { lastXRegister = registerX }  // save register X (display) before computing new results
         var saveStack = programStack  // save in case of nan or inf
         //------------------------------------------------------------
         let (result, secondResult) = popOperandOffStack(&programStack)  // call recursively, until results obtained

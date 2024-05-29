@@ -73,6 +73,7 @@ class CalculatorViewController: UIViewController {
     var displayLabels = [UILabel]()
     var savedDisplayLabelAlphas = [CGFloat]()  // save for turning calculator Off/On
     var calculatorIsOn = true
+    var stackLift = false  // true between pressing enter and an operation (determines overwriting or pushing xRegister)
     var userIsEnteringDigits = false
     var userIsEnteringExponent = false  // userIsEnteringExponent and userIsEnteringDigits can be true at the same time
     var buttonCoverViews = [UIButton: ButtonCoverView]()  // overlays buttons to provide text above and inside buttons
@@ -278,6 +279,13 @@ class CalculatorViewController: UIViewController {
         return attributedString
     }
     
+    private func endDisplayEntry() {
+        brain.xRegister = Double(displayString)
+        userIsEnteringDigits = false
+        userIsEnteringExponent = false
+        brain.printStack()
+    }
+    
     // run program and set display string (switch to scientific notation, if fixed format won't fit)
     private func runAndUpdateInterface() {
         //--------------------------------------
@@ -456,10 +464,10 @@ class CalculatorViewController: UIViewController {
                 trigMode = .GRAD
             case "EEX":
                 // pi pressed
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayString = String(Double.pi)  // 3.141592653589793
-                userIsEnteringDigits = true
-                enterKeyPressed(UIButton())
+                brain.pushOperand(Double.pi)
+                runAndUpdateInterface()
             default:
                 break
             }
@@ -467,7 +475,7 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             if let decimalPlaces = Int(digit) {
                 // number after FIX pressed
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .fixed(decimalPlaces)
                 runAndUpdateInterface()
             } else {
@@ -477,7 +485,7 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             if let decimalPlaces = Int(digit) {
                 // number after SCI pressed
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             } else {
@@ -487,7 +495,7 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             if let additionalDigits = Int(digit) {
                 // number after ENG pressed
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .engineering(min(additionalDigits, 6))  // 1 sign + 1 significant + 6 additional + 1 exponent sign + 2 exponents = 11 digits
                 runAndUpdateInterface()
             } else {
@@ -498,7 +506,7 @@ class CalculatorViewController: UIViewController {
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not implement registers ".0" through ".9"
                 // store displayed number in register
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.storeResultsInRegister(digit)
             default:
                 invalidKeySequenceEntered()
@@ -508,9 +516,9 @@ class CalculatorViewController: UIViewController {
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // recall register, show in display
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayString = String(brain.recallNumberFromStorageRegister(digit))
-                userIsEnteringDigits = true
-                enterKeyPressed(UIButton())
+                brain.pushOperand(Double(displayString)!)
             default:
                 invalidKeySequenceEntered()
             }
@@ -562,23 +570,56 @@ class CalculatorViewController: UIViewController {
             invalidKeySequenceEntered()
             return
         }
+        if userIsEnteringDigits {
+            if stackLift {
+                // operation follows enter; ex. 1 enter 2 +
+                endDisplayEntry()  // overwrite xRegister with display
+            } else {
+                // operation doesn't follow enter; ex. pi 3 -, or 4 sqrt 3 x
+                brain.pushOperand(Double(displayString)!)  // push up xRegister before overwriting
+                brain.printStack()
+            }
+        }  // else user not entering digits; ex. pi pi +
+        
+        brain.lastXRegister = brain.xRegister!  // save xRegister before pushing operation onto stack
+        
         // push operation onto stack (with prefix)
         let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
-        prefix = nil  // must come after previous line and before enterPressed
-        if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push display onto stack, so user doesn't need to hit enter before each operation
+        prefix = nil  // must come after previous line
         //----------------------------------------------
         brain.pushOperation(oneLetterPrefix + operation)
         //----------------------------------------------
         runAndUpdateInterface()
+        userIsEnteringDigits = false
+        userIsEnteringExponent = false
+        stackLift = false
     }
+    
+    // operation:
+    //    if userIsEnteringDigits {
+    //        if stackLift {          // stackLift = true after enter, false after operation
+    //            endDisplayEntry()
+    //        } else {
+    //            brain.pushOperand(Double(displayString)!)
+    //        }
+    //    }
+    //    brain.pushOperation(oneLetterPrefix + operation)
+    //    runAndUpdateInterface()
+    // enter:
+    //    brain.pushOperand(Double(displayString)!)
+    //    brain.pushOperand(Double(displayString)!)
+    // works: (1 + 2) * (3 + 4) => 1 enter 2 + 3 enter 4 + x
+    //                  digitEntry           t           t f
+    //                  stackLift            T           T F
+    // works: (1 + 2) * 7       => 1 enter 2 + 7 x
+    //                  digitEntry           t
+    //                  stackLift            T   F
 
     // push digits from display onto stack when enter key is pressed
     @IBAction func enterKeyPressed(_ sender: UIButton) {
-        if sender.titleLabel?.text != nil {
-            // user (not code) pressed enter - make sound
-            simulatePressingButton(sender)
-            if restoreFromError() { return }
-        }
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        
         switch prefix {
         case .none:
             // Enter pressed
@@ -590,15 +631,18 @@ class CalculatorViewController: UIViewController {
                 if sign == " " { sign = "+" }
                 displayString = displayString.replacingOccurrences(of: " ", with: "") + "e" + sign + exponent1 + exponent2
             }
-            //---------------------------------------------------------------------------------
-            brain.pushOperand(userIsEnteringDigits ? Double(displayString)! : brain.xRegister!)
-            //---------------------------------------------------------------------------------
+            //---------------------------------------
+            brain.pushOperand(Double(displayString)!)
+            brain.pushOperand(Double(displayString)!)
+            //---------------------------------------
         case .f:
             // RND# pressed
             prefix = nil
             srand48(seed)  // re-seed each time, so a manually stored seed will generate the same sequence each time
             let number = drand48()
             seed = Int(number * Double(Int32.max))  // regenerate my own seed to use next time (Note: Int.max gives same numbers for different seeds)
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            displayString = String(number)
             brain.pushOperand(number)
             lastRandomNumberGenerated = number
         case .g:
@@ -608,7 +652,7 @@ class CalculatorViewController: UIViewController {
         case .STO:
             // STO RAN# pressed (store new seed)
             prefix = nil
-            if userIsEnteringDigits { enterKeyPressed(UIButton()) }
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
             if var number = brain.xRegister {
                 number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
                 seed = Int(number * Double(Int32.max))
@@ -625,6 +669,7 @@ class CalculatorViewController: UIViewController {
         runAndUpdateInterface()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
+        stackLift = true
     }
     
     // manipulate stack or display
@@ -640,11 +685,11 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "R↓":
                 // R↓ key pressed (roll stack down)
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.rollStack(directionDown: true)
             case "x≷y":
                 // x≷y key pressed (swap x-y registers)
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.swapXyRegisters()
             case "←":
                 // ← key pressed (remove digit/number)
@@ -669,13 +714,13 @@ class CalculatorViewController: UIViewController {
                 brain.clearAll()
             case "x≷y":
                 // CLEAR REG key pressed (clear storage registers, not stack)
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.clearStorageRegisters()
             case "←":
                 // CLEAR PREFIX key pressed
                 // display mantissa (all numeric digits with no punctuation), until button is released
                 prefix = nil
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayView.showCommas = false
                 displayString = brain.displayMantissa
                 sender.addTarget(self, action: #selector(clearPrefixButtonReleased(_:)), for: .touchUpInside)
@@ -687,7 +732,7 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "R↓":
                 // R↑ key pressed (roll stack up)
-                if userIsEnteringDigits { enterKeyPressed(UIButton()) }  // push current digits onto stack
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.rollStack(directionDown: false)
             case "←":
                 // CLx key pressed
