@@ -80,6 +80,20 @@ class CalculatorViewController: UIViewController {
     var seed = 0  // HP-15C initial random number seed is zero
     var lastRandomNumberGenerated = 0.0
     
+    var displayStringNumber: Double {
+        if userIsEnteringExponent {
+            // convert "1.2345    01" to "1.2345e+01", before trying to convert to number
+            var tempDisplayString = displayString
+            let exponent2 = String(tempDisplayString.removeLast())
+            let exponent1 = String(tempDisplayString.removeLast())
+            var sign = String(tempDisplayString.removeLast())
+            if sign == " " { sign = "+" }
+            return Double(tempDisplayString.replacingOccurrences(of: " ", with: "") + "e" + sign + exponent1 + exponent2)!
+        } else {
+            return Double(displayString)!
+        }
+    }
+
     var decimalWasAlreadyEntered: Bool {
         return displayString.contains(".")
     }
@@ -280,7 +294,7 @@ class CalculatorViewController: UIViewController {
     }
     
     private func endDisplayEntry() {
-        brain.xRegister = Double(displayString)
+        brain.xRegister = displayStringNumber
         userIsEnteringDigits = false
         userIsEnteringExponent = false
         brain.printStack()
@@ -519,7 +533,7 @@ class CalculatorViewController: UIViewController {
                 // recall register, show in display
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayString = String(brain.recallNumberFromStorageRegister(digit))
-                brain.pushOperand(Double(displayString)!)
+                brain.pushOperand(displayStringNumber)
                 runAndUpdateInterface()
             default:
                 invalidKeySequenceEntered()
@@ -575,7 +589,7 @@ class CalculatorViewController: UIViewController {
         if userIsEnteringDigits {
             if liftStack {
                 // operation doesn't follow enter; ex. pi 3 -, or 4 sqrt 3 x
-                brain.pushOperand(Double(displayString)!)  // push up xRegister before overwriting
+                brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
                 brain.printStack()
             } else {
                 // operation follows enter; ex. 1 enter 2 +
@@ -605,17 +619,9 @@ class CalculatorViewController: UIViewController {
         switch prefix {
         case .none:
             // Enter pressed
-            if userIsEnteringExponent {
-                // convert "1.2345    01" to "1.2345e+01", before trying to convert to number
-                let exponent2 = String(displayString.removeLast())
-                let exponent1 = String(displayString.removeLast())
-                var sign = String(displayString.removeLast())
-                if sign == " " { sign = "+" }
-                displayString = displayString.replacingOccurrences(of: " ", with: "") + "e" + sign + exponent1 + exponent2
-            }
             //---------------------------------------
-            brain.pushOperand(Double(displayString)!)
-            brain.pushOperand(Double(displayString)!)
+            brain.pushOperand(displayStringNumber)
+            brain.pushOperand(displayStringNumber)
             //---------------------------------------
         case .f:
             // RND# pressed
