@@ -304,7 +304,6 @@ class CalculatorViewController: UIViewController {
     private func updateInterface() {
         //--------------------------------------
         let numericalResult = brain.xRegister!
-//        let numericalResult = brain.runProgram()  // may be +Inf, -Inf, or NaN
         //--------------------------------------
 
         var potentialDisplayString = String(format: displayFormat.string, numericalResult)  // may be "inf", "-inf", or "nan"
@@ -349,16 +348,16 @@ class CalculatorViewController: UIViewController {
     }
     
     private func invalidKeySequenceEntered() {
-        displayString = "Error"  // not sure what the real HP-15C displays
-        brain.errorPresent = true
+        displayString = " Error  0"  // not sure what the real HP-15C displays
+        brain.error = .badKeySequence
         prefix = nil
         userIsEnteringDigits = false
         userIsEnteringExponent = false
     }
     
     private func restoreFromError() -> Bool {
-        if brain.errorPresent {
-            brain.errorPresent = false
+        if brain.error != .none {
+            brain.error = .none
             updateInterface()
             return true
         } else {
@@ -605,10 +604,14 @@ class CalculatorViewController: UIViewController {
         // push operation onto stack (with prefix)
         let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
         prefix = nil  // must come after previous line
-        //----------------------------------------------
+        //-------------------------------------------------
         brain.performOperation(oneLetterPrefix + operation)
-        //----------------------------------------------
-        updateInterface()
+        //-------------------------------------------------
+        if brain.error == .none {
+            updateInterface()
+        } else {
+            displayString = "nan"  // triggers displayView to show "Error  0"
+        }
         userIsEnteringDigits = false
         userIsEnteringExponent = false
         liftStack = true

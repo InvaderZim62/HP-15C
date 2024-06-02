@@ -18,11 +18,15 @@ struct Constants {
     static let G2R = Double.pi / 200  // gradians to radians
 }
 
+enum Error: Codable {
+    case NaN, badKeySequence, none
+}
+
 class CalculatorBrain: Codable {
     
     var trigMode = TrigMode.DEG
     var lastXRegister = 0.0
-    var errorPresent = false
+    var error = Error.none
 
     var xRegister: Double? {
         get {
@@ -46,7 +50,7 @@ class CalculatorBrain: Codable {
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case trigMode, lastXRegister, errorPresent, xRegister, programStack, storageRegisters }
+    private enum CodingKeys: String, CodingKey { case trigMode, lastXRegister, error, xRegister, programStack, storageRegisters }
     
     init() { }
 
@@ -54,7 +58,7 @@ class CalculatorBrain: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.trigMode = try container.decode(TrigMode.self, forKey: .trigMode)
         self.lastXRegister = try container.decode(Double.self, forKey: .lastXRegister)
-        self.errorPresent = try container.decode(Bool.self, forKey: .errorPresent)
+        self.error = try container.decode(Error.self, forKey: .error)
         self.xRegister = try container.decodeIfPresent(Double.self, forKey: .xRegister)
         self.programStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .programStack)) as? [Double] ?? []
         self.storageRegisters = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .storageRegisters)) as? [String: Double] ?? [:]
@@ -64,7 +68,7 @@ class CalculatorBrain: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.trigMode, forKey: .trigMode)
         try container.encode(self.lastXRegister, forKey: .lastXRegister)
-        try container.encode(self.errorPresent, forKey: .errorPresent)
+        try container.encode(self.error, forKey: .error)
         try container.encodeIfPresent(self.xRegister, forKey: .xRegister)
         try container.encode(JSONSerialization.data(withJSONObject: programStack), forKey: .programStack)
         try container.encode(JSONSerialization.data(withJSONObject: storageRegisters), forKey: .storageRegisters)
@@ -141,7 +145,7 @@ class CalculatorBrain: Codable {
     }
     
     func performOperation(_ prefixAndOperation: String) {
-        var saveStack = programStack  // save in case of nan or inf
+        let saveStack = programStack  // save in case of nan or inf
         var result = 0.0
         var secondResult: Double? = nil
         
@@ -294,8 +298,7 @@ class CalculatorBrain: Codable {
         if result.isNaN || result.isInfinite {
             // restore stack to pre-error state
             programStack = saveStack
-            xRegister = result
-            errorPresent = true  // reset in CalculatorViewController.restoreFromError
+            error = .NaN  // reset in CalculatorViewController.restoreFromError
         } else {
             if secondResult != nil {
                 pushOperand(secondResult!)
