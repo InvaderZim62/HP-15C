@@ -625,10 +625,10 @@ class CalculatorViewController: UIViewController {
         switch prefix {
         case .none:
             // Enter pressed
-            //---------------------------------------
+            //------------------------------------
             brain.pushOperand(displayStringNumber)
             brain.pushOperand(displayStringNumber)
-            //---------------------------------------
+            //------------------------------------
         case .f:
             // RND# pressed
             prefix = nil

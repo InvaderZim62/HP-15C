@@ -5,15 +5,15 @@
 //  Created by Phil Stern on 2/5/21.
 //
 //  Useful functions...
-//     programStack = programStack.suffix(5)                                                      // only save last 5 elements of array
-//     programStack.insert(contentsOf: repeatElement(0.0, count: 5 - programStack.count), at: 0)  // pad front of array with 0.0, to total count = 5
+//     programStack = programStack.suffix(4)                                                      // only save last 4 elements of array
+//     programStack.insert(contentsOf: repeatElement(0.0, count: 4 - programStack.count), at: 0)  // pad front of array with 0.0, to total count = 4
 //     programStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)                      // swap last two elements of array
 //
 
 import Foundation
 
 struct Constants {
-    static let stackSize = 5  // dummy, T, Z, Y, X (dummy needed to allow operation to temporarily push onto stack)
+    static let stackSize = 4  // T, Z, Y, X
     static let D2R = Double.pi / 180
     static let G2R = Double.pi / 200  // gradians to radians
 }
@@ -40,7 +40,7 @@ class CalculatorBrain: Codable {
 
     private var programStack = [Double](repeating: 0.0, count: Constants.stackSize) {
         didSet {
-            // truncate stack to last 5 elements, then pad front with repeat of 0th element if size < 5
+            // truncate stack to last 4 elements, then pad front with repeat of 0th element if size < 4
             programStack = programStack.suffix(Constants.stackSize)
             programStack.insert(contentsOf: repeatElement(programStack[0], count: Constants.stackSize - programStack.count), at: 0)
         }
@@ -101,7 +101,7 @@ class CalculatorBrain: Codable {
     // MARK: - Start of code
     
     func printStack() {
-        print(programStack.suffix(Constants.stackSize - 1), lastXRegister)  // don't print dummy register
+        print(programStack, lastXRegister)
     }
     
     func pushOperand(_ operand: Double) {
@@ -133,15 +133,15 @@ class CalculatorBrain: Codable {
         printStack()
     }
     
-    // don't roll the dummy register at 0
     func rollStack(directionDown: Bool) {
         if directionDown {
-            let xRegister = programStack.removeLast()  // Note: programStack didSet pads beginning back to count = 5 after this
-            programStack.insert(xRegister, at: 2)      // that's why insert at 2 here, instead of 1
+            let xRegister = programStack.removeLast()  // Note: programStack didSet pads beginning back to count = 4 after this
+            programStack.insert(xRegister, at: 1)      // that's why insert at 1 here, instead of 0 (didSet truncates index 0)
         } else {
-            let tRegister = programStack.remove(at: 1)
+            let tRegister = programStack.remove(at: 0)
             programStack.append(tRegister)
         }
+        printStack()
     }
     
     func performOperation(_ prefixAndOperation: String) {
