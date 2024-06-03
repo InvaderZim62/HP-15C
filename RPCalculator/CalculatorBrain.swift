@@ -19,7 +19,7 @@ struct Constants {
 }
 
 enum Error: Codable {
-    case NaN, badKeySequence, none
+    case NaN, badKeySequence, none  // NaN covers 
 }
 
 class CalculatorBrain: Codable {
@@ -101,7 +101,7 @@ class CalculatorBrain: Codable {
     // MARK: - Start of code
     
     func printStack() {
-        print(programStack, lastXRegister)
+        print("\(programStack) \(lastXRegister)  STO 1: \(storageRegisters["1"] ?? 0)")
     }
     
     func pushOperand(_ operand: Double) {
@@ -308,8 +308,8 @@ class CalculatorBrain: Codable {
         printStack()
     }
     
-    func storeResultsInRegister(_ name: String) {
-        storageRegisters[name] = xRegister
+    func storeResultInRegister(_ name: String, result: Double) {
+        storageRegisters[name] = result
     }
     
     func recallNumberFromStorageRegister(_ name: String) -> Double {
