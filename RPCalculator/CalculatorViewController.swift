@@ -39,6 +39,7 @@
 //  - make display blink when +/-overflow (9.999999 99) ex. 1 EEX 99 Enter 10 x
 //  - on real HP-15C, following overflow, entering <- key causes blinking to stop, but leaves 9.999999 99 in display (xRegister)
 //  - p61 implement underflow (displays 0.0)
+//  - backspace key doesn't restore display after ERROR
 //
 
 import UIKit
@@ -54,10 +55,14 @@ enum Prefix: String {
     case RCL
     case HYP = "H"  // hyperbolic trig function
     case HYP1 = "h"  // inverse hyperbolic trig function
-    case ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
-    case SUB
-    case MUL
-    case DIV
+    case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
+    case STO_SUB
+    case STO_MUL
+    case STO_DIV
+    case RCL_ADD  // ex. RCL + 1 (ADD register 1 to display)
+    case RCL_SUB
+    case RCL_MUL
+    case RCL_DIV
 }
 
 enum TrigMode: String, Codable {
@@ -302,8 +307,8 @@ class CalculatorViewController: UIViewController {
         brain.printStack()
     }
     
-    // set display string (switch to scientific notation, if fixed format won't fit)
-    private func updateInterface() {
+    // set display string to xRegister (switch to scientific notation, if fixed format won't fit)
+    private func updateInterface() {  // pws: rename to updateDisplayString
         //--------------------------------------
         let numericalResult = brain.xRegister!
         //--------------------------------------
@@ -544,7 +549,8 @@ class CalculatorViewController: UIViewController {
             default:
                 invalidKeySequenceEntered()
             }
-        case .ADD:
+        case .STO_ADD:
+            // STO + register
             prefix = nil
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
@@ -554,13 +560,15 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                brain.storeResultInRegister(digit, result: brain.recallNumberFromStorageRegister(digit) + brain.xRegister!)
+                let result = brain.recallNumberFromStorageRegister(digit) + brain.xRegister!
+                brain.storeResultInRegister(digit, result: result)
                 updateInterface()
                 brain.printStack()
             default:
                 break
             }
-        case .SUB:
+        case .STO_SUB:
+            // STO - register
             prefix = nil
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
@@ -570,13 +578,15 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                brain.storeResultInRegister(digit, result: brain.recallNumberFromStorageRegister(digit) - brain.xRegister!)
+                let result = brain.recallNumberFromStorageRegister(digit) - brain.xRegister!
+                brain.storeResultInRegister(digit, result: result)
                 updateInterface()
                 brain.printStack()
             default:
                 break
             }
-        case .MUL:
+        case .STO_MUL:
+            // STO × register
             prefix = nil
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
@@ -586,13 +596,15 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                brain.storeResultInRegister(digit, result: brain.recallNumberFromStorageRegister(digit) * brain.xRegister!)
+                let result = brain.recallNumberFromStorageRegister(digit) * brain.xRegister!
+                brain.storeResultInRegister(digit, result: result)
                 updateInterface()
                 brain.printStack()
             default:
                 break
             }
-        case .DIV:
+        case .STO_DIV:
+            // STO ÷ register
             prefix = nil
             switch digit {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
@@ -607,6 +619,79 @@ class CalculatorViewController: UIViewController {
                     displayString = "nan"  // triggers displayView to show "  Error  0"
                 } else {
                     brain.storeResultInRegister(digit, result: result)
+                    updateInterface()
+                }
+                brain.printStack()
+            default:
+                break
+            }
+        case .RCL_ADD:
+            // RCL + register
+            prefix = nil
+            switch digit {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // add register to displayed number
+                if userIsEnteringDigits {
+                    brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                    userIsEnteringDigits = false
+                    userIsEnteringExponent = false
+                }
+                brain.xRegister! += brain.recallNumberFromStorageRegister(digit)
+                updateInterface()
+                brain.printStack()
+            default:
+                break
+            }
+        case .RCL_SUB:
+            // RCL - register
+            prefix = nil
+            switch digit {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // add register to displayed number
+                if userIsEnteringDigits {
+                    brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                    userIsEnteringDigits = false
+                    userIsEnteringExponent = false
+                }
+                brain.xRegister! -= brain.recallNumberFromStorageRegister(digit)
+                updateInterface()
+                brain.printStack()
+            default:
+                break
+            }
+        case .RCL_MUL:
+            // RCL × register
+            prefix = nil
+            switch digit {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // add register to displayed number
+                if userIsEnteringDigits {
+                    brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                    userIsEnteringDigits = false
+                    userIsEnteringExponent = false
+                }
+                brain.xRegister! *= brain.recallNumberFromStorageRegister(digit)
+                updateInterface()
+                brain.printStack()
+            default:
+                break
+            }
+        case .RCL_DIV:
+            // RCL ÷ register
+            prefix = nil
+            switch digit {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // add register to displayed number
+                if userIsEnteringDigits {
+                    brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                    userIsEnteringDigits = false
+                    userIsEnteringExponent = false
+                }
+                let result = brain.xRegister! / brain.recallNumberFromStorageRegister(digit)
+                if result.isNaN || result.isInfinite {  // pws: also need this check for .ADD, .SUB, .MUL (ex. 1E99 in Reg 1, 10 REC x 1 causes overflow)
+                    displayString = "nan"  // triggers displayView to show "  Error  0"
+                } else {
+                    brain.xRegister = result
                     updateInterface()
                 }
                 brain.printStack()
@@ -656,23 +741,38 @@ class CalculatorViewController: UIViewController {
                 break
             }
         case .STO:
-            // STO [+|-|×|÷]
+            // STO [+|–|×|÷]
             switch operation {
             case "+":
-                prefix = .ADD  // ex. add display to number STO-red in register (next key)
-            case "-":
-                prefix = .SUB
+                prefix = .STO_ADD  // ex. add display to number stored in register (next key)
+            case "–":  // not keyboard minus sign
+                prefix = .STO_SUB
             case "×":
-                prefix = .MUL
+                prefix = .STO_MUL
             case "÷":
-                prefix = .DIV
+                prefix = .STO_DIV
+            default:
+                invalidKeySequenceEntered()
+            }
+            return
+        case .RCL:
+            // RCL [+|–|×|÷]
+            switch operation {
+            case "+":
+                prefix = .RCL_ADD  // ex. add register (next key) to display
+            case "–":  // not keyboard minus sign
+                prefix = .RCL_SUB
+            case "×":
+                prefix = .RCL_MUL
+            case "÷":
+                prefix = .RCL_DIV
             default:
                 invalidKeySequenceEntered()
             }
             return
         case .f, .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)
             break
-        case .ADD, .SUB, .MUL, .DIV:  // not allowed to precede operation key (just ignore)
+        case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key (just ignore)
             prefix = nil
             brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
             updateInterface()
