@@ -350,7 +350,7 @@ class CalculatorViewController: UIViewController {
     }
     
     private func invalidKeySequenceEntered() {
-        displayString = " Error  0"  // not sure what the real HP-15C displays
+        displayString = "  Error  0"  // not sure what the real HP-15C displays
         brain.error = .badKeySequence
         prefix = nil
         userIsEnteringDigits = false
@@ -358,12 +358,12 @@ class CalculatorViewController: UIViewController {
     }
     
     private func restoreFromError() -> Bool {
-        if brain.error != .none {
+        if brain.error == .none {
+            return false
+        } else {
             brain.error = .none
             updateInterface()
             return true
-        } else {
-            return false
         }
     }
     
@@ -603,8 +603,8 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringExponent = false
                 }
                 let result = brain.recallNumberFromStorageRegister(digit) / brain.xRegister!
-                if result.isNaN || result.isInfinite {
-                    displayString = "nan"  // triggers displayView to show "Error  0"
+                if result.isNaN || result.isInfinite {  // pws: also need this check for .ADD, .SUB, .MUL (ex. 1E99 in Reg 1, 10 STO x 1 causes overflow)
+                    displayString = "nan"  // triggers displayView to show "  Error  0"
                 } else {
                     brain.storeResultInRegister(digit, result: result)
                     updateInterface()
@@ -707,7 +707,7 @@ class CalculatorViewController: UIViewController {
         if brain.error == .none {
             updateInterface()
         } else {
-            displayString = "nan"  // triggers displayView to show "Error  0"
+            displayString = "nan"  // triggers displayView to show "  Error  0"
         }
         userIsEnteringDigits = false
         userIsEnteringExponent = false

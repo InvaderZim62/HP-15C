@@ -19,7 +19,7 @@ struct Constants {
 }
 
 enum Error: Codable {
-    case NaN, badKeySequence, none  // NaN covers 
+    case NaN, badKeySequence, none  // NaN also covers Inf
 }
 
 class CalculatorBrain: Codable {
