@@ -308,7 +308,7 @@ class CalculatorViewController: UIViewController {
     }
     
     // set display string to xRegister (switch to scientific notation, if fixed format won't fit)
-    private func updateInterface() {  // pws: rename to updateDisplayString
+    private func updateDisplayString() {
         //--------------------------------------
         let numericalResult = brain.xRegister!
         //--------------------------------------
@@ -367,7 +367,7 @@ class CalculatorViewController: UIViewController {
             return false
         } else {
             brain.error = .none
-            updateInterface()
+            updateDisplayString()
             return true
         }
     }
@@ -490,7 +490,7 @@ class CalculatorViewController: UIViewController {
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayString = String(Double.pi)  // 3.141592653589793
                 brain.pushOperand(Double.pi)
-                updateInterface()
+                updateDisplayString()
             default:
                 break
             }
@@ -500,7 +500,7 @@ class CalculatorViewController: UIViewController {
                 // number after FIX pressed
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .fixed(decimalPlaces)
-                updateInterface()
+                updateDisplayString()
             } else {
                 invalidKeySequenceEntered()
             }
@@ -510,7 +510,7 @@ class CalculatorViewController: UIViewController {
                 // number after SCI pressed
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
-                updateInterface()
+                updateDisplayString()
             } else {
                 invalidKeySequenceEntered()
             }
@@ -520,7 +520,7 @@ class CalculatorViewController: UIViewController {
                 // number after ENG pressed
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .engineering(min(additionalDigits, 6))  // 1 sign + 1 significant + 6 additional + 1 exponent sign + 2 exponents = 11 digits
-                updateInterface()
+                updateDisplayString()
             } else {
                 invalidKeySequenceEntered()
             }
@@ -531,7 +531,7 @@ class CalculatorViewController: UIViewController {
                 // store displayed number in register
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.storeResultInRegister(digit, result: brain.xRegister!)
-                updateInterface()
+                updateDisplayString()
                 brain.printStack()
             default:
                 invalidKeySequenceEntered()
@@ -544,7 +544,7 @@ class CalculatorViewController: UIViewController {
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayString = String(brain.recallNumberFromStorageRegister(digit))
                 brain.pushOperand(displayStringNumber)
-                updateInterface()
+                updateDisplayString()
                 brain.printStack()
             default:
                 invalidKeySequenceEntered()
@@ -562,7 +562,7 @@ class CalculatorViewController: UIViewController {
                 }
                 let result = brain.recallNumberFromStorageRegister(digit) + brain.xRegister!
                 brain.storeResultInRegister(digit, result: result)
-                updateInterface()
+                updateDisplayString()
                 brain.printStack()
             default:
                 break
@@ -580,7 +580,7 @@ class CalculatorViewController: UIViewController {
                 }
                 let result = brain.recallNumberFromStorageRegister(digit) - brain.xRegister!
                 brain.storeResultInRegister(digit, result: result)
-                updateInterface()
+                updateDisplayString()
                 brain.printStack()
             default:
                 break
@@ -598,7 +598,7 @@ class CalculatorViewController: UIViewController {
                 }
                 let result = brain.recallNumberFromStorageRegister(digit) * brain.xRegister!
                 brain.storeResultInRegister(digit, result: result)
-                updateInterface()
+                updateDisplayString()
                 brain.printStack()
             default:
                 break
@@ -619,7 +619,7 @@ class CalculatorViewController: UIViewController {
                     displayString = "nan"  // triggers displayView to show "  Error  0"
                 } else {
                     brain.storeResultInRegister(digit, result: result)
-                    updateInterface()
+                    updateDisplayString()
                 }
                 brain.printStack()
             default:
@@ -637,7 +637,7 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringExponent = false
                 }
                 brain.xRegister! += brain.recallNumberFromStorageRegister(digit)
-                updateInterface()
+                updateDisplayString()
                 brain.printStack()
             default:
                 break
@@ -654,7 +654,7 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringExponent = false
                 }
                 brain.xRegister! -= brain.recallNumberFromStorageRegister(digit)
-                updateInterface()
+                updateDisplayString()
                 brain.printStack()
             default:
                 break
@@ -671,7 +671,7 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringExponent = false
                 }
                 brain.xRegister! *= brain.recallNumberFromStorageRegister(digit)
-                updateInterface()
+                updateDisplayString()
                 brain.printStack()
             default:
                 break
@@ -692,7 +692,7 @@ class CalculatorViewController: UIViewController {
                     displayString = "nan"  // triggers displayView to show "  Error  0"
                 } else {
                     brain.xRegister = result
-                    updateInterface()
+                    updateDisplayString()
                 }
                 brain.printStack()
             default:
@@ -775,7 +775,7 @@ class CalculatorViewController: UIViewController {
         case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key (just ignore)
             prefix = nil
             brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
-            updateInterface()
+            updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             brain.printStack()
@@ -805,7 +805,7 @@ class CalculatorViewController: UIViewController {
         brain.performOperation(oneLetterPrefix + operation)
         //-------------------------------------------------
         if brain.error == .none {
-            updateInterface()
+            updateDisplayString()
         } else {
             displayString = "nan"  // triggers displayView to show "  Error  0"
         }
@@ -857,7 +857,7 @@ class CalculatorViewController: UIViewController {
         default:
             return
         }
-        updateInterface()
+        updateDisplayString()
         brain.printStack()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
@@ -943,7 +943,7 @@ class CalculatorViewController: UIViewController {
         }
         if okToClearStillTypingFlag {
             userIsEnteringDigits = false
-            updateInterface()
+            updateDisplayString()
         }
         userIsEnteringExponent = false
         prefix = nil
@@ -952,7 +952,7 @@ class CalculatorViewController: UIViewController {
     @objc private func clearPrefixButtonReleased(_ button: UIButton) {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
         displayView.showCommas = true
-        updateInterface()
+        updateDisplayString()
     }
     
     // set prefix to .f (for "f"), .g (for "g"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
