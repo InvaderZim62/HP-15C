@@ -59,14 +59,9 @@ class DisplayView: UIView {
         // handle errors and sign of displayed number
         var modifiedDisplayString = displayString
         var errorDisplayed = false
-        if displayString == "nan" || displayString == "inf" || displayString == "-inf"  {  // also handled in CalculatorBrain.runProgram
+        if displayString.contains("Error") {
             print(displayString)
-            modifiedDisplayString = "  Error  0"
             errorDisplayed = true
-        } else if displayString == "+overflow" {
-            modifiedDisplayString = " 9.999999 99"
-        } else if displayString == "-overflow" {
-            modifiedDisplayString = "-9.999999 99"
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }

@@ -170,7 +170,7 @@ class CalculatorViewController: UIViewController {
         "1": ("→R", "→P"),
         "2": ("→H.MS", "→H"),
         "3": ("→RAD", "→DEG"),
-        "–": ("Re≷Im", "TEST"),
+        "–": ("Re≷Im", "TEST"),  // not a keyboard minus sign
         "STO": ("FRAC", "INT"),
         "RCL": ("USER", "MEM"),
         "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
@@ -309,14 +309,24 @@ class CalculatorViewController: UIViewController {
     
     // set display string to xRegister (switch to scientific notation, if fixed format won't fit)
     private func updateDisplayString() {
+        switch brain.error {
+        case .code(let number):
+            displayString = number < 10 ? "  Error  \(number)" :  "  Error \(number)"
+            return
+        case .overflow:
+            displayString = " 9.999999 99"
+            return
+        case .underflow:
+            displayString = "-9.999999 99"
+            return
+        default:  // .invalidKeySequence, .none
+            break
+        }
         //--------------------------------------
         let numericalResult = brain.xRegister!
         //--------------------------------------
-
-        var potentialDisplayString = String(format: displayFormat.string, numericalResult)  // may be "inf", "-inf", or "nan"
-        if !numericalResult.description.contains("inf") && abs(numericalResult) > 9.999999999e99 {
-            potentialDisplayString = numericalResult > 0 ? "+overflow" : "-overflow"
-        }
+        var potentialDisplayString = String(format: displayFormat.string, numericalResult)
+        
         // for engineering notation, adjust mantissa so that exponent is a factor of 3
         if case .engineering(let additionalDigits) = displayFormat {
             let components = potentialDisplayString.components(separatedBy: "e")
@@ -355,11 +365,19 @@ class CalculatorViewController: UIViewController {
     }
     
     private func invalidKeySequenceEntered() {
-        displayString = "  Error  0"  // not sure what the real HP-15C displays
         brain.error = .badKeySequence
         prefix = nil
         userIsEnteringDigits = false
         userIsEnteringExponent = false
+        displayString = "  Error  0"  // real HP-15C seems to just ignore most invalid sequences
+    }
+    
+    private func setError(_ number: Int) {
+        brain.error = .code(number)
+        prefix = nil
+        userIsEnteringDigits = false
+        userIsEnteringExponent = false
+        updateDisplayString()
     }
     
     private func restoreFromError() -> Bool {
@@ -502,7 +520,10 @@ class CalculatorViewController: UIViewController {
                 displayFormat = .fixed(decimalPlaces)
                 updateDisplayString()
             } else {
-                invalidKeySequenceEntered()
+                // if not a number, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .SCI:
             prefix = nil
@@ -512,7 +533,10 @@ class CalculatorViewController: UIViewController {
                 displayFormat = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
                 updateDisplayString()
             } else {
-                invalidKeySequenceEntered()
+                // if not a number, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .ENG:
             prefix = nil
@@ -522,7 +546,10 @@ class CalculatorViewController: UIViewController {
                 displayFormat = .engineering(min(additionalDigits, 6))  // 1 sign + 1 significant + 6 additional + 1 exponent sign + 2 exponents = 11 digits
                 updateDisplayString()
             } else {
-                invalidKeySequenceEntered()
+                // if not a number, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .STO:
             prefix = nil
@@ -533,8 +560,10 @@ class CalculatorViewController: UIViewController {
                 brain.storeResultInRegister(digit, result: brain.xRegister!)
                 updateDisplayString()
                 brain.printStack()
+            case "EEX":
+                setError(11)
             default:
-                invalidKeySequenceEntered()
+                setError(99)  // eventually implement .# registers
             }
         case .RCL:
             prefix = nil
@@ -546,8 +575,10 @@ class CalculatorViewController: UIViewController {
                 brain.pushOperand(displayStringNumber)
                 updateDisplayString()
                 brain.printStack()
+            case "EEX":
+                setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
             default:
-                invalidKeySequenceEntered()
+                setError(99)  // eventually implement .# registers
             }
         case .STO_ADD:
             // STO + register
@@ -565,7 +596,10 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 brain.printStack()
             default:
-                break
+                // if not a valid register name, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .STO_SUB:
             // STO - register
@@ -583,7 +617,10 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 brain.printStack()
             default:
-                break
+                // if not a valid register name, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .STO_MUL:
             // STO × register
@@ -601,7 +638,10 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 brain.printStack()
             default:
-                break
+                // if not a valid register name, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .STO_DIV:
             // STO ÷ register
@@ -623,7 +663,10 @@ class CalculatorViewController: UIViewController {
                 }
                 brain.printStack()
             default:
-                break
+                // if not a valid register name, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .RCL_ADD:
             // RCL + register
@@ -640,7 +683,10 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 brain.printStack()
             default:
-                break
+                // if not a valid register name, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .RCL_SUB:
             // RCL - register
@@ -657,7 +703,10 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 brain.printStack()
             default:
-                break
+                // if not a valid register name, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .RCL_MUL:
             // RCL × register
@@ -674,7 +723,10 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 brain.printStack()
             default:
-                break
+                // if not a valid register name, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .RCL_DIV:
             // RCL ÷ register
@@ -696,7 +748,10 @@ class CalculatorViewController: UIViewController {
                 }
                 brain.printStack()
             default:
-                break
+                // if not a valid register name, ignore prefix and resend digit (EEX or .)
+                let tempButton = UIButton()
+                tempButton.setTitle(digit, for: .normal)
+                digitKeyPressed(tempButton)
             }
         default:  // .HYP, .HYP1 (not allowed to precede stack manipulation key)
             invalidKeySequenceEntered()
@@ -705,6 +760,7 @@ class CalculatorViewController: UIViewController {
     
     // perform operation pressed, and display results
     // operation keys: ÷, ×, -, +, √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL
+    // or sent from digitKeyPressed: f-1 (→R), f-2 (→H.MS), f-3 (→RAD), g-1 (→P), g-2 (→H), g-3 (→DEG)
     @IBAction func operationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -752,7 +808,8 @@ class CalculatorViewController: UIViewController {
             case "÷":
                 prefix = .STO_DIV
             default:
-                invalidKeySequenceEntered()
+                setError(3)
+                return
             }
             return
         case .RCL:
@@ -767,22 +824,18 @@ class CalculatorViewController: UIViewController {
             case "÷":
                 prefix = .RCL_DIV
             default:
-                invalidKeySequenceEntered()
+                setError(3)
+                return
             }
             return
         case .f, .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)
             break
-        case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key (just ignore)
+        case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key
+            setError(3)
+            return
+        default:  // .FIX, .SCI, .ENG, .RCL (these ignore the prefix) ex. 2 Enter 3 f FIX x, just does 2 Enter 3 x (= 6)
             prefix = nil
-            brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
-            updateDisplayString()
-            userIsEnteringDigits = false
-            userIsEnteringExponent = false
-            brain.printStack()
-            return
-        default:  // .FIX, .SCI, .ENG, .RCL (not allowed to precede operation key)
-            invalidKeySequenceEntered()
-            return
+            break
         }
         
         if userIsEnteringDigits {
@@ -804,11 +857,7 @@ class CalculatorViewController: UIViewController {
         //-------------------------------------------------
         brain.performOperation(oneLetterPrefix + operation)
         //-------------------------------------------------
-        if brain.error == .none {
-            updateDisplayString()
-        } else {
-            displayString = "nan"  // triggers displayView to show "  Error  0"
-        }
+        updateDisplayString()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
         liftStack = true

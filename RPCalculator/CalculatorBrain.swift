@@ -16,10 +16,15 @@ struct Constants {
     static let stackSize = 4  // T, Z, Y, X
     static let D2R = Double.pi / 180
     static let G2R = Double.pi / 200  // gradians to radians
+    static let maxValue = 9.999999999e99  // more cause overflow on HP-15C
 }
 
-enum Error: Codable {
-    case NaN, badKeySequence, none  // NaN also covers Inf
+enum Error: Equatable, Codable {
+    case code(Int)  // see Appendix A of Owner's Handbook, ex. 1/0, sqrt(-1), acos(1.1) are code 0, STO √x is code 3, STO EEX is code 11
+    case overflow
+    case underflow
+    case badKeySequence
+    case none
 }
 
 class CalculatorBrain: Codable {
@@ -295,10 +300,12 @@ class CalculatorBrain: Codable {
             break
         }
         
-        if result.isNaN || result.isInfinite {
+        if result.isNaN || result.isInfinite {  // ex. sqrt(-1) = NaN, 1/0 = +Inf, -1/0 = -Inf
             // restore stack to pre-error state
             programStack = saveStack
-            error = .NaN  // reset in CalculatorViewController.restoreFromError
+            error = .code(0)  // reset in CalculatorViewController.restoreFromError
+        } else if abs(result) > Constants.maxValue {
+            error = result > 0 ? .overflow : .underflow
         } else {
             if secondResult != nil {
                 pushOperand(secondResult!)
