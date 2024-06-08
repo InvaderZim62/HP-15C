@@ -124,20 +124,29 @@ class CalculatorViewController: UIViewController {
         }
     }
     
-    var trigMode = TrigMode.DEG { didSet {
-        brain.trigMode = trigMode
-        switch trigMode {
-        case .DEG:
-            gradLabel.alpha = 0  // no display label for DEG
-        case .RAD:
-            gradLabel.alpha = 1
-            gradLabel.text = "RAD"
-        case .GRAD:
-            gradLabel.alpha = 1
-            gradLabel.text = "GRAD"
+    var trigMode = TrigMode.DEG {
+        didSet {
+            brain.trigMode = trigMode
+            switch trigMode {
+            case .DEG:
+                gradLabel.alpha = 0  // no display label for DEG
+            case .RAD:
+                gradLabel.alpha = 1
+                gradLabel.text = "RAD"
+            case .GRAD:
+                gradLabel.alpha = 1
+                gradLabel.text = "GRAD"
+            }
+            saveDefaults()
         }
-        saveDefaults()
-    } }
+    }
+    
+    var isComplexMode = false {  // use g-5 (CF) 8 to clear complex mode (pws: not implemented)
+        didSet {
+            brain.isComplexMode = isComplexMode
+            cLabel.alpha = isComplexMode ? 1 : 0
+        }
+    }
     
     // dictionary of button labels going from left to right, top to bottom
     // dictionary key is the primary button label (must agree with storyboard)
@@ -207,7 +216,7 @@ class CalculatorViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         displayView.numberOfDigits = 11  // one digit for sign
         getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
-        brain.printStack()
+        brain.printMemory()
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
         createButtonCovers()
@@ -304,7 +313,7 @@ class CalculatorViewController: UIViewController {
         brain.xRegister = displayStringNumber
         userIsEnteringDigits = false
         userIsEnteringExponent = false
-        brain.printStack()
+        brain.printMemory()
     }
     
     // set display string to xRegister (switch to scientific notation, if fixed format won't fit)
@@ -559,7 +568,7 @@ class CalculatorViewController: UIViewController {
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.storeResultInRegister(digit, result: brain.xRegister!)
                 updateDisplayString()
-                brain.printStack()
+                brain.printMemory()
             case "EEX":
                 setError(11)
             default:
@@ -574,7 +583,7 @@ class CalculatorViewController: UIViewController {
                 displayString = String(brain.recallNumberFromStorageRegister(digit))
                 brain.pushOperand(displayStringNumber)
                 updateDisplayString()
-                brain.printStack()
+                brain.printMemory()
             case "EEX":
                 setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
             default:
@@ -594,7 +603,7 @@ class CalculatorViewController: UIViewController {
                 let result = brain.recallNumberFromStorageRegister(digit) + brain.xRegister!
                 brain.storeResultInRegister(digit, result: result)
                 updateDisplayString()
-                brain.printStack()
+                brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
@@ -615,7 +624,7 @@ class CalculatorViewController: UIViewController {
                 let result = brain.recallNumberFromStorageRegister(digit) - brain.xRegister!
                 brain.storeResultInRegister(digit, result: result)
                 updateDisplayString()
-                brain.printStack()
+                brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
@@ -636,7 +645,7 @@ class CalculatorViewController: UIViewController {
                 let result = brain.recallNumberFromStorageRegister(digit) * brain.xRegister!
                 brain.storeResultInRegister(digit, result: result)
                 updateDisplayString()
-                brain.printStack()
+                brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
@@ -661,7 +670,7 @@ class CalculatorViewController: UIViewController {
                     brain.storeResultInRegister(digit, result: result)
                     updateDisplayString()
                 }
-                brain.printStack()
+                brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
@@ -681,7 +690,7 @@ class CalculatorViewController: UIViewController {
                 }
                 brain.xRegister! += brain.recallNumberFromStorageRegister(digit)
                 updateDisplayString()
-                brain.printStack()
+                brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
@@ -701,7 +710,7 @@ class CalculatorViewController: UIViewController {
                 }
                 brain.xRegister! -= brain.recallNumberFromStorageRegister(digit)
                 updateDisplayString()
-                brain.printStack()
+                brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
@@ -721,7 +730,7 @@ class CalculatorViewController: UIViewController {
                 }
                 brain.xRegister! *= brain.recallNumberFromStorageRegister(digit)
                 updateDisplayString()
-                brain.printStack()
+                brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
@@ -746,7 +755,7 @@ class CalculatorViewController: UIViewController {
                     brain.xRegister = result
                     updateDisplayString()
                 }
-                brain.printStack()
+                brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
@@ -828,7 +837,18 @@ class CalculatorViewController: UIViewController {
                 return
             }
             return
-        case .f, .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)
+        case .f:
+            if operation == "TAN" {
+                // "I" pressed (imaginary number entered)
+                prefix = nil
+                isComplexMode = true
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+                brain.moveRealXToImagX()
+                displayString = String(brain.xRegister!)
+                updateDisplayString()
+            }
+            return
+        case .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)
             break
         case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key
             setError(3)
@@ -842,7 +862,7 @@ class CalculatorViewController: UIViewController {
             if liftStack {
                 // operation doesn't follow enter; ex. pi 3 -, or 4 sqrt 3 x
                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
-                brain.printStack()
+                brain.printMemory()
             } else {
                 // operation follows enter; ex. 1 enter 2 +
                 endDisplayEntry()  // overwrite xRegister with display
@@ -907,7 +927,7 @@ class CalculatorViewController: UIViewController {
             return
         }
         updateDisplayString()
-        brain.printStack()
+        brain.printMemory()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
         liftStack = false
