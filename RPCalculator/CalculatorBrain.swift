@@ -305,10 +305,15 @@ class CalculatorBrain: Codable {
                 result.real = pow(10, power.real) * cos(power.imag * log(10) * angleConversion)
                 result.imag = pow(10, power.real) * sin(power.imag * log(10) * angleConversion)
             case "yx":
-                let power = popOperand()
+                // (a + bi)^x = e^(x * ln(a + bi))
+                //            = e^(c + di), where c = x * ln(mag), d = x * atan2(b, a)
+                //            = e^c * cos(d) + e^c * sin(d)i
+                let x = popOperand()
                 let term = popOperand()
-                result.real = pow(term.real, power.real)  // pws: only implemented using the real parts, for now
-                result.imag = 0
+                let c = x.real * log(term.mag)
+                let d = x.real * atan2(term.imag, term.real)
+                result.real = exp(c) * cos(d)
+                result.imag = exp(c) * sin(d)
             case "1/x":
                 // 1/(a + bi) = a/(a² + b²) - b/(a² + b²)i
                 let term = popOperand()
@@ -375,9 +380,12 @@ class CalculatorBrain: Codable {
 //            case "√x":
 //                // x²
 //                result = pow(popOperand(), 2)
-//            case "ex":
-//                // LN (natural log)
-//                result = log(popOperand())
+            case "ex":
+                // LN (natural log)
+                // ln(a + bi) = ln(sqrt(a² + b²)) + atan2(b, a)i
+                let term = popOperand()
+                result.real = log(term.mag)
+                result.imag = atan2(term.imag, term.real)
 //            case "10x":
 //                // LOG (log base 10)
 //                result = log10(popOperand())
