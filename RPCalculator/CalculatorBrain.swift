@@ -32,7 +32,7 @@ struct Complex {
     var imag: Double
 
     var mag: Double {
-        pow(real, 2) + pow(imag, 2)
+        sqrt(pow(real, 2) + pow(imag, 2))
     }
 }
 
@@ -291,9 +291,8 @@ class CalculatorBrain: Codable {
                     result.real = sqrt(term.real)
                     result.imag = 0
                 } else {
-                    let mag = pow(term.real, 2) + pow(term.imag, 2)
-                    result.real = sqrt((mag + term.real) / 2)
-                    result.imag = term.imag / abs(term.imag) * sqrt((mag - term.real) / 2)
+                    result.real = sqrt((term.mag + term.real) / 2)
+                    result.imag = term.imag / abs(term.imag) * sqrt((term.mag - term.real) / 2)
                 }
             case "ex":
                 // e^(a + bi) = e^a * cos(b) + e^a * sin(b)i
