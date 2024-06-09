@@ -51,7 +51,6 @@ class CalculatorBrain: Codable {
     var trigMode = TrigMode.DEG
     var lastXRegister = 0.0
     var error = Error.none
-    var isComplexMode = false
     var isConvertingPolar = false
 
     var xRegister: Double? {
@@ -61,6 +60,15 @@ class CalculatorBrain: Codable {
         set {
             realStack[realStack.count - 1] = newValue!  // ok to assume realStack is not empty (count > 0)
             printMemory()
+        }
+    }
+    
+    var isComplexMode = false {
+        didSet {
+            // clear imagStack when entering or exiting complex mode
+            if isComplexMode != oldValue {
+                clearImaginaryStack()
+            }
         }
     }
 

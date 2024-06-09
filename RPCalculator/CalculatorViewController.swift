@@ -146,6 +146,8 @@ class CalculatorViewController: UIViewController {
         didSet {
             brain.isComplexMode = isComplexMode
             cLabel.alpha = isComplexMode ? 1 : 0
+            saveDefaults()
+            brain.printMemory()
         }
     }
     
@@ -230,11 +232,11 @@ class CalculatorViewController: UIViewController {
         }
         defaults.set(displayString, forKey: "displayString")
         defaults.set(gradLabel.text, forKey: "gradLabelText")
-        defaults.set(isComplexMode, forKey: "isComplexMode")
         defaults.setValue(displayLabelAlphas, forKey: "displayLabelAlphas")
         if let data = try? JSONEncoder().encode(brain) {
             defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to init and encode
         }
+        defaults.set(isComplexMode, forKey: "isComplexMode")
     }
     
     private func getDefaults() {
@@ -244,12 +246,12 @@ class CalculatorViewController: UIViewController {
         }
         displayString = defaults.string(forKey: "displayString") ?? String(format: displayFormat.string, 0.0)
         gradLabel.text = defaults.string(forKey: "gradLabelText") ?? gradLabel.text
-        isComplexMode = defaults.bool(forKey: "isComplexMode")
         savedDisplayLabelAlphas = defaults.array(forKey: "displayLabelAlphas") as? [CGFloat] ?? displayLabelAlphas
         restoreDisplayLabels()
         if let data = defaults.data(forKey: "brain") {
             brain = try! JSONDecoder().decode(CalculatorBrain.self, from: data)
         }
+        isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
     }
     
     // display labels: USER  f  g  BEGIN  GRAD  D.MY  C  PRGM
@@ -569,12 +571,7 @@ class CalculatorViewController: UIViewController {
         case .CF:
             prefix = nil
             if digit == "8" {  // flag 8 is complex mode
-                if isComplexMode {
-                    isComplexMode = false
-                    brain.clearImaginaryStack()  // clear when entering and exiting complex mode
-                    brain.printMemory()
-                    saveDefaults()
-                }
+                isComplexMode = false
             }
         case .STO:
             prefix = nil
@@ -857,10 +854,7 @@ class CalculatorViewController: UIViewController {
             if operation == "TAN" {
                 // "I" pressed (imaginary number entered)
                 prefix = nil
-                if !isComplexMode {
-                    isComplexMode = true
-                    brain.clearImaginaryStack()  // clear when entering and exiting complex mode
-                }
+                isComplexMode = true
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.moveRealXToImagX()
                 displayString = String(brain.xRegister!)
