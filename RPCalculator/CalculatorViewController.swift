@@ -851,7 +851,21 @@ class CalculatorViewController: UIViewController {
             }
             return
         case .f:
-            if operation == "TAN" {
+            switch operation {
+            case "COS":
+                // "(i) pressed (show imaginary part of number if complex, else Error 3)
+                if isComplexMode {
+                    // show imaginary part of number, until 1.2 sec after button is released
+                    prefix = nil
+                    if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+                    brain.swapRealImag()
+                    updateDisplayString()
+                    sender.addTarget(self, action: #selector(iButtonReleased), for: .touchUpInside)
+                    return
+                } else {
+                    setError(3)
+                }
+            case "TAN":
                 // "I" pressed (imaginary number entered)
                 prefix = nil
                 isComplexMode = true
@@ -866,6 +880,8 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 liftStack = true
                 return
+            default:
+                break
             }
         case .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)
             break
@@ -997,12 +1013,12 @@ class CalculatorViewController: UIViewController {
                 brain.clearStorageRegisters()
             case "←":
                 // CLEAR PREFIX key pressed
-                // display mantissa (all numeric digits with no punctuation), until button is released
+                // display mantissa (all numeric digits with no punctuation), until 1.2 sec after button is released
                 prefix = nil
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayView.showCommas = false
                 displayString = brain.displayMantissa
-                sender.addTarget(self, action: #selector(clearPrefixButtonReleased(_:)), for: .touchUpInside)
+                sender.addTarget(self, action: #selector(clearPrefixButtonReleased), for: .touchUpInside)
                 return
             default:
                 break
@@ -1036,12 +1052,22 @@ class CalculatorViewController: UIViewController {
         prefix = nil
     }
 
-    @objc private func clearPrefixButtonReleased(_ button: UIButton) {
-        button.removeTarget(nil, action: nil, for: .touchUpInside)
-        displayView.showCommas = true
-        updateDisplayString()
+    @objc private func iButtonReleased(_ button: UIButton) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            button.removeTarget(nil, action: nil, for: .touchUpInside)
+            self.brain.swapRealImag()
+            self.updateDisplayString()
+        }
     }
-    
+
+    @objc private func clearPrefixButtonReleased(_ button: UIButton) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            button.removeTarget(nil, action: nil, for: .touchUpInside)
+            self.displayView.showCommas = true
+            self.updateDisplayString()
+        }
+    }
+
     // set prefix to .f (for "f"), .g (for "g"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
     // prefix keys: f, g, GTO
     @IBAction func prefixKeyPressed(_ sender: UIButton) {

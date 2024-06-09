@@ -53,6 +53,41 @@ class CalculatorBrain: Codable {
         }
     }
     
+    var xRegisterImag: Double? {
+        get {
+            return imagStack.last
+        }
+        set {
+            imagStack[imagStack.count - 1] = newValue!  // ok to assume imagStack is not empty (count > 0)
+        }
+    }
+    
+    var angleConversion: Double {
+        if isComplexMode && !isConvertingPolar {
+            return 1.0  // HP-15C does all trig function in radians, except conversions between rectangular and polar coordinates
+        } else {
+            switch trigMode {
+            case .DEG:
+                return Constants.D2R
+            case .RAD:
+                return 1.0
+            case .GRAD:
+                return Constants.G2R
+            }
+        }
+    }
+
+    // mantissa (in this case) is all digits of displayed number, without punctuation ("-", "e", ".", ",")
+    var displayMantissa: String {
+        var mantissa = String(abs(xRegister!))
+        if let ne = mantissa.firstIndex(of: "e") {
+            mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
+        }
+        mantissa = mantissa.replacingOccurrences(of: ".", with: "")
+        if mantissa.count < 10 { mantissa += repeatElement("0", count: 10 - mantissa.count) }
+        return mantissa
+    }
+
     var isComplexMode = false {
         didSet {
             // clear imagStack when entering or exiting complex mode
@@ -109,34 +144,6 @@ class CalculatorBrain: Codable {
         try container.encode(JSONSerialization.data(withJSONObject: imagStack), forKey: .imagStack)
         try container.encode(JSONSerialization.data(withJSONObject: storageRegisters), forKey: .storageRegisters)
     }
-
-    // MARK: - Computed properties
-    
-    var angleConversion: Double {
-        if isComplexMode && !isConvertingPolar {
-            return 1.0  // HP-15C does all trig function in radians, except conversions between rectangular and polar coordinates
-        } else {
-            switch trigMode {
-            case .DEG:
-                return Constants.D2R
-            case .RAD:
-                return 1.0
-            case .GRAD:
-                return Constants.G2R
-            }
-        }
-    }
-
-    // mantissa (in this case) is all digits of displayed number, without punctuation ("-", "e", ".", ",")
-    var displayMantissa: String {
-        var mantissa = String(abs(xRegister!))
-        if let ne = mantissa.firstIndex(of: "e") {
-            mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
-        }
-        mantissa = mantissa.replacingOccurrences(of: ".", with: "")
-        if mantissa.count < 10 { mantissa += repeatElement("0", count: 10 - mantissa.count) }
-        return mantissa
-    }
     
     // MARK: - Start of code
     
@@ -160,6 +167,12 @@ class CalculatorBrain: Codable {
         realStack.removeLast()
         if isComplexMode { imagStack.removeLast() }
         printMemory()
+    }
+    
+    func swapRealImag() {
+        let temp = imagStack.last
+        xRegisterImag = xRegister
+        xRegister = temp
     }
     
     func clearAll() {
@@ -270,7 +283,7 @@ class CalculatorBrain: Codable {
                 let term = popOperand()
                 let den = 1 + pow(tan(term.real * angleConversion), 2) * pow(tanh(term.imag * angleConversion), 2)
                 result.real = tan(term.real * angleConversion) * (1 - pow(tanh(term.imag * angleConversion), 2)) / den
-                result.imag = (tanh(term.imag * angleConversion) + pow(tan(term.real * angleConversion), 2)) / den
+                result.imag = (tanh(term.imag * angleConversion) * (1 + pow(tan(term.real * angleConversion), 2))) / den
             case "√x":
                 // sqrt(a + bi) = sqrt[(mag + a)/2] + b/abs(b)*sqrt[(mag - a)/2]i, where mag = sqrt(a² + b²)
                 let term = popOperand()
