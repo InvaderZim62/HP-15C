@@ -55,6 +55,7 @@ enum Prefix: String {
     case RCL
     case HYP = "H"  // hyperbolic trig function
     case HYP1 = "h"  // inverse hyperbolic trig function
+    case CF  // clear flag
     case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
     case STO_SUB
     case STO_MUL
@@ -229,9 +230,10 @@ class CalculatorViewController: UIViewController {
         }
         defaults.set(displayString, forKey: "displayString")
         defaults.set(gradLabel.text, forKey: "gradLabelText")
+        defaults.set(isComplexMode, forKey: "isComplexMode")
         defaults.setValue(displayLabelAlphas, forKey: "displayLabelAlphas")
         if let data = try? JSONEncoder().encode(brain) {
-            defaults.set(data, forKey: "brain")
+            defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to init and encode
         }
     }
     
@@ -242,6 +244,7 @@ class CalculatorViewController: UIViewController {
         }
         displayString = defaults.string(forKey: "displayString") ?? String(format: displayFormat.string, 0.0)
         gradLabel.text = defaults.string(forKey: "gradLabelText") ?? gradLabel.text
+        isComplexMode = defaults.bool(forKey: "isComplexMode")
         savedDisplayLabelAlphas = defaults.array(forKey: "displayLabelAlphas") as? [CGFloat] ?? displayLabelAlphas
         restoreDisplayLabels()
         if let data = defaults.data(forKey: "brain") {
@@ -506,6 +509,9 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle("3", for: .normal)
                 prefix = .g
                 operationKeyPressed(tempButton)  // better handled as operation
+            case "5":
+                // CF pressed (clear flag)
+                prefix = .CF
             case "7":
                 trigMode = .DEG
             case "8":
@@ -559,6 +565,16 @@ class CalculatorViewController: UIViewController {
                 let tempButton = UIButton()
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
+            }
+        case .CF:
+            prefix = nil
+            if digit == "8" {  // flag 8 is complex mode
+                if isComplexMode {
+                    isComplexMode = false
+                    brain.clearImaginaryStack()  // clear when entering and exiting complex mode
+                    brain.printMemory()
+                    saveDefaults()
+                }
             }
         case .STO:
             prefix = nil
@@ -841,13 +857,16 @@ class CalculatorViewController: UIViewController {
             if operation == "TAN" {
                 // "I" pressed (imaginary number entered)
                 prefix = nil
-                isComplexMode = true
+                if !isComplexMode {
+                    isComplexMode = true
+                    brain.clearImaginaryStack()  // clear when entering and exiting complex mode
+                }
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.moveRealXToImagX()
                 displayString = String(brain.xRegister!)
                 updateDisplayString()
+                return
             }
-            return
         case .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)
             break
         case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key
@@ -855,7 +874,6 @@ class CalculatorViewController: UIViewController {
             return
         default:  // .FIX, .SCI, .ENG, .RCL (these ignore the prefix) ex. 2 Enter 3 f FIX x, just does 2 Enter 3 x (= 6)
             prefix = nil
-            break
         }
         
         if userIsEnteringDigits {

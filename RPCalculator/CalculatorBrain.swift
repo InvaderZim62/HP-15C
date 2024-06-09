@@ -8,8 +8,18 @@
 //     realStack = realStack.suffix(4)                                                      // only save last 4 elements of array
 //     realStack.insert(contentsOf: repeatElement(0.0, count: 4 - realStack.count), at: 0)  // pad front of array with 0.0, to total count = 4
 //     realStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)                   // swap last two elements of array
+//-----------------------------------------------------
+//    import Complex
 //
-
+//    let z: Complex<Double> = 2 + 3 * .i
+//    print(z.real)      // 2.0
+//    print(z.imaginary) // 3.0
+//
+//    let w = Complex<Double>(1, -2) // (1.0, -2.0)
+//
+//    let u: Complex<Double> = .i * .i // (-1.0, 0.0)
+//-----------------------------------------------------
+//
 import Foundation
 
 struct Constants {
@@ -27,11 +37,22 @@ enum Error: Equatable, Codable {
     case none
 }
 
+struct Complex {
+    var real: Double
+    var imag: Double
+
+    var mag: Double {
+        pow(real, 2) + pow(imag, 2)
+    }
+}
+
 class CalculatorBrain: Codable {
     
     var trigMode = TrigMode.DEG
     var lastXRegister = 0.0
     var error = Error.none
+    var isComplexMode = false
+    var isConvertingPolar = false
 
     var xRegister: Double? {
         get {
@@ -40,15 +61,6 @@ class CalculatorBrain: Codable {
         set {
             realStack[realStack.count - 1] = newValue!  // ok to assume realStack is not empty (count > 0)
             printMemory()
-        }
-    }
-    
-    var isComplexMode = false {
-        didSet {
-            if isComplexMode != oldValue {
-                // clear imagStack when entering or exiting complex mode
-                imagStack = [Double](repeating: 0.0, count: Constants.stackSize)
-            }
         }
     }
 
@@ -72,7 +84,7 @@ class CalculatorBrain: Codable {
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case trigMode, lastXRegister, error, xRegister, programStack, storageRegisters }
+    private enum CodingKeys: String, CodingKey { case trigMode, lastXRegister, error, isComplexMode, xRegister, realStack, imagStack, storageRegisters }
     
     init() { }
 
@@ -81,8 +93,10 @@ class CalculatorBrain: Codable {
         self.trigMode = try container.decode(TrigMode.self, forKey: .trigMode)
         self.lastXRegister = try container.decode(Double.self, forKey: .lastXRegister)
         self.error = try container.decode(Error.self, forKey: .error)
+        self.isComplexMode = try container.decode(Bool.self, forKey: .isComplexMode)
         self.xRegister = try container.decodeIfPresent(Double.self, forKey: .xRegister)
-        self.realStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .programStack)) as? [Double] ?? []
+        self.realStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .realStack)) as? [Double] ?? []
+        self.imagStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .imagStack)) as? [Double] ?? []
         self.storageRegisters = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .storageRegisters)) as? [String: Double] ?? [:]
     }
     
@@ -91,16 +105,18 @@ class CalculatorBrain: Codable {
         try container.encode(self.trigMode, forKey: .trigMode)
         try container.encode(self.lastXRegister, forKey: .lastXRegister)
         try container.encode(self.error, forKey: .error)
+        try container.encode(self.isComplexMode, forKey: .isComplexMode)
         try container.encodeIfPresent(self.xRegister, forKey: .xRegister)
-        try container.encode(JSONSerialization.data(withJSONObject: realStack), forKey: .programStack)
+        try container.encode(JSONSerialization.data(withJSONObject: realStack), forKey: .realStack)
+        try container.encode(JSONSerialization.data(withJSONObject: imagStack), forKey: .imagStack)
         try container.encode(JSONSerialization.data(withJSONObject: storageRegisters), forKey: .storageRegisters)
     }
 
     // MARK: - Computed properties
     
     var angleConversion: Double {
-        if isComplexMode {
-            return 1.0  // HP-15C does all trig function in radians
+        if isComplexMode && !isConvertingPolar {
+            return 1.0  // HP-15C does all trig function in radians, except conversions between rectangular and polar coordinates
         } else {
             switch trigMode {
             case .DEG:
@@ -128,12 +144,17 @@ class CalculatorBrain: Codable {
     
     func pushOperand(_ operand: Double) {
         realStack.append(operand)
-        if isComplexMode { imagStack.append(0) }
+        imagStack.append(0)
+    }
+    
+    func pushOperand(_ operand: Complex) {
+        realStack.append(operand.real)
+        imagStack.append(operand.imag)
     }
     
     // remove and return end of stack (X register)
-    func popOperand() -> (real: Double, imag: Double) {
-        (realStack.popLast()!, imagStack.popLast()!)
+    func popOperand() -> Complex {
+        Complex(real: realStack.popLast()!, imag: imagStack.popLast()!)
     }
     
     // remove end of stack
@@ -145,7 +166,8 @@ class CalculatorBrain: Codable {
     
     func clearAll() {
         clearStorageRegisters()
-        realStack = [Double](repeating: 0.0, count: Constants.stackSize)
+        clearRealStack()
+        clearImaginaryStack()
         lastXRegister = 0.0
         printMemory()
     }
@@ -154,6 +176,14 @@ class CalculatorBrain: Codable {
         storageRegisters.removeAll()
     }
     
+    func clearRealStack() {
+        realStack = [Double](repeating: 0.0, count: Constants.stackSize)
+    }
+    
+    func clearImaginaryStack() {
+        imagStack = [Double](repeating: 0.0, count: Constants.stackSize)
+    }
+
     func swapXyRegisters() {
         realStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)  // swap last two elements
         printMemory()
@@ -161,11 +191,15 @@ class CalculatorBrain: Codable {
     
     func rollStack(directionDown: Bool) {
         if directionDown {
-            let xRegister = realStack.removeLast()  // Note: realStack didSet pads beginning back to count = 4 after this
-            realStack.insert(xRegister, at: 1)      // that's why insert at 1 here, instead of 0 (didSet truncates index 0)
+            let xRegisterReal = realStack.removeLast()  // Note: realStack didSet pads beginning back to count = 4 after this
+            realStack.insert(xRegisterReal, at: 1)      // that's why insert at 1 here, instead of 0 (didSet truncates index 0)
+            let xRegisterImag = imagStack.removeLast()
+            imagStack.insert(xRegisterImag, at: 1)
         } else {
-            let tRegister = realStack.remove(at: 0)
-            realStack.append(tRegister)
+            let tRegisterReal = realStack.remove(at: 0)
+            realStack.append(tRegisterReal)
+            let tRegisterImag = imagStack.remove(at: 0)
+            imagStack.append(tRegisterImag)
         }
         printMemory()
     }
@@ -186,12 +220,14 @@ class CalculatorBrain: Codable {
 
     func performOperation(_ prefixAndOperation: String) {
         let saveStack = realStack  // save in case of nan or inf
-        var result = (0.0, 0.0)  // (real, imaginary)
-        var secondResult: Double? = nil
+        var result = Complex(real: 0, imag: 0)
+        var secondResult: Complex? = nil
         
         let prefixKey = prefixAndOperation.first  // prefix is always one letter
         let operation = prefixAndOperation.dropFirst()
 
+        isConvertingPolar = false
+        
         switch prefixKey {
         case "n":  // none (primary button functions)
             switch operation {
@@ -201,102 +237,104 @@ class CalculatorBrain: Codable {
                 let numerator = popOperand()
                 // handle divide by zero, below (and in CalculatorViewController.updateDisplayString)
                 let den = pow(denominator.real, 2) + pow(denominator.imag, 2)
-                let real = (numerator.real * denominator.real + numerator.imag * denominator.imag) / den
-                let imag = (numerator.imag * denominator.real - numerator.real * denominator.imag) / den
-                result = (real, imag)
+                result.real = (numerator.real * denominator.real + numerator.imag * denominator.imag) / den
+                result.imag = (numerator.imag * denominator.real - numerator.real * denominator.imag) / den
             case "×":
                 // (a + bi) x (c + di) = (ac - bd) + (ad + bc)i
                 let term1 = popOperand()
                 let term2 = popOperand()
-                let real = (term1.real * term2.real - term1.imag * term2.imag)
-                let imag = (term1.real * term2.imag + term1.imag * term2.real)
-                result = (real, imag)
+                result.real = (term1.real * term2.real - term1.imag * term2.imag)
+                result.imag = (term1.real * term2.imag + term1.imag * term2.real)
             case "–":
                 // (a + bi) - (c + di) = (a - c) + (b - d)i
                 let term2 = popOperand()
                 let term1 = popOperand()
-                let real = term1.real - term2.real
-                let imag = term1.imag - term2.imag
-                result = (real, imag)
+                result.real = term1.real - term2.real
+                result.imag = term1.imag - term2.imag
             case "+":
                 // (a + bi) - (c + di) = (a - c) + (b - d)i
                 let term1 = popOperand()
                 let term2 = popOperand()
-                let real = term1.real + term2.real
-                let imag = term1.imag + term2.imag
-                result = (real, imag)
+                result.real = term1.real + term2.real
+                result.imag = term1.imag + term2.imag
             case "SIN":
                 // sin(a + bi) = sin(a)cosh(b) + cos(a)sinh(b)i
                 let term = popOperand()
-                let real = sin(term.real * angleConversion) * cosh(term.imag * angleConversion)
-                let imag = cos(term.real * angleConversion) * sinh(term.imag * angleConversion)
-                result = (real, imag)
+                result.real = sin(term.real * angleConversion) * cosh(term.imag * angleConversion)
+                result.imag = cos(term.real * angleConversion) * sinh(term.imag * angleConversion)
             case "COS":
                 // cos(a + bi) = cos(a)cosh(b) + sin(a)sinh(b)i
                 let term = popOperand()
-                let real = cos(term.real * angleConversion) * cosh(term.imag * angleConversion)
-                let imag = sin(term.real * angleConversion) * sinh(term.imag * angleConversion)
-                result = (real, imag)
+                result.real = cos(term.real * angleConversion) * cosh(term.imag * angleConversion)
+                result.imag = sin(term.real * angleConversion) * sinh(term.imag * angleConversion)
             case "TAN":
                 // tan(a + bi) = [tan(a) - tan(a)tanh²(b)] / [1 + tan²(a)tanh²(b)] + [tanh(b) + tan²(a)tanh(b)] / [1 + tan²(a)tanh²(b)]i
                 let term = popOperand()
                 let den = 1 + pow(tan(term.real * angleConversion), 2) * pow(tanh(term.imag * angleConversion), 2)
-                let real = tan(term.real * angleConversion) * (1 - pow(tanh(term.imag * angleConversion), 2)) / den
-                let imag = (tanh(term.imag * angleConversion) + pow(tan(term.real * angleConversion), 2)) / den
-                result = (real, imag)
+                result.real = tan(term.real * angleConversion) * (1 - pow(tanh(term.imag * angleConversion), 2)) / den
+                result.imag = (tanh(term.imag * angleConversion) + pow(tan(term.real * angleConversion), 2)) / den
             case "√x":
                 // sqrt(a + bi) = sqrt[(mag + a)/2] + b/abs(b)*sqrt[(mag - a)/2]i, where mag = sqrt(a² + b²)
                 let term = popOperand()
                 if term.imag == 0 {
-                    result = (sqrt(term.real), 0)
+                    result.real = sqrt(term.real)
+                    result.imag = 0
                 } else {
                     let mag = pow(term.real, 2) + pow(term.imag, 2)
-                    let real = sqrt((mag + term.real) / 2)
-                    let imag = term.imag / abs(term.imag) * sqrt((mag - term.real) / 2)
-                    result = (real, imag)
+                    result.real = sqrt((mag + term.real) / 2)
+                    result.imag = term.imag / abs(term.imag) * sqrt((mag - term.real) / 2)
                 }
             case "ex":
                 // e^(a + bi) = e^a * cos(b) + e^a * sin(b)i
                 let term = popOperand()
-                let real = exp(term.real) * cos(term.imag * angleConversion)
-                let imag = exp(term.real) * sin(term.imag * angleConversion)
-                result = (real, imag)
+                result.real = exp(term.real) * cos(term.imag * angleConversion)
+                result.imag = exp(term.real) * sin(term.imag * angleConversion)
             case "10x":
                 // 10^(a + bi) = 10^a * cos(b*ln(10)) + 10^a * sin(b*ln(10))i
                 let power = popOperand()
-                let real = pow(10, power.real) * cos(power.imag * log(10) * angleConversion)
-                let imag = pow(10, power.real) * sin(power.imag * log(10) * angleConversion)
-                result = (real, imag)
+                result.real = pow(10, power.real) * cos(power.imag * log(10) * angleConversion)
+                result.imag = pow(10, power.real) * sin(power.imag * log(10) * angleConversion)
             case "yx":
                 let power = popOperand()
-//                result = pow(popOperand(), power)
-                result = (pow(popOperand().real, power.real), 0)  // pws: only implemented using the real parts, for now
+                let term = popOperand()
+                result.real = pow(term.real, power.real)  // pws: only implemented using the real parts, for now
+                result.imag = 0
             case "1/x":
                 // 1/(a + bi) = a/(a² + b²) - b/(a² + b²)i
                 let term = popOperand()
                 let den = pow(term.real, 2) + pow(term.imag, 2)
-                let real = term.real / den
-                let imag = -term.imag / den
-                result = (real, imag)
+                result.real = term.real / den
+                result.imag = -term.imag / den
             case "CHS":
                 // CHS only changes the sign of the real part of the imaginary number on the HP-15C
                 let term = popOperand()
-                result = (-term.real, term.imag)
+                result.real = -term.real
+                result.imag = term.imag
             default:
                 break
             }
-//        case "f":  // functions above button (orange)
-//            switch operation {
-//            case "STO":
-//                // FRAC - decimal portion of number
-//                let number = popOperand()
-//                result = number - Double(Int(number))
-//            case "1":  // sent from digitPressed
-//                // →R - convert polar coordinates to rectangular
-//                let radius = popOperand()
-//                let angle = popOperand()
-//                result = radius * cos(angle * angleConversion)  // x
-//                secondResult = radius * sin(angle * angleConversion)  // y
+        case "f":  // functions above button (orange)
+            switch operation {
+            case "STO":
+                // FRAC - decimal portion of number
+                let number = popOperand()
+                result.real = number.real - Double(Int(number.real))
+                result.imag = number.imag
+            case "1":  // sent from digitPressed
+                // →R - convert polar coordinates to rectangular
+                isConvertingPolar = true
+                if isComplexMode {
+                    let polar = popOperand()
+                    let radius = polar.real
+                    let angle = polar.imag
+                    result.real = radius * cos(angle * angleConversion)  // x
+                    result.imag = radius * sin(angle * angleConversion)  // y
+                } else {
+                    let radius = popOperand().real
+                    let angle = popOperand().real
+                    result.real = radius * cos(angle * angleConversion)  // x
+                    secondResult?.real = radius * sin(angle * angleConversion)  // y
+                }
 //            case "2":  // sent from digitPressed
 //                // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
 //                let decimalHours = popOperand()
@@ -307,11 +345,11 @@ class CalculatorBrain: Codable {
 //            case "3":  // sent from digitPressed
 //                // →RAD - convert to radians
 //                result = popOperand() * Constants.D2R
-//            default:
-//                break
-//            }
-//        case "g":  // functions below button (blue)
-//            switch operation {
+            default:
+                break
+            }
+        case "g":  // functions below button (blue)
+            switch operation {
 //            case "STO":
 //                // INT
 //                result = Double(Int(popOperand()))
@@ -348,12 +386,21 @@ class CalculatorBrain: Codable {
 //            case "CHS":
 //                // ABS (absolute value)
 //                result = abs(popOperand())
-//            case "1":  // sent from digitPressed
-//                // →P - convert rectangular coordinates to polar
-//                let x = popOperand()
-//                let y = popOperand()
-//                result = sqrt(x * x + y * y)  // radius
-//                secondResult = atan2(y, x) / angleConversion  // angle
+            case "1":  // sent from digitPressed
+                // →P - convert rectangular coordinates to polar
+                isConvertingPolar = true
+                if isComplexMode {
+                    let rectangular = popOperand()
+                    let x = rectangular.real
+                    let y = rectangular.imag
+                    result.real = rectangular.mag  // radius
+                    result.imag = atan2(y, x) / angleConversion  // angle
+                } else {
+                    let x = popOperand().real
+                    let y = popOperand().real
+                    result.real = sqrt(x * x + y * y)  // radius
+                    secondResult?.real = atan2(y, x) / angleConversion  // angle
+                }
 //            case "2":  // sent from digitPressed
 //                // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
 //                let hoursMinuteSeconds = popOperand()  // ex. hoursMinutesSeconds = 1.1404200
@@ -365,9 +412,9 @@ class CalculatorBrain: Codable {
 //            case "3":  // sent from digitPressed
 //                // →DEG - convert to degrees
 //                result = popOperand() / Constants.D2R
-//            default:
-//                break
-//            }
+            default:
+                break
+            }
 //        case "H":  // hyperbolic trig function
 //            switch operation {
 //            case "SIN":
@@ -394,12 +441,12 @@ class CalculatorBrain: Codable {
             break
         }
         
-        if result.isNaN || result.isInfinite {  // ex. sqrt(-1) = NaN, 1/0 = +Inf, -1/0 = -Inf
+        if result.real.isNaN || result.imag.isNaN || result.real.isInfinite || result.imag.isInfinite {  // ex. sqrt(-1) = NaN, 1/0 = +Inf, -1/0 = -Inf
             // restore stack to pre-error state
             realStack = saveStack
             error = .code(0)  // reset in CalculatorViewController.restoreFromError
-        } else if abs(result) > Constants.maxValue {
-            error = result > 0 ? .overflow : .underflow
+        } else if result.mag > Constants.maxValue {
+            error = result.real > 0 ? .overflow : .underflow  // pws wrong: underflow isn't negative overflow, it's mag < smallest allowable value
         } else {
             if secondResult != nil {
                 pushOperand(secondResult!)
