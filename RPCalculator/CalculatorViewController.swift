@@ -855,10 +855,16 @@ class CalculatorViewController: UIViewController {
                 // "I" pressed (imaginary number entered)
                 prefix = nil
                 isComplexMode = true
-                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+                if liftStack {
+                    brain.pushOperand(displayStringNumber)  // real part needs to be in Y register, before calling moveRealXToImagX
+                    brain.printMemory()
+                } else {
+                    endDisplayEntry()  // real part already in Y register from previous Enter
+                }
                 brain.moveRealXToImagX()
                 displayString = String(brain.xRegister!)
                 updateDisplayString()
+                liftStack = true
                 return
             }
         case .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)

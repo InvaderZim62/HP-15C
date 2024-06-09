@@ -8,18 +8,8 @@
 //     realStack = realStack.suffix(4)                                                      // only save last 4 elements of array
 //     realStack.insert(contentsOf: repeatElement(0.0, count: 4 - realStack.count), at: 0)  // pad front of array with 0.0, to total count = 4
 //     realStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)                   // swap last two elements of array
-//-----------------------------------------------------
-//    import Complex
 //
-//    let z: Complex<Double> = 2 + 3 * .i
-//    print(z.real)      // 2.0
-//    print(z.imaginary) // 3.0
-//
-//    let w = Complex<Double>(1, -2) // (1.0, -2.0)
-//
-//    let u: Complex<Double> = .i * .i // (-1.0, 0.0)
-//-----------------------------------------------------
-//
+
 import Foundation
 
 struct Constants {
