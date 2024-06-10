@@ -443,17 +443,27 @@ class CalculatorBrain: Codable {
             default:
                 break
             }
-//        case "H":  // hyperbolic trig function
-//            switch operation {
-//            case "SIN":
-//                result = sinh(popOperand() * angleConversion)
-//            case "COS":
-//                result = cosh(popOperand() * angleConversion)
-//            case "TAN":
-//                result = tanh(popOperand() * angleConversion)
-//            default:
-//                break
-//            }
+        case "H":  // hyperbolic trig function
+            switch operation {
+            case "SIN":
+                // sinh(a + bi) = sinh(a)cos(b) + cosh(a)sin(b)i
+                let term = popOperand()
+                result.real = sinh(term.real * angleConversion) * cos(term.imag * angleConversion)
+                result.imag = cosh(term.real * angleConversion) * sin(term.imag * angleConversion)
+            case "COS":
+                // cosh(a + bi) = cosh(a)cos(b) + sinh(a)sin(b)i
+                let term = popOperand()
+                result.real = cosh(term.real * angleConversion) * cos(term.imag * angleConversion)
+                result.imag = sinh(term.real * angleConversion) * sin(term.imag * angleConversion)
+            case "TAN":
+                // tanh(a + bi) = [tanh(a) + tanh(a)tan²(b)] / [1 + tanh²(a)tan²(b)] + [tan(b) - tanh²(a)tan(b)] / [1 + tanh²(a)tan²(b)]i
+                let term = popOperand()
+                let den = 1 + pow(tanh(term.real * angleConversion), 2) * pow(tan(term.imag * angleConversion), 2)
+                result.real = tanh(term.real * angleConversion) * (1 + pow(tan(term.imag * angleConversion), 2)) / den
+                result.imag = (tan(term.imag * angleConversion) * (1 - pow(tanh(term.real * angleConversion), 2))) / den
+            default:
+                break
+            }
 //        case "h":  // inverse hyperbolic trig function
 //            switch operation {
 //            case "SIN":
