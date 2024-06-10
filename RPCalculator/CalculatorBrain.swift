@@ -395,7 +395,7 @@ class CalculatorBrain: Codable {
                 result.imag = atan2(term.imag, term.real) / log(10)
             case "yx":
                 // %
-                // note: Owner's Manual p. 130 says "Any functions not mentioned below or in the rest of this section
+                // Note: Owner's Handbook p.130 says "Any functions not mentioned below or in the rest of this section
                 //       (Calculating With Complex Numbers) ignore the imaginary stack."  Percent seems to fall in this
                 //       category, although (a + bi) ENTER (c + di) % gives a complex number answer.  I just use the
                 //       real portion of the x value (c + 0i).
@@ -444,23 +444,26 @@ class CalculatorBrain: Codable {
                 break
             }
         case "H":  // hyperbolic trig function
+            // Note: Owner's Handbook p.26 says "The trigonometric functions operate in the trigonometric mode you select",
+            //       but this does not appear to be true for the hyperbolic trig functions.  They all operate in radians
+            //       for real and complex numbers.
             switch operation {
             case "SIN":
                 // sinh(a + bi) = sinh(a)cos(b) + cosh(a)sin(b)i
                 let term = popOperand()
-                result.real = sinh(term.real * angleConversion) * cos(term.imag * angleConversion)
-                result.imag = cosh(term.real * angleConversion) * sin(term.imag * angleConversion)
+                result.real = sinh(term.real) * cos(term.imag)
+                result.imag = cosh(term.real) * sin(term.imag)
             case "COS":
                 // cosh(a + bi) = cosh(a)cos(b) + sinh(a)sin(b)i
                 let term = popOperand()
-                result.real = cosh(term.real * angleConversion) * cos(term.imag * angleConversion)
-                result.imag = sinh(term.real * angleConversion) * sin(term.imag * angleConversion)
+                result.real = cosh(term.real) * cos(term.imag)
+                result.imag = sinh(term.real) * sin(term.imag)
             case "TAN":
                 // tanh(a + bi) = [tanh(a) + tanh(a)tan²(b)] / [1 + tanh²(a)tan²(b)] + [tan(b) - tanh²(a)tan(b)] / [1 + tanh²(a)tan²(b)]i
                 let term = popOperand()
-                let den = 1 + pow(tanh(term.real * angleConversion), 2) * pow(tan(term.imag * angleConversion), 2)
-                result.real = tanh(term.real * angleConversion) * (1 + pow(tan(term.imag * angleConversion), 2)) / den
-                result.imag = (tan(term.imag * angleConversion) * (1 - pow(tanh(term.real * angleConversion), 2))) / den
+                let den = 1 + pow(tanh(term.real), 2) * pow(tan(term.imag), 2)
+                result.real = tanh(term.real) * (1 + pow(tan(term.imag), 2)) / den
+                result.imag = (tan(term.imag) * (1 - pow(tanh(term.real), 2))) / den
             default:
                 break
             }
