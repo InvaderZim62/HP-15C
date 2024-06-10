@@ -386,24 +386,34 @@ class CalculatorBrain: Codable {
                 let term = popOperand()
                 result.real = log(term.mag)
                 result.imag = atan2(term.imag, term.real)
-//            case "10x":
-//                // LOG (log base 10)
-//                result = log10(popOperand())
-//            case "yx":
-//                // %
-//                let percent = popOperand() * 0.01
-//                let baseNumber = popOperand()
-//                result = percent * baseNumber  // %
-//                secondResult = baseNumber
-//            case "1/x":
-//                // 𝝙% (delta %)
-//                let secondNumber = popOperand()
-//                let baseNumber = popOperand()
-//                result = (secondNumber - baseNumber) / baseNumber * 100
-//                secondResult = baseNumber
-//            case "CHS":
-//                // ABS (absolute value)
-//                result = abs(popOperand())
+            case "10x":
+                // LOG (base 10)
+                // log10(a + bi) = ln(a + bi) / ln(10)
+                //               = ln(sqrt(a² + b²))/ln(10) + atan2(b, a)/ln(10)i
+                let term = popOperand()
+                result.real = log(term.mag) / log(10)
+                result.imag = atan2(term.imag, term.real) / log(10)
+            case "yx":
+                // %
+                // note: Owner's Manual p. 130 says "Any functions not mentioned below or in the rest of this section
+                //       (Calculating With Complex Numbers) ignore the imaginary stack."  Percent seems to fall in this
+                //       category, although (a + bi) ENTER (c + di) % gives a complex number answer.  I just use the
+                //       real portion of the x value (c + 0i).
+                let percent = popOperand().real * 0.01
+                let baseNumber = popOperand()
+                result.real = percent * baseNumber.real  // %
+                secondResult = baseNumber
+            case "1/x":
+                // 𝝙% (delta %)
+                let secondNumber = popOperand().real
+                let baseNumber = popOperand()
+                result.real = (secondNumber - baseNumber.real) / baseNumber.real * 100
+                secondResult = baseNumber
+            case "CHS":
+                // ABS (absolute value)
+                let term = popOperand()
+                result.real = term.mag
+                result.imag = 0
             case "1":  // sent from digitPressed
                 // →P - convert rectangular coordinates to polar
                 isConvertingPolar = true
