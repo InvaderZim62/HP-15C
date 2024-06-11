@@ -298,13 +298,15 @@ class CalculatorBrain: Codable {
                     result.real = radius * cos(angle * angleConversion)  // x
                     secondResult?.real = radius * sin(angle * angleConversion)  // y
                 }
-//            case "2":  // sent from digitPressed
-//                // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
-//                let decimalHours = popOperand()
-//                let hours = Int(decimalHours)
-//                let minutes = Int((decimalHours - Double(hours)) * 60)
-//                let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
-//                result = Double(hours) + Double(minutes) / 100 + seconds / 10000
+            case "2":  // sent from digitPressed
+                // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
+                let term = popOperand()
+                let decimalHours = term.real
+                let hours = Int(decimalHours)
+                let minutes = Int((decimalHours - Double(hours)) * 60)
+                let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
+                result.real = Double(hours) + Double(minutes) / 100 + seconds / 10000
+                result.imag = term.imag
             case "3":  // sent from digitPressed
                 // →RAD - convert to radians
                 let term = popOperand()
@@ -375,14 +377,16 @@ class CalculatorBrain: Codable {
                     result.real = sqrt(x * x + y * y)  // radius
                     secondResult?.real = atan2(y, x) / angleConversion  // angle
                 }
-//            case "2":  // sent from digitPressed
-//                // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
-//                let hoursMinuteSeconds = popOperand()  // ex. hoursMinutesSeconds = 1.1404200
-//                let hours = Int(hoursMinuteSeconds)  // ex. hours = 1
-//                let decimal = Int(round((hoursMinuteSeconds - Double(hours)) * 10000000))  // ex. decimal = 1404200
-//                let minutes = Int(decimal / 100000)  // ex. minutes = 14
-//                let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
-//                result = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
+            case "2":  // sent from digitPressed
+                // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
+                let term = popOperand()
+                let hoursMinuteSeconds = term.real  // ex. hoursMinutesSeconds = 1.1404200
+                let hours = Int(hoursMinuteSeconds)  // ex. hours = 1
+                let decimal = Int(round((hoursMinuteSeconds - Double(hours)) * 10000000))  // ex. decimal = 1404200
+                let minutes = Int(decimal / 100000)  // ex. minutes = 14
+                let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
+                result.real = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
+                result.imag = term.imag
             case "3":  // sent from digitPressed
                 // →DEG - convert to degrees
                 let term = popOperand()
@@ -390,7 +394,7 @@ class CalculatorBrain: Codable {
             default:
                 break
             }
-        case "H":  // hyperbolic trig function
+        case "H":  // hyperbolic trig functions
             // Note: Owner's Handbook p.26 says "The trigonometric functions operate in the trigonometric mode you select",
             //       but this does not appear to be true for the hyperbolic trig functions.  They all operate in radians
             //       for real and complex numbers.
