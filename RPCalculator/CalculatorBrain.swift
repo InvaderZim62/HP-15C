@@ -316,9 +316,10 @@ class CalculatorBrain: Codable {
             }
         case "g":  // functions below button (blue)
             switch operation {
-//            case "STO":
-//                // INT
-//                result = Double(Int(popOperand()))
+            case "STO":
+                // INT
+                let term = popOperand()
+                result = Complex(real: Double(Int(term.real)), imag: term.imag)
             case "SIN":
                 // SIN-1 (arcsin)
                 // asin(z) = -i * ln{sqrt[1 - z²] + zi}

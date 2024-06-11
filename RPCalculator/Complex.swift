@@ -124,7 +124,15 @@ struct Complex {
         Complex(real: lhs * rhs.real, imag: lhs * rhs.imag)
     }
 
+    static func *(lhs: Complex, rhs: Double) -> Complex {
+        Complex(real: lhs.real * rhs, imag: lhs.imag * rhs)
+    }
+
     static func /(lhs: Complex, rhs: Double) -> Complex {
         Complex(real: lhs.real / rhs, imag: lhs.imag / rhs)
+    }
+
+    static func /(lhs: Double, rhs: Complex) -> Complex {
+        Complex(real: lhs / rhs.real, imag: lhs / rhs.imag)
     }
 }
