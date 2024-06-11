@@ -19,6 +19,7 @@
 		4AA20A8025CF84DB00012341 /* DigitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A7F25CF84DB00012341 /* DigitView.swift */; };
 		4AA20A8425D1124800012341 /* click.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4AA20A8325D1124800012341 /* click.wav */; };
 		4AAA223025E855C10035D219 /* DisplayFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAA222F25E855C10035D219 /* DisplayFormat.swift */; };
+		4AEBB0D82C17CDA50000D2AF /* Complex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEBB0D72C17CDA50000D2AF /* Complex.swift */; };
 		4AF8E86F25D895A500C52D10 /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF8E86E25D895A500C52D10 /* CalculatorView.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,7 @@
 		4AA20A7F25CF84DB00012341 /* DigitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitView.swift; sourceTree = "<group>"; };
 		4AA20A8325D1124800012341 /* click.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = click.wav; sourceTree = "<group>"; };
 		4AAA222F25E855C10035D219 /* DisplayFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormat.swift; sourceTree = "<group>"; };
+		4AEBB0D72C17CDA50000D2AF /* Complex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Complex.swift; sourceTree = "<group>"; };
 		4AF8E86E25D895A500C52D10 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -74,6 +76,7 @@
 				4AA20A6125CD0E2A00012341 /* CalculatorViewController.swift */,
 				4AA20A7525CDBBAF00012341 /* CalculatorBrain.swift */,
 				4AAA222F25E855C10035D219 /* DisplayFormat.swift */,
+				4AEBB0D72C17CDA50000D2AF /* Complex.swift */,
 				4AF8E86C25D8955800C52D10 /* Views */,
 				4AA20A8325D1124800012341 /* click.wav */,
 				4AA20A7225CD0E4D00012341 /* Supporting Files */,
@@ -183,6 +186,7 @@
 				4AA20A7625CDBBAF00012341 /* CalculatorBrain.swift in Sources */,
 				4AA20A8025CF84DB00012341 /* DigitView.swift in Sources */,
 				4AA20A6025CD0E2A00012341 /* SceneDelegate.swift in Sources */,
+				4AEBB0D82C17CDA50000D2AF /* Complex.swift in Sources */,
 				4AAA223025E855C10035D219 /* DisplayFormat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

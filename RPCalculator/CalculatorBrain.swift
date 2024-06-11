@@ -27,15 +27,6 @@ enum Error: Equatable, Codable {
     case none
 }
 
-struct Complex {
-    var real: Double
-    var imag: Double
-
-    var mag: Double {
-        sqrt(pow(real, 2) + pow(imag, 2))
-    }
-}
-
 class CalculatorBrain: Codable {
     
     var trigMode = TrigMode.DEG
@@ -243,31 +234,14 @@ class CalculatorBrain: Codable {
         case "n":  // none (primary button functions)
             switch operation {
             case "÷":
-                // (a + bi) / (c + di) = (ac + bd)/(c² + d²) + (bc - ad)/(c² + d²)i
-                let denominator = popOperand()
-                let numerator = popOperand()
-                // handle divide by zero, below (and in CalculatorViewController.updateDisplayString)
-                let den = pow(denominator.real, 2) + pow(denominator.imag, 2)
-                result.real = (numerator.real * denominator.real + numerator.imag * denominator.imag) / den
-                result.imag = (numerator.imag * denominator.real - numerator.real * denominator.imag) / den
+                let divisor = popOperand()
+                result = popOperand() / divisor  // let DisplayView handle divide by zero (result = "inf")
             case "×":
-                // (a + bi) x (c + di) = (ac - bd) + (ad + bc)i
-                let term1 = popOperand()
-                let term2 = popOperand()
-                result.real = (term1.real * term2.real - term1.imag * term2.imag)
-                result.imag = (term1.real * term2.imag + term1.imag * term2.real)
+                result = popOperand() * popOperand()
             case "–":
-                // (a + bi) - (c + di) = (a - c) + (b - d)i
-                let term2 = popOperand()
-                let term1 = popOperand()
-                result.real = term1.real - term2.real
-                result.imag = term1.imag - term2.imag
+                result = -popOperand() + popOperand()
             case "+":
-                // (a + bi) - (c + di) = (a - c) + (b - d)i
-                let term1 = popOperand()
-                let term2 = popOperand()
-                result.real = term1.real + term2.real
-                result.imag = term1.imag + term2.imag
+                result = popOperand() + popOperand()
             case "SIN":
                 // sin(a + bi) = sin(a)cosh(b) + cos(a)sinh(b)i
                 let term = popOperand()
@@ -285,46 +259,21 @@ class CalculatorBrain: Codable {
                 result.real = tan(term.real * angleConversion) * (1 - pow(tanh(term.imag * angleConversion), 2)) / den
                 result.imag = (tanh(term.imag * angleConversion) * (1 + pow(tan(term.real * angleConversion), 2))) / den
             case "√x":
-                // sqrt(a + bi) = sqrt[(mag + a)/2] + b/abs(b)*sqrt[(mag - a)/2]i, where mag = sqrt(a² + b²)
-                let term = popOperand()
-                if term.imag == 0 {
-                    result.real = sqrt(term.real)
-                    result.imag = 0
-                } else {
-                    result.real = sqrt((term.mag + term.real) / 2)
-                    result.imag = term.imag / abs(term.imag) * sqrt((term.mag - term.real) / 2)
-                }
+                result = popOperand().squareRoot
             case "ex":
                 // e^(a + bi) = e^a * cos(b) + e^a * sin(b)i
-                let term = popOperand()
-                result.real = exp(term.real) * cos(term.imag * angleConversion)
-                result.imag = exp(term.real) * sin(term.imag * angleConversion)
+                result = popOperand().exponential
             case "10x":
-                // 10^(a + bi) = 10^a * cos(b*ln(10)) + 10^a * sin(b*ln(10))i
-                let power = popOperand()
-                result.real = pow(10, power.real) * cos(power.imag * log(10) * angleConversion)
-                result.imag = pow(10, power.real) * sin(power.imag * log(10) * angleConversion)
+                result = popOperand().tenToThePowerOf
             case "yx":
-                // (a + bi)^x = e^(x * ln(a + bi))
-                //            = e^(c + di), where c = x * ln(mag), d = x * atan2(b, a)
-                //            = e^c * cos(d) + e^c * sin(d)i
                 let x = popOperand()
-                let term = popOperand()
-                let c = x.real * log(term.mag)
-                let d = x.real * atan2(term.imag, term.real)
-                result.real = exp(c) * cos(d)
-                result.imag = exp(c) * sin(d)
+                result = popOperand()^x
             case "1/x":
-                // 1/(a + bi) = a/(a² + b²) - b/(a² + b²)i
-                let term = popOperand()
-                let den = pow(term.real, 2) + pow(term.imag, 2)
-                result.real = term.real / den
-                result.imag = -term.imag / den
+                result = popOperand().inverse
             case "CHS":
                 // CHS only changes the sign of the real part of the imaginary number on the HP-15C
                 let term = popOperand()
-                result.real = -term.real
-                result.imag = term.imag
+                result = Complex(real: -term.real, imag: term.imag)
             default:
                 break
             }
@@ -368,31 +317,33 @@ class CalculatorBrain: Codable {
 //            case "STO":
 //                // INT
 //                result = Double(Int(popOperand()))
-//            case "SIN":
-//                // SIN-1 (arcsin)
-//                result = asin(popOperand()) / angleConversion
-//            case "COS":
-//                // COS-1 (arccos)
-//                result = acos(popOperand()) / angleConversion
-//            case "TAN":
-//                // TAN-1 (arctan)
-//                result = atan(popOperand()) / angleConversion
-//            case "√x":
-//                // x²
-//                result = pow(popOperand(), 2)
+            case "SIN":
+                // SIN-1 (arcsin)
+                // asin(z) = -i * ln{sqrt[1 - z²] + zi}
+                let term = popOperand()
+                let one = Complex(real: 1, imag: 0)
+                result = -Complex.i * ((one - term.squared).squareRoot + term * Complex.i).naturalLog / angleConversion
+            case "COS":
+                // COS-1 (arccos)
+                // acos(z) = -i * ln{sqrt[z² - 1] + z}
+                let term = popOperand()
+                let one = Complex(real: 1, imag: 0)
+                result = -Complex.i * ((term.squared - one).squareRoot + term).naturalLog / angleConversion
+            case "TAN":
+                // TAN-1 (arctan)
+                // atan(z) = -i / 2 * ln{(i - z)/(i + z)}
+                let term = popOperand()
+                let two = Complex(real: 2, imag: 0)
+                result = -Complex.i / two * ((Complex.i - term) / (Complex.i + term)).naturalLog / angleConversion
+            case "√x":
+                // x²
+                result = popOperand().squared
             case "ex":
                 // LN (natural log)
-                // ln(a + bi) = ln(sqrt(a² + b²)) + atan2(b, a)i
-                let term = popOperand()
-                result.real = log(term.mag)
-                result.imag = atan2(term.imag, term.real)
+                result = popOperand().naturalLog
             case "10x":
                 // LOG (base 10)
-                // log10(a + bi) = ln(a + bi) / ln(10)
-                //               = ln(sqrt(a² + b²))/ln(10) + atan2(b, a)/ln(10)i
-                let term = popOperand()
-                result.real = log(term.mag) / log(10)
-                result.imag = atan2(term.imag, term.real) / log(10)
+                result = popOperand().logBase10
             case "yx":
                 // %
                 // Note: Owner's Handbook p.130 says "Any functions not mentioned below or in the rest of this section
@@ -411,9 +362,7 @@ class CalculatorBrain: Codable {
                 secondResult = baseNumber
             case "CHS":
                 // ABS (absolute value)
-                let term = popOperand()
-                result.real = term.mag
-                result.imag = 0
+                result = Complex(real: popOperand().mag, imag: 0)
             case "1":  // sent from digitPressed
                 // →P - convert rectangular coordinates to polar
                 isConvertingPolar = true
@@ -470,12 +419,17 @@ class CalculatorBrain: Codable {
 //        case "h":  // inverse hyperbolic trig function
 //            switch operation {
 //            case "SIN":
+//                // arcsinh(z) = ln(z + sqrt(z^2 + 1))
+//                //            =
+//                
+//                // ln(a + bi) = ln(sqrt(a² + b²)) + atan2(b, a)i
+//                
 //                result = asinh(popOperand()) / angleConversion
-//            case "COS":
-//                result = acosh(popOperand()) / angleConversion
-//            case "TAN":
-//                result = atanh(popOperand()) / angleConversion
-//            default:
+////            case "COS":
+////                result = acosh(popOperand()) / angleConversion
+////            case "TAN":
+////                result = atanh(popOperand()) / angleConversion
+////            default:
 //                break
 //            }
         default:
