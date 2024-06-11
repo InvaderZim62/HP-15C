@@ -261,7 +261,6 @@ class CalculatorBrain: Codable {
             case "√x":
                 result = popOperand().squareRoot
             case "ex":
-                // e^(a + bi) = e^a * cos(b) + e^a * sin(b)i
                 result = popOperand().exponential
             case "10x":
                 result = popOperand().tenToThePowerOf
@@ -306,9 +305,10 @@ class CalculatorBrain: Codable {
 //                let minutes = Int((decimalHours - Double(hours)) * 60)
 //                let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
 //                result = Double(hours) + Double(minutes) / 100 + seconds / 10000
-//            case "3":  // sent from digitPressed
-//                // →RAD - convert to radians
-//                result = popOperand() * Constants.D2R
+            case "3":  // sent from digitPressed
+                // →RAD - convert to radians
+                let term = popOperand()
+                result = Complex(real: term.real * Constants.D2R, imag: term.imag)  // only applies to the real portion
             default:
                 break
             }
@@ -386,9 +386,10 @@ class CalculatorBrain: Codable {
 //                let minutes = Int(decimal / 100000)  // ex. minutes = 14
 //                let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
 //                result = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
-//            case "3":  // sent from digitPressed
-//                // →DEG - convert to degrees
-//                result = popOperand() / Constants.D2R
+            case "3":  // sent from digitPressed
+                // →DEG - convert to degrees
+                let term = popOperand()
+                result = Complex(real: term.real / Constants.D2R, imag: term.imag)  // only applies to the real portion
             default:
                 break
             }
