@@ -13,6 +13,7 @@ struct Complex {
 
     static let i = Complex(real: 0, imag: 1)
 
+    // |(a + bi)| = sqrt(a² + b²)
     var mag: Double {
         sqrt(pow(real, 2) + pow(imag, 2))
     }
@@ -30,14 +31,10 @@ struct Complex {
                 imag: 2 * real * imag)
     }
     
+    // sqrt(a + bi) = sqrt[(mag + a)/2] + sign(b) * sqrt[(mag - a)/2]i
     var squareRoot: Complex {
-        if imag == 0 {
-            return Complex(real: sqrt((mag + real) / 2),
-                           imag: sqrt((mag - real) / 2))
-        } else {
-            return Complex(real: sqrt((mag + real) / 2),
-                           imag: sqrt((mag - real) / 2) * (imag > 0 ? 1 : -1))
-        }
+        Complex(real: sqrt((mag + real) / 2),
+                imag: sqrt((mag - real) / 2) * (imag >= 0 ? 1 : -1))
     }
     
     // ln(a + bi) = ln(sqrt(a² + b²)) + atan2(b, a)i
@@ -93,7 +90,10 @@ struct Complex {
         (rhs * lhs.naturalLog).exponential
     }
     
+    //----------------------------
     // unary operator
+    //----------------------------
+
     // -(a + bi) = -a - bi
     static prefix func -(rhs: Complex) -> Complex {
         Complex(real: -rhs.real,
