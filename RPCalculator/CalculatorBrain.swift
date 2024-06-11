@@ -321,20 +321,17 @@ class CalculatorBrain: Codable {
                 // SIN-1 (arcsin)
                 // asin(z) = -i * ln{sqrt[1 - z²] + zi}
                 let term = popOperand()
-                let one = Complex(real: 1, imag: 0)
-                result = -Complex.i * ((one - term.squared).squareRoot + term * Complex.i).naturalLog / angleConversion
+                result = -Complex.i * ((1 - term.squared).squareRoot + term * Complex.i).naturalLog / angleConversion
             case "COS":
                 // COS-1 (arccos)
                 // acos(z) = -i * ln{sqrt[z² - 1] + z}
                 let term = popOperand()
-                let one = Complex(real: 1, imag: 0)
-                result = -Complex.i * ((term.squared - one).squareRoot + term).naturalLog / angleConversion
+                result = -Complex.i * ((term.squared - 1).squareRoot + term).naturalLog / angleConversion
             case "TAN":
                 // TAN-1 (arctan)
                 // atan(z) = -i / 2 * ln{(i - z)/(i + z)}
                 let term = popOperand()
-                let two = Complex(real: 2, imag: 0)
-                result = -Complex.i / two * ((Complex.i - term) / (Complex.i + term)).naturalLog / angleConversion
+                result = -Complex.i / 2 * ((Complex.i - term) / (Complex.i + term)).naturalLog / angleConversion
             case "√x":
                 // x²
                 result = popOperand().squared
@@ -417,22 +414,24 @@ class CalculatorBrain: Codable {
             default:
                 break
             }
-//        case "h":  // inverse hyperbolic trig function
-//            switch operation {
-//            case "SIN":
-//                // arcsinh(z) = ln(z + sqrt(z^2 + 1))
-//                //            =
-//                
-//                // ln(a + bi) = ln(sqrt(a² + b²)) + atan2(b, a)i
-//                
-//                result = asinh(popOperand()) / angleConversion
-////            case "COS":
-////                result = acosh(popOperand()) / angleConversion
-////            case "TAN":
-////                result = atanh(popOperand()) / angleConversion
-////            default:
-//                break
-//            }
+        case "h":  // inverse hyperbolic trig functions
+            // See note above.  Inverse hyperbolic trig functions are all in radians.
+            switch operation {
+            case "SIN":
+                // arcsinh(z) = ln(z + sqrt(z^2 + 1))
+                let term = popOperand()
+                result = (term + (term.squared + 1).squareRoot).naturalLog
+            case "COS":
+                // arccosh(z) = ln(z + sqrt(z^2 - 1))
+                let term = popOperand()
+                result = (term + (term.squared - 1).squareRoot).naturalLog
+            case "TAN":
+                // arctanh(z) = 1/2 * ln((1 + z)/(1 - z))
+                let term = popOperand()
+                result = 0.5 * ((1 + term) / (1 - term)).naturalLog
+            default:
+                break
+            }
         default:
             break
         }

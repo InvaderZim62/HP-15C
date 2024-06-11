@@ -35,8 +35,6 @@ struct Complex {
             return Complex(real: sqrt((mag + real) / 2),
                            imag: sqrt((mag - real) / 2))
         } else {
-//            return Complex(real: sqrt((mag + real) / 2),
-//                           imag: imag / abs(imag) * sqrt((mag - real) / 2))
             return Complex(real: sqrt((mag + real) / 2),
                            imag: sqrt((mag - real) / 2) * (imag > 0 ? 1 : -1))
         }
@@ -70,12 +68,6 @@ struct Complex {
         Complex(real: lhs.real + rhs.real,
                 imag: lhs.imag + rhs.imag)
     }
-    
-    // -(a + bi) = -a - bi
-    static prefix func -(rhs: Complex) -> Complex {
-        Complex(real: -rhs.real,
-                imag: -rhs.imag)
-    }
 
     // (a + bi) - (c + di) = (a - c) + (b - d)i
     static func -(lhs: Complex, rhs: Complex) -> Complex {
@@ -96,12 +88,43 @@ struct Complex {
                        imag: (lhs.imag * rhs.real - lhs.real * rhs.imag) / den)
     }
     
-    static func /(lhs: Complex, rhs: Double) -> Complex {
-        Complex(real: lhs.real / rhs, imag: lhs.imag / rhs)
-    }
-    
     // (a + bi)^(c + di) = e^((c + di) * ln(a + bi))
     static func ^(lhs: Complex, rhs: Complex) -> Complex {
         (rhs * lhs.naturalLog).exponential
+    }
+    
+    // unary operator
+    // -(a + bi) = -a - bi
+    static prefix func -(rhs: Complex) -> Complex {
+        Complex(real: -rhs.real,
+                imag: -rhs.imag)
+    }
+    
+    //----------------------------
+    // complex combined with real
+    //----------------------------
+    
+    static func +(lhs: Double, rhs: Complex) -> Complex {
+        Complex(real: lhs + rhs.real, imag: rhs.imag)
+    }
+    
+    static func +(lhs: Complex, rhs: Double) -> Complex {
+        Complex(real: lhs.real + rhs, imag: lhs.imag)
+    }
+
+    static func -(lhs: Double, rhs: Complex) -> Complex {
+        Complex(real: lhs - rhs.real, imag: -rhs.imag)
+    }
+    
+    static func -(lhs: Complex, rhs: Double) -> Complex {
+        Complex(real: lhs.real - rhs, imag: lhs.imag)
+    }
+
+    static func *(lhs: Double, rhs: Complex) -> Complex {
+        Complex(real: lhs * rhs.real, imag: lhs * rhs.imag)
+    }
+
+    static func /(lhs: Complex, rhs: Double) -> Complex {
+        Complex(real: lhs.real / rhs, imag: lhs.imag / rhs)
     }
 }
