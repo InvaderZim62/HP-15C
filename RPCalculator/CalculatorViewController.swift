@@ -1015,6 +1015,7 @@ class CalculatorViewController: UIViewController {
                     if !userIsEnteringDigits {
                         // clear previously entered number (display 0.0)
                         brain.xRegister = 0.0
+                        liftStack = false
                     } else if displayString.count > 1 {
                         // remove one digit
                         displayString = String(displayString.dropLast())
