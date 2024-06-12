@@ -889,6 +889,18 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 liftStack = true
                 return
+            case "–":  // not keyboard minus sign
+                // "Re≷Im" pressed (swap real and imaginary parts of complex number)
+                prefix = nil
+                isComplexMode = true
+                if userIsEnteringDigits {
+                    brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                }
+                brain.swapRealImag()
+                updateDisplayString()
+                userIsEnteringDigits = false
+                userIsEnteringExponent = false
+                return
             default:
                 break
             }
