@@ -55,6 +55,7 @@ enum Prefix: String {
     case RCL
     case HYP = "H"  // hyperbolic trig function
     case HYP1 = "h"  // inverse hyperbolic trig function
+    case SF  // set flag
     case CF  // clear flag
     case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
     case STO_SUB
@@ -511,6 +512,9 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle("3", for: .normal)
                 prefix = .g
                 operationKeyPressed(tempButton)  // better handled as operation
+            case "4":
+                // SF pressed (set flag)
+                prefix = .SF
             case "5":
                 // CF pressed (clear flag)
                 prefix = .CF
@@ -567,6 +571,11 @@ class CalculatorViewController: UIViewController {
                 let tempButton = UIButton()
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
+            }
+        case .SF:
+            prefix = nil
+            if digit == "8" {  // flag 8 is complex mode
+                isComplexMode = true
             }
         case .CF:
             prefix = nil
@@ -853,7 +862,7 @@ class CalculatorViewController: UIViewController {
         case .f:
             switch operation {
             case "COS":
-                // "(i) pressed (show imaginary part of number if complex, else Error 3)
+                // "(i)" pressed (show imaginary part of number if complex, else Error 3)
                 if isComplexMode {
                     // show imaginary part of number, until 1.2 sec after button is released
                     prefix = nil
