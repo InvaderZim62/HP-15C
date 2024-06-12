@@ -88,6 +88,7 @@ class CalculatorViewController: UIViewController {
     var buttonCoverViews = [UIButton: ButtonCoverView]()  // overlays buttons to provide text above and inside buttons
     var seed = 0  // HP-15C initial random number seed is zero
     var lastRandomNumberGenerated = 0.0
+    var isGettingDefaults = false
     
     var displayStringNumber: Double {
         if userIsEnteringExponent {
@@ -220,6 +221,8 @@ class CalculatorViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         displayView.numberOfDigits = 11  // one digit for sign
         getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
+        prepStackForOperation()  // HP-15C completes number entry, if power is cycled
+        updateDisplayString()
         brain.printMemory()
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
@@ -227,20 +230,26 @@ class CalculatorViewController: UIViewController {
     }
 
     private func saveDefaults() {  // pws: should I save seed and lastRandomNumberGenerated?
-        let defaults = UserDefaults.standard
-        if let data = try? JSONEncoder().encode(displayFormat) {
-            defaults.set(data, forKey: "displayFormat")
+        if !isGettingDefaults {  // several variables save defaults in their didSet handlers; don't save everything else, while getting defaults
+            let defaults = UserDefaults.standard
+            if let data = try? JSONEncoder().encode(displayFormat) {
+                defaults.set(data, forKey: "displayFormat")
+            }
+            defaults.set(displayString, forKey: "displayString")
+            defaults.set(gradLabel.text, forKey: "gradLabelText")
+            defaults.setValue(displayLabelAlphas, forKey: "displayLabelAlphas")
+            if let data = try? JSONEncoder().encode(brain) {
+                defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to init and encode
+            }
+            defaults.set(isComplexMode, forKey: "isComplexMode")
+            defaults.set(userIsEnteringDigits, forKey: "userIsEnteringDigits")
+            defaults.set(userIsEnteringExponent, forKey: "userIsEnteringExponent")
+            defaults.set(liftStack, forKey: "liftStack")
         }
-        defaults.set(displayString, forKey: "displayString")
-        defaults.set(gradLabel.text, forKey: "gradLabelText")
-        defaults.setValue(displayLabelAlphas, forKey: "displayLabelAlphas")
-        if let data = try? JSONEncoder().encode(brain) {
-            defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to init and encode
-        }
-        defaults.set(isComplexMode, forKey: "isComplexMode")
     }
     
     private func getDefaults() {
+        isGettingDefaults = true
         let defaults = UserDefaults.standard
         if let data = defaults.data(forKey: "displayFormat") {
             displayFormat = try! JSONDecoder().decode(DisplayFormat.self, from: data)
@@ -253,6 +262,10 @@ class CalculatorViewController: UIViewController {
             brain = try! JSONDecoder().decode(CalculatorBrain.self, from: data)
         }
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
+        userIsEnteringDigits = defaults.bool(forKey: "userIsEnteringDigits")
+        userIsEnteringExponent = defaults.bool(forKey: "userIsEnteringExponent")
+        liftStack = defaults.bool(forKey: "liftStack")
+        isGettingDefaults = false
     }
     
     // display labels: USER  f  g  BEGIN  GRAD  D.MY  C  PRGM
@@ -326,6 +339,9 @@ class CalculatorViewController: UIViewController {
                 endDisplayEntry()  // overwrite xRegister with display
             }
         }  // else complete number already in xRegister; ex. pi pi +
+        userIsEnteringDigits = false
+        userIsEnteringExponent = false
+        liftStack = true
     }
     
     private func endDisplayEntry() {
@@ -335,7 +351,7 @@ class CalculatorViewController: UIViewController {
         brain.printMemory()
     }
     
-    // set display string to xRegister (switch to scientific notation, if fixed format won't fit)
+    // set display string to xRegister using current format (switch to scientific notation, if fixed format won't fit)
     private func updateDisplayString() {
         switch brain.error {
         case .code(let number):
@@ -471,6 +487,7 @@ class CalculatorViewController: UIViewController {
                 }
                 userIsEnteringDigits = true
             }
+            saveDefaults()
         case .f:
             prefix = nil
             switch digit {
@@ -907,9 +924,6 @@ class CalculatorViewController: UIViewController {
                 //----------------------
                 displayString = String(brain.xRegister!)
                 updateDisplayString()
-                userIsEnteringDigits = false
-                userIsEnteringExponent = false
-                liftStack = true
                 return
             case "–":  // not keyboard minus sign
                 // "Re≷Im" pressed (swap real and imaginary parts of complex number)
@@ -920,9 +934,6 @@ class CalculatorViewController: UIViewController {
                 brain.swapRealImag()
                 //------------------
                 updateDisplayString()
-                userIsEnteringDigits = false
-                userIsEnteringExponent = false
-                liftStack = true
                 return
             default:
                 break
@@ -945,9 +956,6 @@ class CalculatorViewController: UIViewController {
         brain.performOperation(oneLetterPrefix + operation)
         //-------------------------------------------------
         updateDisplayString()
-        userIsEnteringDigits = false
-        userIsEnteringExponent = false
-        liftStack = true
     }
 
     // push digits from display onto stack when enter key is pressed
@@ -1156,6 +1164,8 @@ class CalculatorViewController: UIViewController {
         calculatorIsOn = !calculatorIsOn
         displayView.turnOnIf(calculatorIsOn)
         if calculatorIsOn {
+            prepStackForOperation()  // HP-15C completes number entry, if power is cycled
+            updateDisplayString()
             restoreDisplayLabels()
         } else {
             hideDisplayLabels()
