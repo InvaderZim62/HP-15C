@@ -315,6 +315,19 @@ class CalculatorViewController: UIViewController {
         return attributedString
     }
     
+    private func prepStackForOperation() {
+        if userIsEnteringDigits {
+            if liftStack {
+                // operation doesn't follow enter; ex. pi 3 -, or 4 sqrt 3 x
+                brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                brain.printMemory()
+            } else {
+                // operation follows enter or "←"; ex. 1 enter 2 +
+                endDisplayEntry()  // overwrite xRegister with display
+            }
+        }  // else complete number already in xRegister; ex. pi pi +
+    }
+    
     private func endDisplayEntry() {
         brain.xRegister = displayStringNumber
         userIsEnteringDigits = false
@@ -596,6 +609,7 @@ class CalculatorViewController: UIViewController {
             default:
                 setError(99)  // eventually implement .# registers
             }
+            liftStack = true
         case .RCL:
             prefix = nil
             switch digit {
@@ -611,6 +625,7 @@ class CalculatorViewController: UIViewController {
             default:
                 setError(99)  // eventually implement .# registers
             }
+            liftStack = true
         case .STO_ADD:
             // STO + register
             prefix = nil
@@ -632,6 +647,7 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
             }
+            liftStack = true
         case .STO_SUB:
             // STO - register
             prefix = nil
@@ -653,6 +669,7 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
             }
+            liftStack = true
         case .STO_MUL:
             // STO × register
             prefix = nil
@@ -674,6 +691,7 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
             }
+            liftStack = true
         case .STO_DIV:
             // STO ÷ register
             prefix = nil
@@ -699,6 +717,7 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
             }
+            liftStack = true
         case .RCL_ADD:
             // RCL + register
             prefix = nil
@@ -719,6 +738,7 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
             }
+            liftStack = true
         case .RCL_SUB:
             // RCL - register
             prefix = nil
@@ -739,6 +759,7 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
             }
+            liftStack = true
         case .RCL_MUL:
             // RCL × register
             prefix = nil
@@ -759,6 +780,7 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
             }
+            liftStack = true
         case .RCL_DIV:
             // RCL ÷ register
             prefix = nil
@@ -784,6 +806,7 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle(digit, for: .normal)
                 digitKeyPressed(tempButton)
             }
+            liftStack = true
         default:  // .HYP, .HYP1 (not allowed to precede stack manipulation key)
             invalidKeySequenceEntered()
         }
@@ -878,28 +901,28 @@ class CalculatorViewController: UIViewController {
                 // "I" pressed (imaginary number entered)
                 prefix = nil
                 isComplexMode = true
-                if liftStack {
-                    brain.pushOperand(displayStringNumber)  // real part needs to be in Y register, before calling moveRealXToImagX
-                    brain.printMemory()
-                } else {
-                    endDisplayEntry()  // real part already in Y register from previous Enter
-                }
+                prepStackForOperation()
+                //----------------------
                 brain.moveRealXToImagX()
+                //----------------------
                 displayString = String(brain.xRegister!)
                 updateDisplayString()
+                userIsEnteringDigits = false
+                userIsEnteringExponent = false
                 liftStack = true
                 return
             case "–":  // not keyboard minus sign
                 // "Re≷Im" pressed (swap real and imaginary parts of complex number)
                 prefix = nil
                 isComplexMode = true
-                if userIsEnteringDigits {
-                    brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
-                }
+                prepStackForOperation()
+                //------------------
                 brain.swapRealImag()
+                //------------------
                 updateDisplayString()
                 userIsEnteringDigits = false
                 userIsEnteringExponent = false
+                liftStack = true
                 return
             default:
                 break
@@ -913,20 +936,9 @@ class CalculatorViewController: UIViewController {
             prefix = nil
         }
         
-        if userIsEnteringDigits {
-            if liftStack {
-                // operation doesn't follow enter; ex. pi 3 -, or 4 sqrt 3 x
-                brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
-                brain.printMemory()
-            } else {
-                // operation follows enter; ex. 1 enter 2 +
-                endDisplayEntry()  // overwrite xRegister with display
-            }
-        }  // else complete number already in xRegister; ex. pi pi +
-        
+        prepStackForOperation()
         brain.lastXRegister = brain.xRegister!  // save xRegister before pushing operation onto stack
         
-        // push operation onto stack (with prefix)
         let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
         prefix = nil  // must come after previous line
         //-------------------------------------------------
