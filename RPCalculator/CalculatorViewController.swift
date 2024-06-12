@@ -1074,10 +1074,17 @@ class CalculatorViewController: UIViewController {
             case "←":
                 // CLx key pressed
                 displayString = String(format: displayFormat.string, 0.0)  // display 0.0
-                if !userIsEnteringDigits { brain.popXRegister() }  // pop last number off stack, unless still typing digits
+                if userIsEnteringDigits {
+                    brain.pushOperand(0)
+                } else {
+                    brain.xRegister = 0
+                }
+                liftStack = false
                 userIsEnteringDigits = false
                 userIsEnteringExponent = false
                 prefix = nil
+                saveDefaults()
+                brain.printMemory()
                 return  // return, or prior number will be displayed
             default:
                 break

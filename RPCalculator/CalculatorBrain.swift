@@ -156,7 +156,7 @@ class CalculatorBrain: Codable {
     // remove end of stack
     func popXRegister() {
         realStack.removeLast()
-        if isComplexMode { imagStack.removeLast() }
+        imagStack.removeLast()
         printMemory()
     }
     
