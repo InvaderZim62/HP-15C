@@ -153,6 +153,11 @@ class CalculatorBrain: Codable {
         Complex(real: realStack.popLast()!, imag: imagStack.popLast()!)
     }
     
+    func pushXRegister() {
+        realStack.append(xRegister!)
+        imagStack.append(xRegisterImag!)
+    }
+
     // remove end of stack
     func popXRegister() {
         realStack.removeLast()
