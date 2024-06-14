@@ -77,6 +77,7 @@ enum TrigMode: String, Codable {
 class CalculatorViewController: UIViewController {
     
     var brain = CalculatorBrain()
+    var program = Program()
     var clickSoundPlayer: AVAudioPlayer?
     var displayString = "" { didSet { displayView.displayString = displayString } }
     var displayFormat = DisplayFormat.fixed(4)
@@ -157,9 +158,17 @@ class CalculatorViewController: UIViewController {
     var isProgramMode = false {
         didSet {
             prgmLabel.alpha = isProgramMode ? 1 : 0
+            displayView.showCommas = false
+            displayString = "000-"
         }
     }
     
+    var isRunMode = false {
+        didSet {
+            if isRunMode { displayString = " Running" }  // "R" shows as small "r" near top of screen (deconflict with "r" in Error)
+        }
+    }
+
     var isUserMode = false {
         didSet{
             userLabel.alpha = isUserMode ? 1 : 0
@@ -466,6 +475,8 @@ class CalculatorViewController: UIViewController {
         
         switch prefix {
         case .none:
+            if isProgramMode { displayString = program.addInstruction(digit); return }
+
             // digit pressed (without prefix)
             if digit == "EEX" {
                 if !userIsEnteringExponent {
@@ -868,6 +879,8 @@ class CalculatorViewController: UIViewController {
         
         switch prefix {
         case .none:
+            if isProgramMode { displayString = program.addInstruction(operation); return }
+
             switch operation {
             case "CHS":
                 if userIsEnteringExponent {
@@ -969,6 +982,11 @@ class CalculatorViewController: UIViewController {
                 prefix = nil
                 isUserMode.toggle()
                 return
+            case "√x":
+                let tempButton = UIButton()
+                tempButton.setTitle("√x", for: .normal)
+                programKeyPressed(tempButton)  // better handled as program key
+                return
             default:
                 break
             }
@@ -999,6 +1017,8 @@ class CalculatorViewController: UIViewController {
         
         switch prefix {
         case .none:
+            if isProgramMode { displayString = program.addInstruction("ENTER"); return }
+
             // Enter pressed
             if liftStack {
                 //------------------------------------
@@ -1057,6 +1077,8 @@ class CalculatorViewController: UIViewController {
 
         switch prefix {
         case .none:
+            if isProgramMode { displayString = program.addInstruction(keyName); return }
+
             switch keyName {
             case "R↓":
                 // R↓ key pressed (roll stack down)
@@ -1158,7 +1180,7 @@ class CalculatorViewController: UIViewController {
 
     // set prefix to .f (for "f"), .g (for "g"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
     // prefix keys: f, g
-    // prefix sent from programKeyPressed: GTO
+    // prefix sent from programKeyPressed: GTO, √x
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1166,6 +1188,8 @@ class CalculatorViewController: UIViewController {
         
         switch prefix {
         case .none:
+            if isProgramMode { displayString = program.addInstruction(keyName); return }
+
             switch keyName {
             case "f":
                 prefix = .f
@@ -1227,6 +1251,8 @@ class CalculatorViewController: UIViewController {
         case .f:
             prefix = nil
             switch keyName {
+            case "√x":
+                isRunMode = true
             case "GTO":
                 // HYP
                 let tempButton = UIButton()

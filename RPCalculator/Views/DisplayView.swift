@@ -12,7 +12,7 @@
 //     |  |  |  |  |  |
 //      -- .  -- .  -- .
 //
-//  Decimal point is drawn with digit to its left.
+//  Decimal points and commas are drawn with digit to its left.
 //
 
 import UIKit
@@ -21,7 +21,7 @@ class DisplayView: UIView {
     
     var numberOfDigits = 0 { didSet { createDigitViews() } }
     var displayString = "" { didSet { updateDisplay() } }
-    var showCommas = true
+    var showCommas = true  // show commas, except when displaying mantissa (PREFIX)
 
     private var digitViews = [DigitView]()
     private var exponentWasFound = false
@@ -87,7 +87,7 @@ class DisplayView: UIView {
             stringIndex += 1
         }
         // add commas every three digits before decimal point (or end of number,
-        // if no decimal point), except when showing mantissa (PREFIX)
+        // if no decimal point), except when displaying mantissa (PREFIX)
         if !errorDisplayed && showCommas {
             var endIndex: Int
             if let i = modifiedDisplayString.firstIndex(of: ".") {

@@ -64,7 +64,12 @@ class DigitView: UIView {
         "E": [.upperCross, .upperLeft, .middleCross, .lowerLeft, .lowerCross],
         "e": [.upperCross, .upperLeft, .middleCross, .lowerLeft, .lowerCross],  // swift uses "e" for exponent (ex. 1.234e-02)
         "r": [.middleCross, .lowerLeft],
-        "o": [.middleCross, .lowerLeft, .lowerRight, .lowerCross]
+        "o": [.middleCross, .lowerLeft, .lowerRight, .lowerCross],
+        "R": [.upperCross, .upperLeft],  // small r near top of screen
+        "u": [.middleCross, .upperLeft, .upperRight],
+        "n": [.upperCross, .upperLeft, .upperRight],
+        "i": [.upperRight],
+        "g": [.upperCross, .upperLeft, .upperRight, .middleCross, .lowerRight, .lowerCross]
         // unlisted characters will appear as blanks
     ]
 
