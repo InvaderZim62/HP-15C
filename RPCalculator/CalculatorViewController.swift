@@ -160,6 +160,12 @@ class CalculatorViewController: UIViewController {
         }
     }
     
+    var isUserMode = false {
+        didSet{
+            userLabel.alpha = isUserMode ? 1 : 0
+        }
+    }
+    
     // dictionary of button labels going from left to right, top to bottom
     // dictionary key is the primary button label (must agree with storyboard)
     var buttonText = [  // [nText: (fText, gText)]  ie. normal text, f-prefix text, g-prefix text
@@ -249,6 +255,7 @@ class CalculatorViewController: UIViewController {
                 defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to init and encode
             }
             defaults.set(isComplexMode, forKey: "isComplexMode")
+            defaults.set(isUserMode, forKey: "isUserMode")
             defaults.set(userIsEnteringDigits, forKey: "userIsEnteringDigits")
             defaults.set(userIsEnteringExponent, forKey: "userIsEnteringExponent")
             defaults.set(liftStack, forKey: "liftStack")
@@ -269,6 +276,7 @@ class CalculatorViewController: UIViewController {
             brain = try! JSONDecoder().decode(CalculatorBrain.self, from: data)
         }
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
+        isUserMode = defaults.bool(forKey: "isUserMode")
         userIsEnteringDigits = defaults.bool(forKey: "userIsEnteringDigits")
         userIsEnteringExponent = defaults.bool(forKey: "userIsEnteringExponent")
         liftStack = defaults.bool(forKey: "liftStack")
@@ -836,13 +844,27 @@ class CalculatorViewController: UIViewController {
         }
     }
     
-    // perform operation pressed, and display results
-    // operation keys: ÷, ×, -, +, √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL
-    // or sent from digitKeyPressed: f-1 (→R), f-2 (→H.MS), f-3 (→RAD), g-1 (→P), g-2 (→H), g-3 (→DEG)
+    // perform selected operation, and display results
+    // operation keys: √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL, ÷, ×, -, +
+    // operations sent from digitKeyPressed: f-1 (→R), f-2 (→H.MS), f-3 (→RAD), g-1 (→P), g-2 (→H), g-3 (→DEG)
     @IBAction func operationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let operation = sender.currentTitle!
+        
+        if isUserMode {
+            // swap the primary functions and f-shifted functions of keys A-E
+            switch operation {
+            case "√x", "ex", "10x", "yx", "1/x":
+                if prefix == nil {
+                    prefix = .f
+                } else if prefix == .f {
+                    prefix = nil
+                }
+            default:
+                break
+            }
+        }
         
         switch prefix {
         case .none:
@@ -942,10 +964,15 @@ class CalculatorViewController: UIViewController {
                 //------------------
                 updateDisplayString()
                 return
+            case "RCL":
+                // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
+                prefix = nil
+                isUserMode.toggle()
+                return
             default:
                 break
             }
-        case .g, .HYP, .HYP1:  // allowed to precede operation key (ex. f-SIN, f-HYP-COS, g-LOG)
+        case .g, .HYP, .HYP1:  // allowed to precede operation key (ex. g-10x, f-HYP-SIN, f-HYP1-COS)
             break
         case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key
             setError(3)
@@ -1131,7 +1158,7 @@ class CalculatorViewController: UIViewController {
 
     // set prefix to .f (for "f"), .g (for "g"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
     // prefix keys: f, g
-    // or GTO (sent from programKeyPressed)
+    // prefix sent from programKeyPressed: GTO
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
