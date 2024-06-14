@@ -248,23 +248,19 @@ class CalculatorBrain: Codable {
             case "+":
                 result = popOperand() + popOperand()
             case "SIN":
-                // sin(a + bi) = sin(a)cosh(b) + cos(a)sinh(b)i
-                let term = popOperand()
-                result.real = sin(term.real * angleConversion) * cosh(term.imag * angleConversion)
-                result.imag = cos(term.real * angleConversion) * sinh(term.imag * angleConversion)
+                result = (popOperand() * angleConversion).sine
             case "COS":
-                // cos(a + bi) = cos(a)cosh(b) + sin(a)sinh(b)i
-                let term = popOperand()
-                result.real = cos(term.real * angleConversion) * cosh(term.imag * angleConversion)
-                result.imag = sin(term.real * angleConversion) * sinh(term.imag * angleConversion)
+                result = (popOperand() * angleConversion).cosine
             case "TAN":
-                // tan(a + bi) = [tan(a) - tan(a)tanh²(b)] / [1 + tan²(a)tanh²(b)] + [tanh(b) + tan²(a)tanh(b)] / [1 + tan²(a)tanh²(b)]i
-                let term = popOperand()
-                let den = 1 + pow(tan(term.real * angleConversion), 2) * pow(tanh(term.imag * angleConversion), 2)
-                result.real = tan(term.real * angleConversion) * (1 - pow(tanh(term.imag * angleConversion), 2)) / den
-                result.imag = (tanh(term.imag * angleConversion) * (1 + pow(tan(term.real * angleConversion), 2))) / den
+                result = (popOperand() * angleConversion).tangent
             case "√x":
-                result = popOperand().squareRoot
+                if isComplexMode {
+                    // both methods give same real answer for positive operands, but .squareRoot does not return
+                    // NaN, if operand is negative (it return a valid complex number); must use sqrt() to get NaN.
+                    result = popOperand().squareRoot
+                } else {
+                    result.real = sqrt(popOperand().real)
+                }
             case "ex":
                 result = popOperand().exponential
             case "10x":
@@ -327,19 +323,25 @@ class CalculatorBrain: Codable {
                 result = Complex(real: Double(Int(term.real)), imag: term.imag)
             case "SIN":
                 // SIN-1 (arcsin)
-                // asin(z) = -i * ln{sqrt[1 - z²] + zi}
-                let term = popOperand()
-                result = -Complex.i * ((1 - term.squared).squareRoot + term * Complex.i).naturalLog / angleConversion
+                if isComplexMode {
+                    // both methods give same real answer for abs(operands) < 1, but .arcsin does not return
+                    // NaN, if abs(operand) > 1 (it return a valid complex number); must use asin() to get NaN.
+                    result = popOperand().arcsin
+                } else {
+                    result.real = asin(popOperand().real) / angleConversion
+                }
             case "COS":
                 // COS-1 (arccos)
-                // acos(z) = -i * ln{sqrt[z² - 1] + z}
-                let term = popOperand()
-                result = -Complex.i * ((term.squared - 1).squareRoot + term).naturalLog / angleConversion
+                if isComplexMode {
+                    // both methods give same real answer for abs(operands) < 1, but .arccos does not return
+                    // NaN, if abs(operand) > 1 (it return a valid complex number); must use acos() to get NaN.
+                    result = popOperand().arccos
+                } else {
+                    result.real = acos(popOperand().real) / angleConversion
+                }
             case "TAN":
                 // TAN-1 (arctan)
-                // atan(z) = -i / 2 * ln{(i - z)/(i + z)}
-                let term = popOperand()
-                result = -Complex.i / 2 * ((Complex.i - term) / (Complex.i + term)).naturalLog / angleConversion
+                result = (popOperand() / angleConversion).arctan
             case "√x":
                 // x²
                 result = popOperand().squared
@@ -406,21 +408,14 @@ class CalculatorBrain: Codable {
             //       for real and complex numbers.
             switch operation {
             case "SIN":
-                // sinh(a + bi) = sinh(a)cos(b) + cosh(a)sin(b)i
-                let term = popOperand()
-                result.real = sinh(term.real) * cos(term.imag)
-                result.imag = cosh(term.real) * sin(term.imag)
+                // HYP SIN
+                result = popOperand().sinhyp
             case "COS":
-                // cosh(a + bi) = cosh(a)cos(b) + sinh(a)sin(b)i
-                let term = popOperand()
-                result.real = cosh(term.real) * cos(term.imag)
-                result.imag = sinh(term.real) * sin(term.imag)
+                // HYP COS
+                result = popOperand().coshyp
             case "TAN":
-                // tanh(a + bi) = [tanh(a) + tanh(a)tan²(b)] / [1 + tanh²(a)tan²(b)] + [tan(b) - tanh²(a)tan(b)] / [1 + tanh²(a)tan²(b)]i
-                let term = popOperand()
-                let den = 1 + pow(tanh(term.real), 2) * pow(tan(term.imag), 2)
-                result.real = tanh(term.real) * (1 + pow(tan(term.imag), 2)) / den
-                result.imag = (tan(term.imag) * (1 - pow(tanh(term.real), 2))) / den
+                // HYP TAN
+                result = popOperand().tanhyp
             default:
                 break
             }
@@ -428,17 +423,26 @@ class CalculatorBrain: Codable {
             // See note above.  Inverse hyperbolic trig functions are all in radians.
             switch operation {
             case "SIN":
-                // arcsinh(z) = ln(z + sqrt(z^2 + 1))
-                let term = popOperand()
-                result = (term + (term.squared + 1).squareRoot).naturalLog
+                // HYP-1 SIN
+                result = popOperand().arcsinh
             case "COS":
-                // arccosh(z) = ln(z + sqrt(z^2 - 1))
-                let term = popOperand()
-                result = (term + (term.squared - 1).squareRoot).naturalLog
+                // HYP-1 COS
+                if isComplexMode {
+                    // both methods give same real answer for operands > 1, but .arccosh does not return
+                    // NaN, if operand < 1 (it return a valid complex number); must use acosh() to get NaN.
+                    result = popOperand().arccosh
+                } else {
+                    result.real = acosh(popOperand().real)
+                }
             case "TAN":
-                // arctanh(z) = 1/2 * ln((1 + z)/(1 - z))
-                let term = popOperand()
-                result = 0.5 * ((1 + term) / (1 - term)).naturalLog
+                // HYP-1 TAN
+                if isComplexMode {
+                    // both methods give same real answer for abs(operands) < 1, but .arctanh does not return
+                    // NaN, if abs(operand) > 1 (it return a valid complex number); must use atanh() to get NaN.
+                    result = popOperand().arctanh
+                } else {
+                    result.real = atanh(popOperand().real)
+                }
             default:
                 break
             }

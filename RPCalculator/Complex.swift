@@ -59,6 +59,86 @@ struct Complex {
         Complex(real: pow(10, real) * cos(imag * log(10)),
                 imag: pow(10, real) * sin(imag * log(10)))
     }
+    
+    //----------------------------
+    // trig functions
+    //----------------------------
+    
+    // sin(a + bi) = sin(a)cosh(b) + cos(a)sinh(b)i
+    var sine: Complex {
+        Complex(real: sin(real) * cosh(imag),
+                imag: cos(real) * sinh(imag))
+    }
+    
+    // cos(a + bi) = cos(a)cosh(b) + sin(a)sinh(b)i
+    var cosine: Complex {
+        Complex(real: cos(real) * cosh(imag),
+                imag: sin(real) * sinh(imag))
+    }
+    
+    // tan(a + bi) = [tan(a) - tan(a)tanh²(b)] / [1 + tan²(a)tanh²(b)] + [tanh(b) + tan²(a)tanh(b)] / [1 + tan²(a)tanh²(b)]i
+    var tangent: Complex {
+        let den = 1 + pow(tan(real), 2) * pow(tanh(imag), 2)
+        return Complex(real: tan(real) * (1 - pow(tanh(imag), 2)) / den,
+                       imag: tanh(imag) * (1 + pow(tan(real), 2)) / den)
+    }
+    
+    // sinh(a + bi) = sinh(a)cos(b) + cosh(a)sin(b)i
+    var sinhyp: Complex {
+        Complex(real: sinh(real) * cos(imag),
+                imag: cosh(real) * sin(imag))
+    }
+    
+    // cosh(a + bi) = cosh(a)cos(b) + sinh(a)sin(b)i
+    var coshyp: Complex {
+        Complex(real: cosh(real) * cos(imag),
+                imag: sinh(real) * sin(imag))
+    }
+    
+    // tanh(a + bi) = [tanh(a) + tanh(a)tan²(b)] / [1 + tanh²(a)tan²(b)] + [tan(b) - tanh²(a)tan(b)] / [1 + tanh²(a)tan²(b)]i
+    var tanhyp: Complex {
+        let den = 1 + pow(tanh(real), 2) * pow(tan(imag), 2)
+        return Complex(real: tanh(real) * (1 + pow(tan(imag), 2)) / den,
+                       imag: tan(imag) * (1 - pow(tanh(real), 2)) / den)
+    }
+    
+    //----------------------------
+    // inverse trig functions
+    //----------------------------
+
+    // asin(z) = -i * ln{sqrt[1 - z²] + zi}
+    var arcsin: Complex {
+        -Complex.i * ((1 - squared).squareRoot + self * Complex.i).naturalLog
+    }
+
+    // acos(z) = -i * ln{sqrt[z² - 1] + z}
+    var arccos: Complex {
+        -Complex.i * ((squared - 1).squareRoot + self).naturalLog
+    }
+    
+    // atan(z) = -i / 2 * ln{(i - z)/(i + z)}
+    var arctan: Complex {
+        -Complex.i / 2 * ((Complex.i - self) / (Complex.i + self)).naturalLog
+    }
+
+    // arcsinh(z) = ln(z + sqrt(z^2 + 1))
+    var arcsinh: Complex {
+        (self + (squared + 1).squareRoot).naturalLog
+    }
+
+    // arccosh(z) = ln(z + sqrt(z^2 - 1))
+    var arccosh: Complex {
+        (self + (squared - 1).squareRoot).naturalLog
+    }
+
+    // arctanh(z) = 1/2 * ln((1 + z)/(1 - z))
+    var arctanh: Complex {
+        0.5 * ((1 + self) / (1 - self)).naturalLog
+    }
+
+    //----------------------------
+    // math functions
+    //----------------------------
 
     // (a + bi) - (c + di) = (a - c) + (b - d)i
     static func +(lhs: Complex, rhs: Complex) -> Complex {
