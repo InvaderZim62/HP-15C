@@ -40,6 +40,7 @@
 //  - on real HP-15C, following overflow, entering <- key causes blinking to stop, but leaves 9.999999 99 in display (xRegister)
 //  - p61 implement underflow (displays 0.0)
 //  - backspace key doesn't restore display after ERROR
+//  - HP-15C resets prefix (f, g) and program mode during power cycle
 //
 
 import UIKit
@@ -144,12 +145,18 @@ class CalculatorViewController: UIViewController {
         }
     }
     
-    var isComplexMode = false {  // use g-5 (CF) 8 to clear complex mode (pws: not implemented)
+    var isComplexMode = false {  // use g-4 (SF) 8 to enable complex mode and g-5 (CF) 8 to disable complex mode
         didSet {
             brain.isComplexMode = isComplexMode
             cLabel.alpha = isComplexMode ? 1 : 0
             saveDefaults()
             brain.printMemory()
+        }
+    }
+    
+    var isProgramMode = false {
+        didSet {
+            prgmLabel.alpha = isProgramMode ? 1 : 0
         }
     }
     
@@ -226,7 +233,7 @@ class CalculatorViewController: UIViewController {
         brain.printMemory()
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
-        createButtonCovers()
+        createButtonCovers()  // pws: this will create duplicate buttonCoverViews, if this app ever returns from a segue
     }
 
     private func saveDefaults() {  // pws: should I save seed and lastRandomNumberGenerated?
@@ -1014,7 +1021,7 @@ class CalculatorViewController: UIViewController {
     }
     
     // manipulate stack or display
-    // stack manipulation keys: GSB, R↓, x≷y, ←
+    // stack manipulation keys: R↓, x≷y, ←
     @IBAction func stackManipulationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1123,7 +1130,8 @@ class CalculatorViewController: UIViewController {
     }
 
     // set prefix to .f (for "f"), .g (for "g"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
-    // prefix keys: f, g, GTO
+    // prefix keys: f, g
+    // or GTO (sent from programKeyPressed)
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1169,6 +1177,58 @@ class CalculatorViewController: UIViewController {
         }
     }
 
+    // program manipulation keys: SST, GTO, R/S, GSB
+    @IBAction func programKeyPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = sender.currentTitle!
+        
+        switch prefix {
+        case .none:
+            switch keyName {
+            case "SST":
+                print("SST")  // TBD
+            case "GTO":
+                print("GTO")
+            case "R/S":
+                print("R/S")
+            case "GSB":
+                print("GSB")
+            default:
+                break
+            }
+        case .f:
+            prefix = nil
+            switch keyName {
+            case "GTO":
+                // HYP
+                let tempButton = UIButton()
+                tempButton.setTitle("GTO", for: .normal)
+                prefix = .f
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+            default:
+                break
+            }
+        case .g:
+            prefix = nil
+            switch keyName {
+            case "R/S":
+                // P/R pressed
+                isProgramMode.toggle()
+            case "GTO":
+                // HYP-1
+                let tempButton = UIButton()
+                tempButton.setTitle("GTO", for: .normal)
+                prefix = .g
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+            default:
+                break
+            }
+        default:
+            break
+        }
+    }
+    
     // hide/unhide display (emulating ON key)
     @IBAction func onKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
@@ -1187,13 +1247,13 @@ class CalculatorViewController: UIViewController {
     
     // MARK: - Simulated button
     
-    // All button actions trigger on Touch Down (set up in Interface Builder).  SimulatePressingButton
-    // plays a click sound and darkens the button text, then creates a temporary target for Touch Up
+    // All button actions trigger on Touch Down (see header notes).  SimulatePressingButton plays
+    // a click sound and darkens the button text, then creates a temporary target for Touch Up
     // Inside, which gets called when the button is released (calling simulateReleasingButton).
     private func simulatePressingButton(_ button: UIButton) {
         clickSoundPlayer?.play()
         buttonCoverViews[button]?.whiteLabel.textColor = .darkGray
-        button.addTarget(self, action: #selector(simulateReleasingButton(_:)), for: .touchUpInside)
+        button.addTarget(self, action: #selector(simulateReleasingButton), for: .touchUpInside)
     }
     
     // When the button is released, reset button text to normal color, and remove this target for Touch Up Inside.
