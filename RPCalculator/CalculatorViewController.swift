@@ -206,7 +206,7 @@ class CalculatorViewController: UIViewController {
         "1": ("→R", "→P"),
         "2": ("→H.MS", "→H"),
         "3": ("→RAD", "→DEG"),
-        "–": ("Re≷Im", "TEST"),  // not a keyboard minus sign
+        "–": ("Re≷Im", "TEST"),  // minus sign is an "EN DASH"
         "STO": ("FRAC", "INT"),
         "RCL": ("USER", "MEM"),
         "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
@@ -474,7 +474,7 @@ class CalculatorViewController: UIViewController {
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
         if isProgramMode {
-            if let instruction = program.addToInstruction(digit) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(digit) { displayString = instruction }
             return
         }
 
@@ -867,7 +867,7 @@ class CalculatorViewController: UIViewController {
         let operation = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.addToInstruction(operation) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(operation) { displayString = instruction }
             return
         }
 
@@ -920,7 +920,7 @@ class CalculatorViewController: UIViewController {
             switch operation {
             case "+":
                 prefix = .STO_ADD  // ex. add display to number stored in register (next key)
-            case "–":  // not keyboard minus sign
+            case "–":  // minus sign is an "EN DASH"
                 prefix = .STO_SUB
             case "×":
                 prefix = .STO_MUL
@@ -936,7 +936,7 @@ class CalculatorViewController: UIViewController {
             switch operation {
             case "+":
                 prefix = .RCL_ADD  // ex. add register (next key) to display
-            case "–":  // not keyboard minus sign
+            case "–":  // minus sign is an "EN DASH"
                 prefix = .RCL_SUB
             case "×":
                 prefix = .RCL_MUL
@@ -973,7 +973,7 @@ class CalculatorViewController: UIViewController {
                 displayString = String(brain.xRegister!)
                 updateDisplayString()
                 return
-            case "–":  // not keyboard minus sign
+            case "–":  // minus sign is an "EN DASH"
                 // "Re≷Im" pressed (swap real and imaginary parts of complex number)
                 prefix = nil
                 isComplexMode = true
@@ -1022,7 +1022,7 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         
         if isProgramMode {
-            if let instruction = program.addToInstruction("ENTER") { displayString = instruction }
+            if let instruction = program.buildInstructionWith("ENTER") { displayString = instruction }
             return
         }
 
@@ -1084,7 +1084,7 @@ class CalculatorViewController: UIViewController {
         let keyName = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.addToInstruction(keyName) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(keyName) { displayString = instruction }
             return
         }
 
@@ -1200,7 +1200,7 @@ class CalculatorViewController: UIViewController {
         let keyName = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.addToInstruction(keyName) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(keyName) { displayString = instruction }
             return
         }
 
@@ -1251,7 +1251,7 @@ class CalculatorViewController: UIViewController {
         let keyName = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.addToInstruction(keyName) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(keyName) { displayString = instruction }
             return
         }
 

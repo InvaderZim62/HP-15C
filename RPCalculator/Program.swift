@@ -30,88 +30,16 @@ class Program {
     var prefix = ""
     var instructionCodes = [String]()
     
+    // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label)
+    //       minus sign is an "EN DASH"
+
     let keycodes: [String: String] = [  // [button label: key-code]
          "√x": "11",  "ex": "12", "10x": "13",  "yx": "14", "1/x": "15",   "CHS": "16", "7": " 7", "8": " 8",  "9": " 9", "÷": "10",
         "SST": "21", "GTO": "22", "SIN": "23", "COS": "24", "TAN": "25",   "EEX": "26", "4": " 4", "5": " 5",  "6": " 6", "×": "20",
         "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "ENTER": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
          "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
-    
-    // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label)
 
-    func addToInstruction(_ keyLabel: String) -> String? {
-        switch keyLabel {
-        case "f", "g":
-            // base prefix
-            prefix = keyLabel
-            instructionCodes = [keycodes[keyLabel]!]  // start over
-        case "STO":
-            if instructionCodes.isEmpty || prefix == "RCL" {  // "STO" and "RCL" can go back and forth
-                // base prefix
-                prefix = keyLabel
-                instructionCodes = [keycodes[keyLabel]!]  // start over
-            } else {
-                // complete instruction
-                instructionCodes.append(keycodes[keyLabel]!)
-                return instruction
-            }
-        case "RCL":
-            if instructionCodes.isEmpty || prefix == "STO" {
-                // base prefix
-                prefix = keyLabel
-                instructionCodes = [keycodes[keyLabel]!]  // start over
-            } else {
-                // complete instruction
-                instructionCodes.append(keycodes[keyLabel]!)
-                return instruction
-            }
-        case "7", "8", "9":
-            if prefix == "f" {
-                // compound prefix
-                prefix += keyLabel
-                instructionCodes.append(keycodes[keyLabel]!)
-            } else {
-                // complete instruction
-                instructionCodes.append(keycodes[keyLabel]!)
-                return instruction
-            }
-        case "GTO":
-            if prefix == "f" || prefix == "g" {
-                // compound prefix
-                prefix += keyLabel
-                instructionCodes.append(keycodes[keyLabel]!)
-            } else {
-                // complete instruction
-                instructionCodes.append(keycodes[keyLabel]!)
-                return instruction
-            }
-        case "4", "5":
-            if prefix == "g" {
-                // compound prefix
-                prefix += keyLabel
-                instructionCodes.append(keycodes[keyLabel]!)
-            } else {
-                // complete instruction
-                instructionCodes.append(keycodes[keyLabel]!)
-                return instruction
-            }
-        case "+", "–", "×", "÷":
-            if prefix == "STO" || prefix == "RCL" {
-                // compound prefix
-                prefix += keyLabel
-                instructionCodes.append(keycodes[keyLabel]!)
-            } else {
-                // complete instruction
-                instructionCodes.append(keycodes[keyLabel]!)
-                return instruction
-            }
-        default:
-            // complete instruction
-            instructionCodes.append(keycodes[keyLabel]!)
-            return instruction
-        }
-        return nil  // continue adding instructionCodes
-    }
-    // Prefix   keyLabel(s)
+    // Prefix   buttonLabel(s)
     // f        f    // basic (single digit)
     // g        g
     // STO      STO
@@ -132,10 +60,83 @@ class Program {
     // RCL_MUL  RCL ×
     // RCL_DIV  RCL ÷
 
+    func buildInstructionWith(_ buttonLabel: String) -> String? {
+        switch buttonLabel {
+        case "f", "g":
+            // any time "f" or "g" is entered, the program instruction starts over
+            prefix = buttonLabel
+            instructionCodes = [keycodes[buttonLabel]!]
+        case "STO":
+            if instructionCodes.isEmpty || prefix == "RCL" {
+                // if "RCL" is entered after "STO" (with no prior prefix), the program instruction starts over
+                prefix = buttonLabel
+                instructionCodes = [keycodes[buttonLabel]!]
+            } else {
+                // instruction complete
+                instructionCodes.append(keycodes[buttonLabel]!)
+                return instruction
+            }
+        case "RCL":
+            if instructionCodes.isEmpty || prefix == "STO" {
+                // if "STO" is entered after "RCL" (with no prior prefix), the program instruction starts over
+                prefix = buttonLabel
+                instructionCodes = [keycodes[buttonLabel]!]
+            } else {
+                // instruction complete
+                instructionCodes.append(keycodes[buttonLabel]!)
+                return instruction
+            }
+        case "7", "8", "9":
+            if prefix == "f" {
+                // compound prefix
+                prefix += buttonLabel
+                instructionCodes.append(keycodes[buttonLabel]!)
+            } else {
+                // instruction complete
+                instructionCodes.append(keycodes[buttonLabel]!)
+                return instruction
+            }
+        case "GTO":
+            if prefix == "f" || prefix == "g" {
+                // compound prefix
+                prefix += buttonLabel
+                instructionCodes.append(keycodes[buttonLabel]!)
+            } else {
+                // instruction complete
+                instructionCodes.append(keycodes[buttonLabel]!)
+                return instruction
+            }
+        case "4", "5":
+            if prefix == "g" {
+                // compound prefix
+                prefix += buttonLabel
+                instructionCodes.append(keycodes[buttonLabel]!)
+            } else {
+                // instruction complete
+                instructionCodes.append(keycodes[buttonLabel]!)
+                return instruction
+            }
+        case "+", "–", "×", "÷":  // minus sign is an "EN DASH"
+            if prefix == "STO" || prefix == "RCL" {
+                // compound prefix
+                prefix += buttonLabel
+                instructionCodes.append(keycodes[buttonLabel]!)
+            } else {
+                // instruction complete
+                instructionCodes.append(keycodes[buttonLabel]!)
+                return instruction
+            }
+        default:
+            // instruction complete
+            instructionCodes.append(keycodes[buttonLabel]!)
+            return instruction
+        }
+        return nil  // continue adding instructionCodes
+    }
+
     // format
     // 3 codes: "nnn-cc,cc,cc" (commas get attached to prior digit in DisplayView)
     // 2 codes: "nnn- cc cc"  ex. g COS
-    // -or-
     // 2 codes: "nnn-  cc c"  ex. STO 1
     // 1 code:  "nnn-    cc"
 
