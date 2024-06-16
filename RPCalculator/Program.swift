@@ -24,14 +24,33 @@
 
 import Foundation
 
-class Program {
+class Program: Codable {
     
     var instructions = [String]()
+    var currentLine = 0
     var prefix = ""
-    var instructionCodes = [String]()
+    var instructionCodes = [String]()  // used for building up compound instructions
+
+    // MARK: - Codable
+
+    private enum CodingKeys: String, CodingKey { case instructions, currentLine }
     
-    // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label)
-    //       minus sign is an "EN DASH"
+    init() { }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.instructions = try container.decode([String].self, forKey: .instructions)
+        self.currentLine = try container.decode(Int.self, forKey: .currentLine)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.instructions, forKey: .instructions)
+        try container.encode(self.currentLine, forKey: .currentLine)
+    }
+
+    // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
+    //       minus sign is an "EN DASH" (U+2013)
 
     let keycodes: [String: String] = [  // [button label: key-code]
          "√x": "11",  "ex": "12", "10x": "13",  "yx": "14", "1/x": "15",   "CHS": "16", "7": " 7", "8": " 8",  "9": " 9", "÷": "10",

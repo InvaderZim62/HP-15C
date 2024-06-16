@@ -204,7 +204,7 @@ class CalculatorViewController: UIViewController {
         "1": ("→R", "→P"),
         "2": ("→H.MS", "→H"),
         "3": ("→RAD", "→DEG"),
-        "–": ("Re≷Im", "TEST"),  // minus sign is an "EN DASH"
+        "–": ("Re≷Im", "TEST"),  // minus sign is an "EN DASH" (U+2013)
         "STO": ("FRAC", "INT"),
         "RCL": ("USER", "MEM"),
         "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
@@ -259,13 +259,16 @@ class CalculatorViewController: UIViewController {
             defaults.set(gradLabel.text, forKey: "gradLabelText")
             defaults.setValue(displayLabelAlphas, forKey: "displayLabelAlphas")
             if let data = try? JSONEncoder().encode(brain) {
-                defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to init and encode
+                defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to CalculatorBrain.init and .encode
             }
             defaults.set(isComplexMode, forKey: "isComplexMode")
             defaults.set(isUserMode, forKey: "isUserMode")
             defaults.set(userIsEnteringDigits, forKey: "userIsEnteringDigits")
             defaults.set(userIsEnteringExponent, forKey: "userIsEnteringExponent")
             defaults.set(liftStack, forKey: "liftStack")
+            if let data = try? JSONEncoder().encode(program) {
+                defaults.set(data, forKey: "program")  // note: variables added to program must also be added to Program.init and .encode
+            }
         }
     }
     
@@ -287,6 +290,9 @@ class CalculatorViewController: UIViewController {
         userIsEnteringDigits = defaults.bool(forKey: "userIsEnteringDigits")
         userIsEnteringExponent = defaults.bool(forKey: "userIsEnteringExponent")
         liftStack = defaults.bool(forKey: "liftStack")
+        if let data = defaults.data(forKey: "program") {
+            program = try! JSONDecoder().decode(Program.self, from: data)
+        }
         isGettingDefaults = false
     }
     
