@@ -126,6 +126,17 @@ class Program {
                 instructionCodes.append(keycodes[buttonLabel]!)
                 return instruction
             }
+        case "R↓":
+            if prefix == "f" {
+                // CLEAR PRGM
+                instructions.removeAll()
+                instructionCodes = []
+                return instruction
+            } else {
+                // instruction complete
+                instructionCodes.append(keycodes[buttonLabel]!)
+                return instruction
+            }
         default:
             // instruction complete
             instructionCodes.append(keycodes[buttonLabel]!)
@@ -161,7 +172,6 @@ class Program {
         instructions.append(instruction)
         instructionCodes.removeAll()  // start new
         prefix = ""
-        print(instruction)
         return instruction
     }
 }

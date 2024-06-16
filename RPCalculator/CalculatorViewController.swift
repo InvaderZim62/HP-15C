@@ -158,8 +158,6 @@ class CalculatorViewController: UIViewController {
     var isProgramMode = false {
         didSet {
             prgmLabel.alpha = isProgramMode ? 1 : 0
-            displayView.showCommas = false
-            displayString = "000-"
         }
     }
     
@@ -475,6 +473,7 @@ class CalculatorViewController: UIViewController {
         
         if isProgramMode {
             if let instruction = program.buildInstructionWith(digit) { displayString = instruction }
+            prefix = nil
             return
         }
 
@@ -868,6 +867,7 @@ class CalculatorViewController: UIViewController {
         
         if isProgramMode {
             if let instruction = program.buildInstructionWith(operation) { displayString = instruction }
+            prefix = nil
             return
         }
 
@@ -1085,6 +1085,7 @@ class CalculatorViewController: UIViewController {
         
         if isProgramMode {
             if let instruction = program.buildInstructionWith(keyName) { displayString = instruction }
+            prefix = nil
             return
         }
 
@@ -1201,7 +1202,6 @@ class CalculatorViewController: UIViewController {
         
         if isProgramMode {
             if let instruction = program.buildInstructionWith(keyName) { displayString = instruction }
-            return
         }
 
         switch prefix {
@@ -1219,7 +1219,11 @@ class CalculatorViewController: UIViewController {
             case "g":
                 prefix = .g
             case "GTO":
-                prefix = .HYP
+                if !isProgramMode {
+                    prefix = .HYP
+                } else {
+                    prefix = nil
+                }
             default:
                 break
             }
@@ -1228,14 +1232,18 @@ class CalculatorViewController: UIViewController {
             case "f":
                 prefix = .f
             case "GTO":
-                prefix = .HYP1
+                if !isProgramMode {
+                    prefix = .HYP1
+                } else {
+                    prefix = nil
+                }
             default:
                 break
             }
         case .STO, .RCL:
             switch keyName {
             case "f":
-                break  // leave prefix = .STO/.RCL, to allow Enter to store/recall random seed
+                break  // leave prefix = .STO/.RCL, to allow Enter to store/recall random seed (STO/RCL f ENTER)
             default:
                 invalidKeySequenceEntered()
             }
@@ -1249,11 +1257,6 @@ class CalculatorViewController: UIViewController {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = sender.currentTitle!
-        
-        if isProgramMode {
-            if let instruction = program.buildInstructionWith(keyName) { displayString = instruction }
-            return
-        }
 
         switch prefix {
         case .none:
@@ -1273,6 +1276,7 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             switch keyName {
             case "√x":
+                // run program at Label A (not yet implemented)
                 isRunMode = true
             case "GTO":
                 // HYP
