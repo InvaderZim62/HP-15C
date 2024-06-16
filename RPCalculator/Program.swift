@@ -27,15 +27,8 @@ import Foundation
 class Program {
     
     var instructions = [String]()
-    
-    let buttons = [
-        [ "√x",  "ex", "10x",  "yx", "1/x",   "CHS", "7", "8",  "9", "÷"],
-        ["SST", "GTO", "SIN", "COS", "TAN",   "EEX", "4", "5",  "6", "×"],
-        ["R/S", "GSB",  "R↓", "x≷y",   "←", "ENTER", "1", "2",  "3", "–"],
-        [ "ON",   "f",   "g", "STO", "RCL",      "", "0", ".", "Σ+", "+"]
-    ]
-    
-    // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label)
+    var prefix = ""
+    var instructionCodes = [String]()
     
     let keycodes: [String: String] = [  // [button label: key-code]
          "√x": "11",  "ex": "12", "10x": "13",  "yx": "14", "1/x": "15",   "CHS": "16", "7": " 7", "8": " 8",  "9": " 9", "÷": "10",
@@ -43,12 +36,131 @@ class Program {
         "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "ENTER": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
          "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
     
-    func addInstruction(_ keySequence: String) -> String {
-        let keycode = keycodes[keySequence]!
+    // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label)
+
+    func addToInstruction(_ keyLabel: String) -> String? {
+        switch keyLabel {
+        case "f", "g":
+            // base prefix
+            prefix = keyLabel
+            instructionCodes = [keycodes[keyLabel]!]  // start over
+        case "STO":
+            if instructionCodes.isEmpty || prefix == "RCL" {  // "STO" and "RCL" can go back and forth
+                // base prefix
+                prefix = keyLabel
+                instructionCodes = [keycodes[keyLabel]!]  // start over
+            } else {
+                // complete instruction
+                instructionCodes.append(keycodes[keyLabel]!)
+                return instruction
+            }
+        case "RCL":
+            if instructionCodes.isEmpty || prefix == "STO" {
+                // base prefix
+                prefix = keyLabel
+                instructionCodes = [keycodes[keyLabel]!]  // start over
+            } else {
+                // complete instruction
+                instructionCodes.append(keycodes[keyLabel]!)
+                return instruction
+            }
+        case "7", "8", "9":
+            if prefix == "f" {
+                // compound prefix
+                prefix += keyLabel
+                instructionCodes.append(keycodes[keyLabel]!)
+            } else {
+                // complete instruction
+                instructionCodes.append(keycodes[keyLabel]!)
+                return instruction
+            }
+        case "GTO":
+            if prefix == "f" || prefix == "g" {
+                // compound prefix
+                prefix += keyLabel
+                instructionCodes.append(keycodes[keyLabel]!)
+            } else {
+                // complete instruction
+                instructionCodes.append(keycodes[keyLabel]!)
+                return instruction
+            }
+        case "4", "5":
+            if prefix == "g" {
+                // compound prefix
+                prefix += keyLabel
+                instructionCodes.append(keycodes[keyLabel]!)
+            } else {
+                // complete instruction
+                instructionCodes.append(keycodes[keyLabel]!)
+                return instruction
+            }
+        case "+", "–", "×", "÷":
+            if prefix == "STO" || prefix == "RCL" {
+                // compound prefix
+                prefix += keyLabel
+                instructionCodes.append(keycodes[keyLabel]!)
+            } else {
+                // complete instruction
+                instructionCodes.append(keycodes[keyLabel]!)
+                return instruction
+            }
+        default:
+            // complete instruction
+            instructionCodes.append(keycodes[keyLabel]!)
+            return instruction
+        }
+        return nil  // continue adding instructionCodes
+    }
+    // Prefix   keyLabel(s)
+    // f        f    // basic (single digit)
+    // g        g
+    // STO      STO
+    // RCL      RCL
+    // FIX      f 7  // compound (two digits)
+    // SCI      f 8
+    // ENG      f 9
+    // HYP      f GTO
+    // HYP1     g GTO
+    // SF       g 4
+    // CF       g 5
+    // STO_ADD  STO +
+    // STO_SUB  STO –
+    // STO_MUL  STO ×
+    // STO_DIV  STO ÷
+    // RCL_ADD  RCL +
+    // RCL_SUB  RCL –
+    // RCL_MUL  RCL ×
+    // RCL_DIV  RCL ÷
+
+    // format
+    // 3 codes: "nnn-cc,cc,cc" (commas get attached to prior digit in DisplayView)
+    // 2 codes: "nnn- cc cc"  ex. g COS
+    // -or-
+    // 2 codes: "nnn-  cc c"  ex. STO 1
+    // 1 code:  "nnn-    cc"
+
+    var instruction: String {
         let lineNumber = String(format: "%03d", instructions.count)
-        let instruction = "\(lineNumber)-\(keycode)"
+        var codes = ""
+        switch instructionCodes.count {
+        case 1:
+            codes = "    " + instructionCodes[0]
+        case 2:
+            if instructionCodes[1].first == " " {
+                codes = "  " + instructionCodes[0] + instructionCodes[1]
+            } else {
+                codes = " " + instructionCodes[0] + " " + instructionCodes[1]
+            }
+        case 3:
+            codes = instructionCodes[0] + "," + instructionCodes[1] + "," + instructionCodes[2]
+        default:
+            break
+        }
+        let instruction = "\(lineNumber)-\(codes)"
         instructions.append(instruction)
-        print(instructions)
+        instructionCodes.removeAll()  // start new
+        prefix = ""
+        print(instruction)
         return instruction
     }
 }

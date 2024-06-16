@@ -30,6 +30,16 @@ class DisplayView: UIView {
         digitViews.forEach { $0.alpha = isOn ? 1 : 0 }
     }
     
+    // program mode display three-digit line number followed by a dash
+    var isProgramMode: Bool {
+        if displayString.count > 3 {
+            let index = displayString.index(displayString.startIndex, offsetBy: 3)
+            return displayString[index] == "-"
+        } else {
+            return false
+        }
+    }
+    
     // create equally sized digitViews and add them to this DisplayView, leaving the specified
     // boarder (inset) around the digitViews
     private func createDigitViews() {
@@ -75,6 +85,9 @@ class DisplayView: UIView {
                 if character == "." {
                     displayIndex -= 1  // add decimal point to prior digitView (displayIndex will be one behind string index)
                     digitViews[displayIndex].trailingDecimal = true
+                } else if character == "," {  // displaying program
+                    displayIndex -= 1  // add comma to prior digitView (displayIndex will be one behind string index)
+                    digitViews[displayIndex].trailingComma = true
                 } else if character == "e" {
                     exponentWasFound = true
                     displayIndex = 7  // will increment to 8, below
@@ -88,7 +101,7 @@ class DisplayView: UIView {
         }
         // add commas every three digits before decimal point (or end of number,
         // if no decimal point), except when displaying mantissa (PREFIX)
-        if !errorDisplayed && showCommas {
+        if !errorDisplayed && !isProgramMode && showCommas {
             var endIndex: Int
             if let i = modifiedDisplayString.firstIndex(of: ".") {
                 endIndex = modifiedDisplayString.distance(from: modifiedDisplayString.startIndex, to: i) - 1  // ex. "1234.0" -> "1,234.0"

@@ -52,16 +52,16 @@ enum Prefix: String {
     case FIX
     case SCI
     case ENG
-    case STO
-    case RCL
     case HYP = "H"  // hyperbolic trig function
     case HYP1 = "h"  // inverse hyperbolic trig function
-    case SF  // set flag
-    case CF  // clear flag
+    case SF  // ex. SF 8 (set flag 8 - enable complex mode)
+    case CF  // ex. CF 8 (clear flag 8 - disable complex mode)
+    case STO
     case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
     case STO_SUB
     case STO_MUL
     case STO_DIV
+    case RCL
     case RCL_ADD  // ex. RCL + 1 (ADD register 1 to display)
     case RCL_SUB
     case RCL_MUL
@@ -473,10 +473,13 @@ class CalculatorViewController: UIViewController {
         var digit = sender.currentTitle!
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
+        if isProgramMode {
+            if let instruction = program.addToInstruction(digit) { displayString = instruction }
+            return
+        }
+
         switch prefix {
         case .none:
-            if isProgramMode { displayString = program.addInstruction(digit); return }
-
             // digit pressed (without prefix)
             if digit == "EEX" {
                 if !userIsEnteringExponent {
@@ -863,6 +866,11 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         let operation = sender.currentTitle!
         
+        if isProgramMode {
+            if let instruction = program.addToInstruction(operation) { displayString = instruction }
+            return
+        }
+
         if isUserMode {
             // swap the primary functions and f-shifted functions of keys A-E
             switch operation {
@@ -879,8 +887,6 @@ class CalculatorViewController: UIViewController {
         
         switch prefix {
         case .none:
-            if isProgramMode { displayString = program.addInstruction(operation); return }
-
             switch operation {
             case "CHS":
                 if userIsEnteringExponent {
@@ -1015,10 +1021,13 @@ class CalculatorViewController: UIViewController {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         
+        if isProgramMode {
+            if let instruction = program.addToInstruction("ENTER") { displayString = instruction }
+            return
+        }
+
         switch prefix {
         case .none:
-            if isProgramMode { displayString = program.addInstruction("ENTER"); return }
-
             // Enter pressed
             if liftStack {
                 //------------------------------------
@@ -1073,12 +1082,16 @@ class CalculatorViewController: UIViewController {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = sender.currentTitle!
+        
+        if isProgramMode {
+            if let instruction = program.addToInstruction(keyName) { displayString = instruction }
+            return
+        }
+
         var okToClearStillTypingFlag = true
 
         switch prefix {
         case .none:
-            if isProgramMode { displayString = program.addInstruction(keyName); return }
-
             switch keyName {
             case "R↓":
                 // R↓ key pressed (roll stack down)
@@ -1186,10 +1199,13 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         let keyName = sender.currentTitle!
         
+        if isProgramMode {
+            if let instruction = program.addToInstruction(keyName) { displayString = instruction }
+            return
+        }
+
         switch prefix {
         case .none:
-            if isProgramMode { displayString = program.addInstruction(keyName); return }
-
             switch keyName {
             case "f":
                 prefix = .f
@@ -1234,6 +1250,11 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         let keyName = sender.currentTitle!
         
+        if isProgramMode {
+            if let instruction = program.addToInstruction(keyName) { displayString = instruction }
+            return
+        }
+
         switch prefix {
         case .none:
             switch keyName {
