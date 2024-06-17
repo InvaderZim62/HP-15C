@@ -31,6 +31,19 @@ class Program: Codable {
     var prefix = ""
     var instructionCodes = [String]()  // used for building up compound instructions
 
+    // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
+    //       minus sign is an "EN DASH" (U+2013)
+
+    let keycodes: [String: String] = [  // [button label: key-code]
+         "√x": "11",  "ex": "12", "10x": "13",  "yx": "14", "1/x": "15",   "CHS": "16", "7": " 7", "8": " 8",  "9": " 9", "÷": "10",
+        "SST": "21", "GTO": "22", "SIN": "23", "COS": "24", "TAN": "25",   "EEX": "26", "4": " 4", "5": " 5",  "6": " 6", "×": "20",
+        "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "ENTER": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
+         "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
+    
+    var currentInstruction: String {
+        instructions[currentLine]
+    }
+
     // MARK: - Codable
 
     private enum CodingKeys: String, CodingKey { case instructions, currentLine }
@@ -48,15 +61,22 @@ class Program: Codable {
         try container.encode(self.instructions, forKey: .instructions)
         try container.encode(self.currentLine, forKey: .currentLine)
     }
-
-    // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
-    //       minus sign is an "EN DASH" (U+2013)
-
-    let keycodes: [String: String] = [  // [button label: key-code]
-         "√x": "11",  "ex": "12", "10x": "13",  "yx": "14", "1/x": "15",   "CHS": "16", "7": " 7", "8": " 8",  "9": " 9", "÷": "10",
-        "SST": "21", "GTO": "22", "SIN": "23", "COS": "24", "TAN": "25",   "EEX": "26", "4": " 4", "5": " 5",  "6": " 6", "×": "20",
-        "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "ENTER": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
-         "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
+    
+    // MARK: - Start of code
+    
+    func enterProgramMode() {
+        if instructions.isEmpty { instructions = ["000-"] }
+        instructionCodes = []
+        prefix = ""
+    }
+    
+    func clearProgram() {
+        instructions = []
+        instructionCodes = []
+        currentLine = 0
+    }
+    
+    // MARK: - Start of code
 
     // Prefix   buttonLabel(s)
     // f        f    // basic (single digit)
@@ -148,8 +168,7 @@ class Program: Codable {
         case "R↓":
             if prefix == "f" {
                 // CLEAR PRGM
-                instructions.removeAll()
-                instructionCodes = []
+                clearProgram()
                 return instruction
             } else {
                 // instruction complete
@@ -188,6 +207,7 @@ class Program: Codable {
             break
         }
         let instruction = "\(lineNumber)-\(codes)"
+        currentLine = instructions.count
         instructions.append(instruction)
         instructionCodes.removeAll()  // start new
         prefix = ""

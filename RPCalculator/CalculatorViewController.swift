@@ -83,6 +83,7 @@ class CalculatorViewController: UIViewController {
     var displayFormat = DisplayFormat.fixed(4)
     var displayLabels = [UILabel]()
     var savedDisplayLabelAlphas = [CGFloat]()  // save for turning calculator Off/On
+    var saveDisplayString = ""
     var calculatorIsOn = true
     var liftStack = true  // false between pressing enter and an operation (determines overwriting or pushing xRegister)
     var userIsEnteringDigits = false
@@ -158,6 +159,15 @@ class CalculatorViewController: UIViewController {
     var isProgramMode = false {
         didSet {
             prgmLabel.alpha = isProgramMode ? 1 : 0
+            if !oldValue && isProgramMode {
+                // toggled on
+                program.enterProgramMode()
+                saveDisplayString = displayString
+                displayString = program.currentInstruction
+            } else if oldValue && !isProgramMode {
+                // toggled off
+                displayString = saveDisplayString
+            }
         }
     }
     
@@ -1130,6 +1140,9 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "GSB":
                 brain.clearAll()
+            case "R↓":
+                // CLEAR PRGM pressed
+                program.clearProgram()
             case "x≷y":
                 // CLEAR REG key pressed (clear storage registers, not stack)
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
