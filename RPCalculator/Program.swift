@@ -76,7 +76,7 @@ class Program: Codable {
         currentLine = 0
     }
     
-    func singleStep() -> String {
+    func forwardStep() -> String {
         currentLine = (currentLine + 1) % instructions.count
         return currentInstruction
     }
@@ -86,6 +86,10 @@ class Program: Codable {
         currentLine = (currentLine - 1) % instructions.count
         if currentLine < 0 { currentLine += instructions.count }
         return currentInstruction
+    }
+    
+    func deleteCurrentInstruction() {
+        instructions.remove(at: currentLine)
     }
     
     // MARK: - Start of code

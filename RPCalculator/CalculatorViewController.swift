@@ -1118,7 +1118,7 @@ class CalculatorViewController: UIViewController {
             return
         }
 
-        var okToClearStillTypingFlag = true
+        var okToClearUserEnteringDigits = true
 
         switch prefix {
         case .none:
@@ -1132,7 +1132,7 @@ class CalculatorViewController: UIViewController {
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.swapXyRegisters()
             case "←":
-                // ← key pressed (remove digit/number)
+                // ← key pressed (remove single digit or whole number)
                 if userIsEnteringExponent {
                     return
                 } else {
@@ -1143,8 +1143,13 @@ class CalculatorViewController: UIViewController {
                     } else if displayString.count > 1 {
                         // remove one digit
                         displayString = String(displayString.dropLast())
-                        okToClearStillTypingFlag = false
-                    }  // else last digit removed (display prior number)
+                        okToClearUserEnteringDigits = false  // ie. user is still entering digits
+                    } else {
+                        // push 0.0 onto stack
+                        brain.pushOperand(0.0)
+                        liftStack = false  // not sure if this is needed
+                        brain.printMemory()
+                    }
                 }
             default:
                 break
@@ -1200,7 +1205,7 @@ class CalculatorViewController: UIViewController {
             invalidKeySequenceEntered()
             return
         }
-        if okToClearStillTypingFlag {
+        if okToClearUserEnteringDigits {
             userIsEnteringDigits = false
             updateDisplayString()
         }
@@ -1282,7 +1287,7 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "SST":
                 if isProgramMode {
-                    displayString = program.singleStep()
+                    displayString = program.forwardStep()
                 } else {
                     // while holding down SST button, display current line of code;
                     // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
@@ -1398,7 +1403,7 @@ class CalculatorViewController: UIViewController {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
         // 1) execute current program line (TBD)
         // 2) display results (TBD)
-        _ = program.singleStep()  // 3) increment current program line
+        _ = program.forwardStep()  // 3) increment current program line
         updateDisplayString()
     }
     
