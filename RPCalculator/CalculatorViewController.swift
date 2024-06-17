@@ -488,7 +488,10 @@ class CalculatorViewController: UIViewController {
         if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith(digit) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(digit) {
+                displayString = instruction
+                saveDefaults()
+            }
             prefix = nil
             return
         }
@@ -882,7 +885,10 @@ class CalculatorViewController: UIViewController {
         let operation = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith(operation) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(operation) {
+                displayString = instruction
+                saveDefaults()
+            }
             prefix = nil
             return
         }
@@ -1038,7 +1044,10 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith("ENTER") { displayString = instruction }
+            if let instruction = program.buildInstructionWith("ENTER") {
+                displayString = instruction
+                saveDefaults()
+            }
             return
         }
 
@@ -1100,7 +1109,10 @@ class CalculatorViewController: UIViewController {
         let keyName = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith(keyName) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(keyName) {
+                displayString = instruction
+                saveDefaults()
+            }
             prefix = nil
             return
         }
@@ -1195,22 +1207,6 @@ class CalculatorViewController: UIViewController {
         prefix = nil
     }
 
-    @objc private func iButtonReleased(_ button: UIButton) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            button.removeTarget(nil, action: nil, for: .touchUpInside)
-            self.brain.swapRealImag()
-            self.updateDisplayString()
-        }
-    }
-
-    @objc private func clearPrefixButtonReleased(_ button: UIButton) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            button.removeTarget(nil, action: nil, for: .touchUpInside)
-            self.displayView.showCommas = true
-            self.updateDisplayString()
-        }
-    }
-
     // set prefix to .f (for "f"), .g (for "g"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
     // prefix keys: f, g
     // prefix sent from programKeyPressed: GTO, √x
@@ -1220,7 +1216,10 @@ class CalculatorViewController: UIViewController {
         let keyName = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith(keyName) { displayString = instruction }
+            if let instruction = program.buildInstructionWith(keyName) {
+                displayString = instruction
+                saveDefaults()
+            }
         }
 
         switch prefix {
@@ -1281,7 +1280,14 @@ class CalculatorViewController: UIViewController {
         case .none:
             switch keyName {
             case "SST":
-                print("SST")  // TBD
+                if isProgramMode {
+                    displayString = program.singleStep()
+                } else {
+                    // while holding down SST button, display current line of code;
+                    // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
+                    displayString = program.currentInstruction
+                    sender.addTarget(self, action: #selector(sstButtonReleased), for: .touchUpInside)
+                }
             case "GTO":
                 print("GTO")
             case "R/S":
@@ -1309,15 +1315,22 @@ class CalculatorViewController: UIViewController {
         case .g:
             prefix = nil
             switch keyName {
-            case "R/S":
-                // P/R pressed
-                isProgramMode.toggle()
+            case "SST":
+                // BST pressed
+                displayString = program.backStep()
+                if !isProgramMode {
+                    // show previous line until button released, then return to normal display
+                    sender.addTarget(self, action: #selector(bstButtonReleased), for: .touchUpInside)
+                }
             case "GTO":
                 // HYP-1
                 let tempButton = UIButton()
                 tempButton.setTitle("GTO", for: .normal)
                 prefix = .g
                 prefixKeyPressed(tempButton)  // better handled as prefix key
+            case "R/S":
+                // P/R pressed
+                isProgramMode.toggle()
             default:
                 break
             }
@@ -1361,6 +1374,37 @@ class CalculatorViewController: UIViewController {
         }
     }
     
+    @objc private func iButtonReleased(_ button: UIButton) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            button.removeTarget(nil, action: nil, for: .touchUpInside)
+            self.brain.swapRealImag()
+            self.updateDisplayString()
+        }
+    }
+
+    @objc private func clearPrefixButtonReleased(_ button: UIButton) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            button.removeTarget(nil, action: nil, for: .touchUpInside)
+            self.displayView.showCommas = true
+            self.updateDisplayString()
+        }
+    }
+    
+    // after releasing SST button: 1) execute current line, 2) display results, 3) increment current line (don't show)
+    // pws: steps 1 & 2 not yet implemented
+    @objc private func sstButtonReleased(_ button: UIButton) {
+        button.removeTarget(nil, action: nil, for: .touchUpInside)
+        // 1) execute current program line (TBD)
+        // 2) display results (TBD)
+        _ = program.singleStep()  // 3) increment current program line
+        updateDisplayString()
+    }
+    
+    @objc private func bstButtonReleased(_ button: UIButton) {
+        button.removeTarget(nil, action: nil, for: .touchUpInside)
+        updateDisplayString()
+    }
+
     private func setupClickSoundPlayer() {
         guard let url = Bundle.main.url(forResource: "click", withExtension: "wav") else { return }
         do {

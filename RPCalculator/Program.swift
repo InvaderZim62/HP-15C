@@ -76,6 +76,18 @@ class Program: Codable {
         currentLine = 0
     }
     
+    func singleStep() -> String {
+        currentLine = (currentLine + 1) % instructions.count
+        return currentInstruction
+    }
+    
+    func backStep() -> String {
+        prefix = ""
+        currentLine = (currentLine - 1) % instructions.count
+        if currentLine < 0 { currentLine += instructions.count }
+        return currentInstruction
+    }
+    
     // MARK: - Start of code
 
     // Prefix   buttonLabel(s)
