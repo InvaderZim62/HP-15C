@@ -292,6 +292,7 @@ class CalculatorViewController: UIViewController {
         gradLabel.text = defaults.string(forKey: "gradLabelText") ?? gradLabel.text
         savedDisplayLabelAlphas = defaults.array(forKey: "displayLabelAlphas") as? [CGFloat] ?? displayLabelAlphas
         restoreDisplayLabels()
+        prefix = nil  // prefix is lost after re-start
         if let data = defaults.data(forKey: "brain") {
             brain = try! JSONDecoder().decode(CalculatorBrain.self, from: data)
         }
@@ -1349,6 +1350,7 @@ class CalculatorViewController: UIViewController {
             prepStackForOperation()  // HP-15C completes number entry, if power is cycled
             updateDisplayString()
             restoreDisplayLabels()
+            prefix = nil  // prefix is lost after re-start
         } else {
             hideDisplayLabels()
         }
