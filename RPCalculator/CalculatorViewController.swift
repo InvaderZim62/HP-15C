@@ -1243,10 +1243,10 @@ class CalculatorViewController: UIViewController {
             case "g":
                 prefix = .g
             case "GTO":
-                if !isProgramMode {
-                    prefix = .HYP
-                } else {
+                if isProgramMode {
                     prefix = nil
+                } else {
+                    prefix = .HYP
                 }
             default:
                 break
@@ -1256,10 +1256,10 @@ class CalculatorViewController: UIViewController {
             case "f":
                 prefix = .f
             case "GTO":
-                if !isProgramMode {
-                    prefix = .HYP1
-                } else {
+                if isProgramMode {
                     prefix = nil
+                } else {
+                    prefix = .HYP1
                 }
             default:
                 break

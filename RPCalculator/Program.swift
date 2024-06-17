@@ -30,6 +30,7 @@ class Program: Codable {
     var currentLine = 0
     var prefix = ""
     var instructionCodes = [String]()  // used for building up compound instructions
+    let dashPosition = "nnn-".index("nnn-".startIndex, offsetBy: 3)
 
     // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
     //       minus sign is an "EN DASH" (U+2013)
@@ -90,6 +91,10 @@ class Program: Codable {
     
     func deleteCurrentInstruction() {
         instructions.remove(at: currentLine)
+        // renumber following instructions
+        for index in currentLine..<instructions.count {
+            instructions[index] = index.asThreeDigitString + instructions[index].suffix(from: dashPosition)
+        }
     }
     
     // MARK: - Start of code
@@ -191,6 +196,9 @@ class Program: Codable {
                 instructionCodes.append(keycodes[buttonLabel]!)
                 return instruction
             }
+        case "←":
+            deleteCurrentInstruction()
+            return currentInstruction
         default:
             // instruction complete
             instructionCodes.append(keycodes[buttonLabel]!)
@@ -206,7 +214,7 @@ class Program: Codable {
     // 1 code:  "nnn-    cc"
 
     var instruction: String {
-        let lineNumber = String(format: "%03d", instructions.count)
+        let lineNumber = instructions.count.asThreeDigitString
         var codes = ""
         switch instructionCodes.count {
         case 1:
@@ -228,5 +236,11 @@ class Program: Codable {
         instructionCodes.removeAll()  // start new
         prefix = ""
         return instruction
+    }
+}
+
+extension Int {
+    var asThreeDigitString: String {
+        String(format: "%03d", self)
     }
 }
