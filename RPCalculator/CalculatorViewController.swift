@@ -293,6 +293,7 @@ class CalculatorViewController: UIViewController {
         savedDisplayLabelAlphas = defaults.array(forKey: "displayLabelAlphas") as? [CGFloat] ?? displayLabelAlphas
         restoreDisplayLabels()
         prefix = nil  // prefix is lost after re-start
+        isProgramMode = false  // don't re-start in program mode
         if let data = defaults.data(forKey: "brain") {
             brain = try! JSONDecoder().decode(CalculatorBrain.self, from: data)
         }
@@ -1356,6 +1357,7 @@ class CalculatorViewController: UIViewController {
             updateDisplayString()
             restoreDisplayLabels()
             prefix = nil  // prefix is lost after re-start
+            isProgramMode = false  // don't re-start in program mode
         } else {
             hideDisplayLabels()
         }
