@@ -40,10 +40,6 @@ class Program: Codable {
         "SST": "21", "GTO": "22", "SIN": "23", "COS": "24", "TAN": "25",   "EEX": "26", "4": " 4", "5": " 5",  "6": " 6", "×": "20",
         "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "ENTER": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
          "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
-    
-    var currentInstruction: String {
-        instructions[currentLine]
-    }
 
     // MARK: - Codable
 
@@ -65,10 +61,17 @@ class Program: Codable {
     
     // MARK: - Start of code
     
+    var currentInstruction: String {
+        instructions[currentLine]
+    }
+
     func enterProgramMode() {
-        if instructions.isEmpty { instructions = ["000-"] }
-        instructionCodes = []
+        if instructions.count <= 1 {
+            instructions = ["000-"]
+            currentLine = 0
+        }
         prefix = ""
+        instructionCodes = []
     }
     
     func clearProgram() {
@@ -78,12 +81,15 @@ class Program: Codable {
     }
     
     func forwardStep() -> String {
+        prefix = ""
+        instructionCodes = []
         currentLine = (currentLine + 1) % instructions.count
         return currentInstruction
     }
     
     func backStep() -> String {
         prefix = ""
+        instructionCodes = []
         currentLine = (currentLine - 1) % instructions.count
         if currentLine < 0 { currentLine += instructions.count }
         return currentInstruction
@@ -92,13 +98,16 @@ class Program: Codable {
     func deleteCurrentInstruction() {
         guard currentLine > 0 else { return }
         instructions.remove(at: currentLine)
-        // renumber following instructions
-        for index in currentLine..<instructions.count {
-            instructions[index] = index.asThreeDigitString + instructions[index].suffix(from: dashPosition)
-        }
+        renumberInstructions()
         currentLine -= 1  // leave at prior instruction
     }
     
+    func renumberInstructions() {
+        for index in 0..<instructions.count {
+            instructions[index] = index.asThreeDigitString + instructions[index].suffix(from: dashPosition)
+        }
+    }
+
     // MARK: - Start of code
 
     // Prefix   buttonLabel(s)
@@ -216,28 +225,34 @@ class Program: Codable {
     // 1 code:  "nnn-    cc"
 
     var instruction: String {
-        let lineNumber = instructions.count.asThreeDigitString
-        var codes = ""
-        switch instructionCodes.count {
-        case 1:
-            codes = "    " + instructionCodes[0]
-        case 2:
-            if instructionCodes[1].first == " " {
-                codes = "  " + instructionCodes[0] + instructionCodes[1]
-            } else {
-                codes = " " + instructionCodes[0] + " " + instructionCodes[1]
+        if instructions.isEmpty {
+            instructions.append("000-")
+            return "000-"
+        } else {
+            currentLine += 1
+            let lineNumber = currentLine.asThreeDigitString
+            var codes = ""
+            switch instructionCodes.count {
+            case 1:
+                codes = "    " + instructionCodes[0]
+            case 2:
+                if instructionCodes[1].first == " " {
+                    codes = "  " + instructionCodes[0] + instructionCodes[1]
+                } else {
+                    codes = " " + instructionCodes[0] + " " + instructionCodes[1]
+                }
+            case 3:
+                codes = instructionCodes[0] + "," + instructionCodes[1] + "," + instructionCodes[2]
+            default:
+                break
             }
-        case 3:
-            codes = instructionCodes[0] + "," + instructionCodes[1] + "," + instructionCodes[2]
-        default:
-            break
+            let instruction = "\(lineNumber)-\(codes)"
+            instructions.insert(instruction, at: currentLine)
+            renumberInstructions()
+            instructionCodes.removeAll()  // start new
+            prefix = ""
+            return instruction
         }
-        let instruction = "\(lineNumber)-\(codes)"
-        currentLine = instructions.count
-        instructions.append(instruction)
-        instructionCodes.removeAll()  // start new
-        prefix = ""
-        return instruction
     }
 }
 
