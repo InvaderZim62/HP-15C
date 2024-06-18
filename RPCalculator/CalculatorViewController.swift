@@ -49,13 +49,15 @@ import AVFoundation  // needed for AVAudioPlayer
 enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
-    case FIX
+    case GTO  // ex. GTO 5 (goto label 5)
+    case CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
+    case FIX  // ex. f FIX 4 (format numbers in fixed-point with 4 decimal places)
     case SCI
     case ENG
-    case HYP = "H"  // hyperbolic trig function
-    case HYP1 = "h"  // inverse hyperbolic trig function
-    case SF  // ex. SF 8 (set flag 8 - enable complex mode)
-    case CF  // ex. CF 8 (clear flag 8 - disable complex mode)
+    case HYP = "H"  // ex. f HYP SIN (hyperbolic sine)
+    case HYP1 = "h"  // ex. g HYP1 SIN (inverse hyperbolic sine)
+    case SF  // ex. g SF 8 (set flag 8 - enable complex mode)
+    case CF  // ex. g CF 8 (clear flag 8 - disable complex mode)
     case STO
     case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
     case STO_SUB
@@ -675,6 +677,7 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 brain.printMemory()
             case "EEX":
+                prepStackForOperation()
                 setError(11)
             default:
                 setError(99)  // eventually implement .# registers
@@ -691,6 +694,7 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
                 brain.printMemory()
             case "EEX":
+                prepStackForOperation()
                 setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
             default:
                 setError(99)  // eventually implement .# registers
@@ -952,6 +956,7 @@ class CalculatorViewController: UIViewController {
             case "÷":
                 prefix = .STO_DIV
             default:
+                prepStackForOperation()
                 setError(3)
                 return
             }
@@ -968,6 +973,7 @@ class CalculatorViewController: UIViewController {
             case "÷":
                 prefix = .RCL_DIV
             default:
+                prepStackForOperation()
                 setError(3)
                 return
             }
@@ -985,6 +991,7 @@ class CalculatorViewController: UIViewController {
                     sender.addTarget(self, action: #selector(iButtonReleased), for: .touchUpInside)
                     return
                 } else {
+                    prepStackForOperation()
                     setError(3)
                 }
             case "TAN":
@@ -1014,6 +1021,7 @@ class CalculatorViewController: UIViewController {
                 isUserMode.toggle()
                 return
             case "√x":
+                // "A" pressed
                 let tempButton = UIButton()
                 tempButton.setTitle("√x", for: .normal)
                 programKeyPressed(tempButton)  // better handled as program key
@@ -1023,7 +1031,27 @@ class CalculatorViewController: UIViewController {
             }
         case .g, .HYP, .HYP1:  // allowed to precede operation key (ex. g-10x, f-HYP-SIN, f-HYP1-COS)
             break
+        case .GTO:
+            switch keyName {
+            case "CHS":
+                let tempButton = UIButton()
+                tempButton.setTitle("CHS", for: .normal)
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+                return
+            case "√x":  // pws: not complete
+                // nothing happens (just added to stack)
+                prefix = nil
+                prepStackForOperation()
+                return
+            case "SIN", "COS", "STO":  // pws: not complete
+                // operation performed without prefix
+                prefix = nil
+            default:
+                prepStackForOperation()
+                setError(4)
+            }
         case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key
+            prepStackForOperation()
             setError(3)
             return
         default:  // .FIX, .SCI, .ENG, .RCL (these ignore the prefix) ex. 2 Enter 3 f FIX x, just does 2 Enter 3 x (= 6)
@@ -1209,9 +1237,9 @@ class CalculatorViewController: UIViewController {
         prefix = nil
     }
 
-    // set prefix to .f (for "f"), .g (for "g"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
+    // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
     // prefix keys: f, g
-    // prefix sent from programKeyPressed: GTO, √x
+    // prefix sent from programKeyPressed: GTO
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1228,7 +1256,9 @@ class CalculatorViewController: UIViewController {
                 prefix = .f
             case "g":
                 prefix = .g
-            default:  // GTO (not implemented)
+            case "GTO":
+                prefix = .GTO  // build-up to GTO n (go to label n) or GTO CHS nnn (go to line nnn)
+            default:
                 break
             }
         case .f:
@@ -1270,6 +1300,7 @@ class CalculatorViewController: UIViewController {
     }
 
     // program manipulation keys: SST, GTO, R/S, GSB
+    // sent from operationKeyPressed: f-√x ("A")
     @IBAction func programKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1289,7 +1320,10 @@ class CalculatorViewController: UIViewController {
                     sender.addTarget(self, action: #selector(sstButtonReleased), for: .touchUpInside)
                 }
             case "GTO":
-                print("GTO")
+                // build-up to GTO CHS nnn (go to line nnn)
+                let tempButton = UIButton()
+                tempButton.setTitle("GTO", for: .normal)
+                prefixKeyPressed(tempButton)  // better handled as prefix key
             case "R/S":
                 // run/stop [program]
                 if isProgramMode {
