@@ -887,7 +887,7 @@ class CalculatorViewController: UIViewController {
     }
     
     // perform selected operation, and display results
-    // operation keys: √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, STO, RCL, ÷, ×, -, +
+    // operation keys: √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, ÷, ×, -, +
     // operations sent from digitKeyPressed: f-1 (→R), f-2 (→H.MS), f-3 (→RAD), g-1 (→P), g-2 (→H), g-3 (→DEG)
     @IBAction func operationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
@@ -935,12 +935,6 @@ class CalculatorViewController: UIViewController {
                     }
                     return
                 }  // else CHS pressed with existing number on display (push "nCHS" onto stack, below)
-            case "STO":
-                prefix = .STO
-                return
-            case "RCL":
-                prefix = .RCL
-                return
             default:
                 break
             }
@@ -1014,11 +1008,6 @@ class CalculatorViewController: UIViewController {
                 brain.swapRealImag()
                 //------------------
                 updateDisplayString()
-                return
-            case "RCL":
-                // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
-                prefix = nil
-                isUserMode.toggle()
                 return
             case "√x":
                 // "A" pressed
@@ -1238,7 +1227,7 @@ class CalculatorViewController: UIViewController {
     }
 
     // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
-    // prefix keys: f, g
+    // prefix keys: f, g, STO, RCL
     // prefix sent from programKeyPressed: GTO
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
@@ -1256,6 +1245,10 @@ class CalculatorViewController: UIViewController {
                 prefix = .f
             case "g":
                 prefix = .g
+            case "STO":
+                prefix = .STO
+            case "RCL":
+                prefix = .RCL
             case "GTO":
                 prefix = .GTO  // build-up to GTO n (go to label n) or GTO CHS nnn (go to line nnn)
             default:
@@ -1265,6 +1258,10 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "g":
                 prefix = .g
+            case "RCL":
+                // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
+                prefix = nil
+                isUserMode.toggle()
             case "GTO":
                 if isProgramMode {
                     prefix = nil

@@ -200,7 +200,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="xxe-bN-owS"/>
+                                                            <action selector="prefixKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="k5e-gM-hOc"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -245,7 +245,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="MNv-FM-Pbd"/>
+                                                            <action selector="prefixKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="zTs-yC-6jF"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
