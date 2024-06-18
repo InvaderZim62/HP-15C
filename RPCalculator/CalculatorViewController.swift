@@ -474,6 +474,13 @@ class CalculatorViewController: UIViewController {
         }
     }
     
+    private func sendToProgram(_ keyName: String) {
+        if let instruction = program.buildInstructionWith(keyName) {
+            displayString = instruction
+            saveDefaults()
+        }
+    }
+    
     // MARK: - Button actions
     
     // Note: It's somewhat arbitrary which action each button is assigned to (digitKeyPressed, operationKeyPressed,
@@ -486,14 +493,11 @@ class CalculatorViewController: UIViewController {
     @IBAction func digitKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        var digit = sender.currentTitle!
-        if digit == "·" { digit = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
+        var keyName = sender.currentTitle!
+        if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith(digit) {
-                displayString = instruction
-                saveDefaults()
-            }
+            sendToProgram(keyName)
             prefix = nil
             return
         }
@@ -501,7 +505,7 @@ class CalculatorViewController: UIViewController {
         switch prefix {
         case .none:
             // digit pressed (without prefix)
-            if digit == "EEX" {
+            if keyName == "EEX" {
                 if !userIsEnteringExponent {
                     userIsEnteringExponent = true
                     if !userIsEnteringDigits {
@@ -515,31 +519,31 @@ class CalculatorViewController: UIViewController {
                 }
             } else if userIsEnteringDigits {
                 // add digit to display (only one decimal per number, and none in exponent)
-                if !(digit == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {
+                if !(keyName == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {
                     if userIsEnteringExponent {
                         // slide second digit of exponent left and put new digit in its place
                         let exponent2 = String(displayString.removeLast())
                         displayString.removeLast(1)
-                        displayString += exponent2 + digit
+                        displayString += exponent2 + keyName
                     } else {
                         //--------------------------------------------------------
-                        displayString += digit  // append entered digit to display
+                        displayString += keyName  // append entered digit to display
                         //--------------------------------------------------------
                     }
                 }
             } else {
                 // start clean display with digit
-                if digit == "." {
+                if keyName == "." {
                     displayString = "0."  // precede leading decimal point with a zero
                 } else {
-                    displayString = digit
+                    displayString = keyName
                 }
                 userIsEnteringDigits = true
             }
             saveDefaults()
         case .f:
             prefix = nil
-            switch digit {
+            switch keyName {
             case "1":
                 // →R pressed (convert to rectangular coordinates)
                 let tempButton = UIButton()
@@ -572,7 +576,7 @@ class CalculatorViewController: UIViewController {
             }
         case .g:
             prefix = nil
-            switch digit {
+            switch keyName {
             case "1":
                 // →P pressed (convert to polar coordinates)
                 let tempButton = UIButton()
@@ -614,7 +618,7 @@ class CalculatorViewController: UIViewController {
             }
         case .FIX:
             prefix = nil
-            if let decimalPlaces = Int(digit) {
+            if let decimalPlaces = Int(keyName) {
                 // number after FIX pressed
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .fixed(decimalPlaces)
@@ -622,12 +626,12 @@ class CalculatorViewController: UIViewController {
             } else {
                 // if not a number, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
         case .SCI:
             prefix = nil
-            if let decimalPlaces = Int(digit) {
+            if let decimalPlaces = Int(keyName) {
                 // number after SCI pressed
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
@@ -635,12 +639,12 @@ class CalculatorViewController: UIViewController {
             } else {
                 // if not a number, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
         case .ENG:
             prefix = nil
-            if let additionalDigits = Int(digit) {
+            if let additionalDigits = Int(keyName) {
                 // number after ENG pressed
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 displayFormat = .engineering(min(additionalDigits, 6))  // 1 sign + 1 significant + 6 additional + 1 exponent sign + 2 exponents = 11 digits
@@ -648,26 +652,26 @@ class CalculatorViewController: UIViewController {
             } else {
                 // if not a number, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
         case .SF:
             prefix = nil
-            if digit == "8" {  // flag 8 is complex mode
+            if keyName == "8" {  // flag 8 is complex mode
                 isComplexMode = true
             }
         case .CF:
             prefix = nil
-            if digit == "8" {  // flag 8 is complex mode
+            if keyName == "8" {  // flag 8 is complex mode
                 isComplexMode = false
             }
         case .STO:
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not implement registers ".0" through ".9"
                 // store displayed number in register
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-                brain.storeResultInRegister(digit, result: brain.xRegister!)
+                brain.storeResultInRegister(keyName, result: brain.xRegister!)
                 updateDisplayString()
                 brain.printMemory()
             case "EEX":
@@ -678,11 +682,11 @@ class CalculatorViewController: UIViewController {
             liftStack = true
         case .RCL:
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // recall register, show in display
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-                displayString = String(brain.recallNumberFromStorageRegister(digit))
+                displayString = String(brain.recallNumberFromStorageRegister(keyName))
                 brain.pushOperand(displayStringNumber)
                 updateDisplayString()
                 brain.printMemory()
@@ -695,7 +699,7 @@ class CalculatorViewController: UIViewController {
         case .STO_ADD:
             // STO + register
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // add displayed number to register
                 if userIsEnteringDigits {
@@ -703,21 +707,21 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                let result = brain.recallNumberFromStorageRegister(digit) + brain.xRegister!
-                brain.storeResultInRegister(digit, result: result)
+                let result = brain.recallNumberFromStorageRegister(keyName) + brain.xRegister!
+                brain.storeResultInRegister(keyName, result: result)
                 updateDisplayString()
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
             liftStack = true
         case .STO_SUB:
             // STO - register
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // subtract displayed number from register
                 if userIsEnteringDigits {
@@ -725,21 +729,21 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                let result = brain.recallNumberFromStorageRegister(digit) - brain.xRegister!
-                brain.storeResultInRegister(digit, result: result)
+                let result = brain.recallNumberFromStorageRegister(keyName) - brain.xRegister!
+                brain.storeResultInRegister(keyName, result: result)
                 updateDisplayString()
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
             liftStack = true
         case .STO_MUL:
             // STO × register
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // multiply register by displayed number
                 if userIsEnteringDigits {
@@ -747,21 +751,21 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                let result = brain.recallNumberFromStorageRegister(digit) * brain.xRegister!
-                brain.storeResultInRegister(digit, result: result)
+                let result = brain.recallNumberFromStorageRegister(keyName) * brain.xRegister!
+                brain.storeResultInRegister(keyName, result: result)
                 updateDisplayString()
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
             liftStack = true
         case .STO_DIV:
             // STO ÷ register
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // divided register by displayed number
                 if userIsEnteringDigits {
@@ -769,25 +773,25 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                let result = brain.recallNumberFromStorageRegister(digit) / brain.xRegister!
+                let result = brain.recallNumberFromStorageRegister(keyName) / brain.xRegister!
                 if result.isNaN || result.isInfinite {  // pws: also need this check for .ADD, .SUB, .MUL (ex. 1E99 in Reg 1, 10 STO x 1 causes overflow)
                     displayString = "nan"  // triggers displayView to show "  Error  0"
                 } else {
-                    brain.storeResultInRegister(digit, result: result)
+                    brain.storeResultInRegister(keyName, result: result)
                     updateDisplayString()
                 }
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
             liftStack = true
         case .RCL_ADD:
             // RCL + register
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // add register to displayed number
                 if userIsEnteringDigits {
@@ -795,20 +799,20 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                brain.xRegister! += brain.recallNumberFromStorageRegister(digit)
+                brain.xRegister! += brain.recallNumberFromStorageRegister(keyName)
                 updateDisplayString()
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
             liftStack = true
         case .RCL_SUB:
             // RCL - register
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // add register to displayed number
                 if userIsEnteringDigits {
@@ -816,20 +820,20 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                brain.xRegister! -= brain.recallNumberFromStorageRegister(digit)
+                brain.xRegister! -= brain.recallNumberFromStorageRegister(keyName)
                 updateDisplayString()
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
             liftStack = true
         case .RCL_MUL:
             // RCL × register
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // add register to displayed number
                 if userIsEnteringDigits {
@@ -837,20 +841,20 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                brain.xRegister! *= brain.recallNumberFromStorageRegister(digit)
+                brain.xRegister! *= brain.recallNumberFromStorageRegister(keyName)
                 updateDisplayString()
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
             liftStack = true
         case .RCL_DIV:
             // RCL ÷ register
             prefix = nil
-            switch digit {
+            switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // add register to displayed number
                 if userIsEnteringDigits {
@@ -858,7 +862,7 @@ class CalculatorViewController: UIViewController {
                     userIsEnteringDigits = false
                     userIsEnteringExponent = false
                 }
-                let result = brain.xRegister! / brain.recallNumberFromStorageRegister(digit)
+                let result = brain.xRegister! / brain.recallNumberFromStorageRegister(keyName)
                 if result.isNaN || result.isInfinite {  // pws: also need this check for .ADD, .SUB, .MUL (ex. 1E99 in Reg 1, 10 REC x 1 causes overflow)
                     displayString = "nan"  // triggers displayView to show "  Error  0"
                 } else {
@@ -869,7 +873,7 @@ class CalculatorViewController: UIViewController {
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
                 let tempButton = UIButton()
-                tempButton.setTitle(digit, for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
             liftStack = true
@@ -884,20 +888,17 @@ class CalculatorViewController: UIViewController {
     @IBAction func operationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        let operation = sender.currentTitle!
+        let keyName = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith(operation) {
-                displayString = instruction
-                saveDefaults()
-            }
+            sendToProgram(keyName)
             prefix = nil
             return
         }
 
         if isUserMode {
             // swap the primary functions and f-shifted functions of keys A-E
-            switch operation {
+            switch keyName {
             case "√x", "ex", "10x", "yx", "1/x":
                 if prefix == nil {
                     prefix = .f
@@ -911,7 +912,7 @@ class CalculatorViewController: UIViewController {
         
         switch prefix {
         case .none:
-            switch operation {
+            switch keyName {
             case "CHS":
                 if userIsEnteringExponent {
                     // change sign of exponent, during entry
@@ -941,7 +942,7 @@ class CalculatorViewController: UIViewController {
             }
         case .STO:
             // STO [+|–|×|÷]
-            switch operation {
+            switch keyName {
             case "+":
                 prefix = .STO_ADD  // ex. add display to number stored in register (next key)
             case "–":  // minus sign is an "EN DASH"
@@ -957,7 +958,7 @@ class CalculatorViewController: UIViewController {
             return
         case .RCL:
             // RCL [+|–|×|÷]
-            switch operation {
+            switch keyName {
             case "+":
                 prefix = .RCL_ADD  // ex. add register (next key) to display
             case "–":  // minus sign is an "EN DASH"
@@ -972,7 +973,7 @@ class CalculatorViewController: UIViewController {
             }
             return
         case .f:
-            switch operation {
+            switch keyName {
             case "COS":
                 // "(i)" pressed (show imaginary part of number if complex, else Error 3)
                 if isComplexMode {
@@ -1035,7 +1036,7 @@ class CalculatorViewController: UIViewController {
         let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
         prefix = nil  // must come after previous line
         //-------------------------------------------------
-        brain.performOperation(oneLetterPrefix + operation)
+        brain.performOperation(oneLetterPrefix + keyName)
         //-------------------------------------------------
         updateDisplayString()
     }
@@ -1046,10 +1047,7 @@ class CalculatorViewController: UIViewController {
         if restoreFromError() { return }
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith("ENTER") {
-                displayString = instruction
-                saveDefaults()
-            }
+            sendToProgram("ENTER")
             return
         }
 
@@ -1111,10 +1109,7 @@ class CalculatorViewController: UIViewController {
         let keyName = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith(keyName) {
-                displayString = instruction
-                saveDefaults()
-            }
+            sendToProgram(keyName)
             prefix = nil
             return
         }
@@ -1223,10 +1218,7 @@ class CalculatorViewController: UIViewController {
         let keyName = sender.currentTitle!
         
         if isProgramMode {
-            if let instruction = program.buildInstructionWith(keyName) {
-                displayString = instruction
-                saveDefaults()
-            }
+            sendToProgram(keyName)
         }
 
         switch prefix {
@@ -1298,7 +1290,12 @@ class CalculatorViewController: UIViewController {
             case "GTO":
                 print("GTO")
             case "R/S":
-                print("R/S")
+                if isProgramMode {
+                    sendToProgram(keyName)
+                } else {
+                    // run program
+                    // pws: TBD
+                }
             case "GSB":
                 print("GSB")
             default:
