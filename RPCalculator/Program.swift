@@ -90,11 +90,13 @@ class Program: Codable {
     }
     
     func deleteCurrentInstruction() {
+        guard currentLine > 0 else { return }
         instructions.remove(at: currentLine)
         // renumber following instructions
         for index in currentLine..<instructions.count {
             instructions[index] = index.asThreeDigitString + instructions[index].suffix(from: dashPosition)
         }
+        currentLine -= 1  // leave at prior instruction
     }
     
     // MARK: - Start of code
