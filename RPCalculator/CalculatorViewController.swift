@@ -1279,6 +1279,7 @@ class CalculatorViewController: UIViewController {
         case .none:
             switch keyName {
             case "SST":
+                // single-step program
                 if isProgramMode {
                     displayString = program.forwardStep()
                 } else {
@@ -1290,6 +1291,7 @@ class CalculatorViewController: UIViewController {
             case "GTO":
                 print("GTO")
             case "R/S":
+                // run/stop [program]
                 if isProgramMode {
                     sendToProgram(keyName)
                 } else {
@@ -1305,14 +1307,20 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             switch keyName {
             case "√x":
-                // run program at Label A (not yet implemented)
+                // "A" pressed (run program at Label A)
+                // pws: not yet implemented
                 isRunMode = true
             case "GTO":
-                // HYP
+                // HYP pressed
                 let tempButton = UIButton()
                 tempButton.setTitle("GTO", for: .normal)
                 prefix = .f
                 prefixKeyPressed(tempButton)  // better handled as prefix key
+            case "R/S":
+                // PSE pressed (pause program)
+                if isProgramMode {
+                    sendToProgram(keyName)
+                }  // else (no action in run mode)
             default:
                 break
             }
@@ -1320,14 +1328,14 @@ class CalculatorViewController: UIViewController {
             prefix = nil
             switch keyName {
             case "SST":
-                // BST pressed
+                // BST pressed (back step program)
                 displayString = program.backStep()
                 if !isProgramMode {
                     // show previous line until button released, then return to normal display
                     sender.addTarget(self, action: #selector(bstButtonReleased), for: .touchUpInside)
                 }
             case "GTO":
-                // HYP-1
+                // HYP-1 pressed
                 let tempButton = UIButton()
                 tempButton.setTitle("GTO", for: .normal)
                 prefix = .g
