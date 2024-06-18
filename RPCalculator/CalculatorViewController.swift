@@ -254,7 +254,6 @@ class CalculatorViewController: UIViewController {
         displayView.numberOfDigits = 11  // one digit for sign
         getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
         prepStackForOperation()  // HP-15C completes number entry, if power is cycled
-        updateDisplayString()
         brain.printMemory()
         logoCircleView.layer.masksToBounds = true
         logoCircleView.layer.cornerRadius = logoCircleView.bounds.width / 2  // make it circular
@@ -381,6 +380,7 @@ class CalculatorViewController: UIViewController {
                 endDisplayEntry()  // overwrite xRegister with display
             }
         }  // else complete number already in xRegister; ex. pi pi +
+        updateDisplayString()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
         liftStack = true
@@ -996,7 +996,7 @@ class CalculatorViewController: UIViewController {
                 //----------------------
                 brain.moveRealXToImagX()
                 //----------------------
-                displayString = String(brain.xRegister!)
+                displayString = String(brain.xRegister!)  // show real part
                 updateDisplayString()
                 return
             case "–":  // minus sign is an "EN DASH"
@@ -1027,17 +1027,18 @@ class CalculatorViewController: UIViewController {
                 tempButton.setTitle("CHS", for: .normal)
                 prefixKeyPressed(tempButton)  // better handled as prefix key
                 return
-            case "√x":  // pws: not complete
-                // nothing happens (just added to stack)
+            case "√x":
+                // do nothing (just add to stack)
                 prefix = nil
                 prepStackForOperation()
                 return
-            case "SIN", "COS", "STO":  // pws: not complete
-                // operation performed without prefix
+            case "SIN", "COS", "÷", "×", "-", "+", "→R", "→P", "→H.MS", "→H", "→RAD", "→DEG":
+                // perform operation without prefix
                 prefix = nil
             default:
                 prepStackForOperation()
                 setError(4)
+                return
             }
         case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key
             prepStackForOperation()
@@ -1390,7 +1391,6 @@ class CalculatorViewController: UIViewController {
         displayView.turnOnIf(calculatorIsOn)
         if calculatorIsOn {
             prepStackForOperation()  // HP-15C completes number entry, if power is cycled
-            updateDisplayString()
             restoreDisplayLabels()
             prefix = nil  // prefix is lost after re-start
             isProgramMode = false  // don't re-start in program mode
