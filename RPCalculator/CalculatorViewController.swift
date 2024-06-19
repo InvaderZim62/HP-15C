@@ -929,8 +929,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     }
     
     // perform selected operation, and display results
+    // Note: most of the real operators are not handled in the large switch statement;
+    // they fall through (using break statements) to be sent to brain.performOperation
+    //
     // operation keys: √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, ÷, ×, -, +
     // operations sent from digitKeyPressed: f-1 (→R), f-2 (→H.MS), f-3 (→RAD), g-1 (→P), g-2 (→H), g-3 (→DEG)
+    // operations sent from prefixKeyPressed: f-STO (FRAC), g-STO (INT)
     @IBAction func operationKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1065,6 +1069,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         case .GTO:
             switch keyName {
             case "CHS":
+                // goto line number
                 let tempButton = UIButton()
                 tempButton.setTitle("CHS", for: .normal)
                 prefixKeyPressed(tempButton)  // better handled as prefix key
@@ -1304,7 +1309,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 prefix = .g
             case "STO":
                 // "FRAC" pressed
-                print("FRAC")  // pws: TBD
+                let tempButton = UIButton()
+                tempButton.setTitle("STO", for: .normal)
+                prefix = .f
+                operationKeyPressed(tempButton)  // better handled as operation
             case "RCL":
                 // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
                 prefix = nil
@@ -1324,7 +1332,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 prefix = .f
             case "STO":
                 // "INT" pressed
-                print("INT")  // pws: TBD
+                let tempButton = UIButton()
+                tempButton.setTitle("STO", for: .normal)
+                prefix = .g
+                operationKeyPressed(tempButton)  // better handled as operation
             case "RCL":
                 // "MEM" pressed
                 print("MEM")  // pws: TBD

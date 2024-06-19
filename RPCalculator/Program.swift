@@ -7,7 +7,7 @@
 //  Each line of a program is an instruction.
 //  An instruction is a line number followed by 1 to 3 key-codes.
 //  If there are three key-codes, they are separated by commas, otherwise they are separated by spaces.
-//  A key-code is the row and column of the button, except for number keys, which are just represented by the number itself.
+//  A key-code is the row and column of the button, except for number keys, which are just represented by the numbers themselves.
 //  Rows go from 1...4 (top to bottom).
 //  Columns go from 1...9, 0 (left to right), where 0 is the 10th column.
 //
