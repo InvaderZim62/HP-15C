@@ -76,7 +76,7 @@ enum TrigMode: String, Codable {
     case GRAD = "G"  // 100 gradians = 90 degrees
 }
 
-class CalculatorViewController: UIViewController {
+class CalculatorViewController: UIViewController, ProgramDelegate {
     
     var brain = CalculatorBrain()
     var program = Program()
@@ -254,6 +254,7 @@ class CalculatorViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         displayView.numberOfDigits = 11  // one digit for sign
         getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
+        program.delegate = self  // must be called after getting defaults (overwrites program)
         prepStackForOperation()  // HP-15C completes number entry, if power is cycled
         brain.printMemory()
         logoCircleView.layer.masksToBounds = true
@@ -459,7 +460,7 @@ class CalculatorViewController: UIViewController {
         displayString = "  Error  0"  // real HP-15C seems to just ignore most invalid sequences
     }
     
-    private func setError(_ number: Int) {
+    func setError(_ number: Int) {
         brain.error = .code(number)
         prefix = nil
         userIsEnteringDigits = false
@@ -472,7 +473,11 @@ class CalculatorViewController: UIViewController {
             return false
         } else {
             brain.error = .none
-            updateDisplayString()
+            if isProgramMode {
+                displayString = program.currentInstruction
+            } else {
+                updateDisplayString()
+            }
             return true
         }
     }

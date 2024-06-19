@@ -22,14 +22,21 @@
 //     20 is row 2, col 10   = "x"
 //
 
+protocol ProgramDelegate: AnyObject {
+    func setError(_ number: Int)
+}
+
 import Foundation
 
 class Program: Codable {
+    
+    weak var delegate: ProgramDelegate?
     
     var instructions = [String]()
     var currentLine = 0
     var prefix = ""
     var instructionCodes = [String]()  // used for building up compound instructions
+    var gotoLineNumberDigits = [Int]()
     let dashPosition = "nnn-".index("nnn-".startIndex, offsetBy: 3)
 
     // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
@@ -113,9 +120,11 @@ class Program: Codable {
     // Prefix   buttonLabel(s)
     // f        f    // basic (single digit)
     // g        g
+    // GTO      GTO
     // STO      STO
     // RCL      RCL
-    // FIX      f 7  // compound (two digits)
+    // GTO_CHS  GTO CHS  // compound (two digits)
+    // FIX      f 7
     // SCI      f 8
     // ENG      f 9
     // HYP      f GTO
@@ -137,28 +146,13 @@ class Program: Codable {
             // any time "f" or "g" is entered, the program instruction starts over
             prefix = buttonLabel
             instructionCodes = [keycodes[buttonLabel]!]
-        case "STO":
-            if instructionCodes.isEmpty || prefix == "RCL" {
-                // if "RCL" is entered after "STO" (with no prior prefix), the program instruction starts over
+        case "GTO", "STO", "RCL":
+            if instructionCodes.isEmpty || prefix == "GTO" || prefix == "STO" || prefix == "RCL" {
+                // if there is no other current prefix, these three can override each other;
+                // start the program instruction over with the latest one
                 prefix = buttonLabel
                 instructionCodes = [keycodes[buttonLabel]!]
-            } else {
-                // instruction complete
-                instructionCodes.append(keycodes[buttonLabel]!)
-                return instruction
-            }
-        case "RCL":
-            if instructionCodes.isEmpty || prefix == "STO" {
-                // if "STO" is entered after "RCL" (with no prior prefix), the program instruction starts over
-                prefix = buttonLabel
-                instructionCodes = [keycodes[buttonLabel]!]
-            } else {
-                // instruction complete
-                instructionCodes.append(keycodes[buttonLabel]!)
-                return instruction
-            }
-        case "7", "8", "9":
-            if prefix == "f" {
+            } else if (prefix == "f" || prefix == "g") && buttonLabel == "GTO" {
                 // compound prefix
                 prefix += buttonLabel
                 instructionCodes.append(keycodes[buttonLabel]!)
@@ -167,18 +161,35 @@ class Program: Codable {
                 instructionCodes.append(keycodes[buttonLabel]!)
                 return instruction
             }
-        case "GTO":
-            if prefix == "f" || prefix == "g" {
+        case "CHS":
+            if prefix == "GTO" {  // non-programmable
+                // compound prefix
+                prefix += buttonLabel
+                instructionCodes = []
+                gotoLineNumberDigits = []
+            }
+        case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+            if prefix == "GTOCHS" {  // non-programmable
+                // add buttonLabel to gotoLineNumber
+                gotoLineNumberDigits.append(Int(buttonLabel)!)
+                if gotoLineNumberDigits.count == 3 {
+                    // all goto line number received
+                    prefix = ""
+                    let gotoLineNumber = 100 * gotoLineNumberDigits[0] + 10 * gotoLineNumberDigits[1] + gotoLineNumberDigits[2]
+                    if gotoLineNumber >= instructions.count {
+                        // line number past end of program
+                        delegate?.setError(4)  // have CalculatorViewController process the error
+                    } else {
+                        // line number within program
+                        currentLine = gotoLineNumber
+                        return currentInstruction
+                    }
+                }
+            } else if prefix == "f" && (buttonLabel == "7" || buttonLabel == "8" || buttonLabel == "9") {
                 // compound prefix
                 prefix += buttonLabel
                 instructionCodes.append(keycodes[buttonLabel]!)
-            } else {
-                // instruction complete
-                instructionCodes.append(keycodes[buttonLabel]!)
-                return instruction
-            }
-        case "4", "5":
-            if prefix == "g" {
+            } else if prefix == "g" && (buttonLabel == "4" || buttonLabel == "5") {
                 // compound prefix
                 prefix += buttonLabel
                 instructionCodes.append(keycodes[buttonLabel]!)
@@ -208,8 +219,19 @@ class Program: Codable {
                 return instruction
             }
         case "←":
-            deleteCurrentInstruction()
-            return currentInstruction
+            switch prefix {
+            case "":  // non-programmable
+                deleteCurrentInstruction()
+                return currentInstruction
+            case "g":
+                // CLX
+                // instruction complete
+                instructionCodes.append(keycodes[buttonLabel]!)
+                return instruction
+            default:
+                prefix = ""
+                break  // non-programmable
+            }
         default:
             // instruction complete
             instructionCodes.append(keycodes[buttonLabel]!)
