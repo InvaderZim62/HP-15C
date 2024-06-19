@@ -50,7 +50,7 @@ enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
     case GTO  // ex. GTO 5 (goto label 5)
-    case CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
+    case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
     case FIX  // ex. f FIX 4 (format numbers in fixed-point with 4 decimal places)
     case SCI
     case ENG
@@ -94,6 +94,7 @@ class CalculatorViewController: UIViewController {
     var seed = 0  // HP-15C initial random number seed is zero
     var lastRandomNumberGenerated = 0.0
     var isGettingDefaults = false
+    var gotoLineNumberDigits = [Int]()
     
     var displayStringNumber: Double {
         if userIsEnteringExponent {
@@ -617,6 +618,42 @@ class CalculatorViewController: UIViewController {
                 updateDisplayString()
             default:
                 break
+            }
+        case .GTO:
+            switch keyName {
+            case ".":
+                print("GTO .")  // pws: goto label starting with "."?
+            case "EEX":
+                prefix = nil
+                let tempButton = UIButton()
+                tempButton.setTitle("EEX", for: .normal)
+                digitKeyPressed(tempButton)
+            default:
+                prepStackForOperation()
+                setError(4)
+            }
+        case .GTO_CHS:
+            switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                gotoLineNumberDigits.append(Int(keyName)!)
+                if gotoLineNumberDigits.count == 3 {
+                    prefix = nil
+                    let gotoLineNumber = 100 * gotoLineNumberDigits[0] + 10 * gotoLineNumberDigits[1] + gotoLineNumberDigits[2]
+                    if gotoLineNumber >= program.instructions.count {
+                        // line number past end of program
+                        prepStackForOperation()
+                        setError(4)
+                    } else {
+                        program.currentLine = gotoLineNumber
+                    }
+                }
+            default:
+                // ".", "EXE" - resend without prefix
+                prefix = nil
+                gotoLineNumberDigits = []
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                digitKeyPressed(tempButton)
             }
         case .FIX:
             prefix = nil
@@ -1230,6 +1267,7 @@ class CalculatorViewController: UIViewController {
     // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
     // prefix keys: f, g, STO, RCL
     // prefix sent from programKeyPressed: GTO
+    // prefix sent from operationKeyPressed: GTO_CHS
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1259,6 +1297,9 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "g":
                 prefix = .g
+            case "STO":
+                // "FRAC" pressed
+                print("FRAC")  // pws: TBD
             case "RCL":
                 // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
                 prefix = nil
@@ -1276,6 +1317,12 @@ class CalculatorViewController: UIViewController {
             switch keyName {
             case "f":
                 prefix = .f
+            case "STO":
+                // "INT" pressed
+                print("INT")  // pws: TBD
+            case "RCL":
+                // "MEM" pressed
+                print("MEM")  // pws: TBD
             case "GTO":
                 if isProgramMode {
                     prefix = nil
@@ -1285,12 +1332,61 @@ class CalculatorViewController: UIViewController {
             default:
                 break
             }
-        case .STO, .RCL:
+        case .STO:
             switch keyName {
             case "f":
-                break  // leave prefix = .STO/.RCL, to allow Enter to store/recall random seed (STO/RCL f ENTER)
+                prefix = .f  // pws: HP-15C shows f after STO f, so what is STO f ENTER?
+            case "g":
+                prefix = .g
+            case "RCL":
+                prefix = .RCL
+            case "GTO":
+                print("STO GTO")  // pws: not sure what this is
+            default:
+                setError(99)  // shouldn't get here
+            }
+        case .RCL:
+            switch keyName {
+            case "f":
+                prefix = .f
+            case "g":
+                prefix = .g
+            case "STO":
+                prefix = .STO
             default:
                 invalidKeySequenceEntered()
+            }
+        case .GTO:
+            switch keyName {
+            case "f":
+                prefix = .f
+            case "g":
+                prefix = .g
+            case "STO":
+                prefix = .STO
+            case "RCL":
+                prefix = .RCL
+            case "CHS":
+                prefix = .GTO_CHS
+                gotoLineNumberDigits = []
+            default:
+                setError(99)  // shouldn't get here
+            }
+        case .GTO_CHS:
+            gotoLineNumberDigits = []
+            switch keyName {
+            case "f":
+                prefix = .f
+            case "g":
+                prefix = .g
+            case "STO":
+                prefix = .STO
+            case "RCL":
+                prefix = .RCL
+            case "GTO":
+                prefix = .GTO
+            default:
+                setError(99)  // shouldn't get here
             }
         default:  // .FIX, .SCI, .ENG, .HYP, .HYP1 (not allowed to precede prefix key)
             invalidKeySequenceEntered()
@@ -1378,6 +1474,7 @@ class CalculatorViewController: UIViewController {
             default:
                 break
             }
+            // there may be some odd combinations of program keys that do something or cause an error
         default:
             break
         }
