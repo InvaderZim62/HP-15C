@@ -1443,15 +1443,15 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                     // pws: TBD
                 }
             case "GSB":
-                print("GSB")
+                print("GSB")  // pws: TBD
             default:
                 break
             }
         case .f:
             prefix = nil
             switch keyName {
-            case "√x":
-                // "A" pressed (run program at Label A)
+            case "√x", "ex", "10x", "yx", "1/x":
+                // "A"-"E" pressed (run program at Label A or B...)
                 // pws: not yet implemented
                 isRunMode = true
             case "GTO":

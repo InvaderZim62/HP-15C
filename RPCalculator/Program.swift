@@ -37,17 +37,20 @@ class Program: Codable {
     var prefix = ""
     var instructionCodes = [String]()  // used for building up compound instructions
     var gotoLineNumberDigits = [Int]()
-    let dashPosition = "nnn-".index("nnn-".startIndex, offsetBy: 3)
+    let codeStart = "nnn-".index("nnn-".startIndex, offsetBy: 4)
 
     // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
     //       minus sign is an "EN DASH" (U+2013)
 
-    let keycodes: [String: String] = [  // [button label: key-code]
+    static let keycodes: [String: String] = [  // [button label: key-code]
          "√x": "11",  "ex": "12", "10x": "13",  "yx": "14", "1/x": "15",   "CHS": "16", "7": " 7", "8": " 8",  "9": " 9", "÷": "10",
         "SST": "21", "GTO": "22", "SIN": "23", "COS": "24", "TAN": "25",   "EEX": "26", "4": " 4", "5": " 5",  "6": " 6", "×": "20",
         "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "ENTER": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
          "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
 
+    // inverse of keycodes dictionary
+    static let labels = Dictionary(uniqueKeysWithValues: keycodes.map({ ($1, $0) }))
+    
     // MARK: - Codable
 
     private enum CodingKeys: String, CodingKey { case instructions, currentLine }
@@ -111,7 +114,7 @@ class Program: Codable {
     
     func renumberInstructions() {
         for index in 0..<instructions.count {
-            instructions[index] = index.asThreeDigitString + instructions[index].suffix(from: dashPosition)
+            instructions[index] = index.asThreeDigitString + "-" + instructions[index].suffix(from: codeStart)
         }
     }
 
@@ -145,20 +148,20 @@ class Program: Codable {
         case "f", "g":
             // any time "f" or "g" is entered, the program instruction starts over
             prefix = buttonLabel
-            instructionCodes = [keycodes[buttonLabel]!]
+            instructionCodes = [Program.keycodes[buttonLabel]!]
         case "GTO", "STO", "RCL":
             if instructionCodes.isEmpty || prefix == "GTO" || prefix == "STO" || prefix == "RCL" {
                 // if there is no other current prefix, these three can override each other;
                 // start the program instruction over with the latest one
                 prefix = buttonLabel
-                instructionCodes = [keycodes[buttonLabel]!]
+                instructionCodes = [Program.keycodes[buttonLabel]!]
             } else if (prefix == "f" || prefix == "g") && buttonLabel == "GTO" {
                 // compound prefix
                 prefix += buttonLabel
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else {
                 // instruction complete
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return instruction
             }
         case "CHS":
@@ -188,24 +191,24 @@ class Program: Codable {
             } else if prefix == "f" && (buttonLabel == "7" || buttonLabel == "8" || buttonLabel == "9") {
                 // compound prefix
                 prefix += buttonLabel
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else if prefix == "g" && (buttonLabel == "4" || buttonLabel == "5") {
                 // compound prefix
                 prefix += buttonLabel
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else {
                 // instruction complete
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return instruction
             }
         case "+", "–", "×", "÷":  // minus sign is an "EN DASH"
             if prefix == "STO" || prefix == "RCL" {
                 // compound prefix
                 prefix += buttonLabel
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else {
                 // instruction complete
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return instruction
             }
         case "R↓":
@@ -215,7 +218,7 @@ class Program: Codable {
                 return instruction
             } else {
                 // instruction complete
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return instruction
             }
         case "←":
@@ -226,7 +229,7 @@ class Program: Codable {
             case "g":
                 // CLX
                 // instruction complete
-                instructionCodes.append(keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return instruction
             default:
                 prefix = ""
@@ -234,47 +237,76 @@ class Program: Codable {
             }
         default:
             // instruction complete
-            instructionCodes.append(keycodes[buttonLabel]!)
+            instructionCodes.append(Program.keycodes[buttonLabel]!)
             return instruction
         }
         return nil  // continue adding instructionCodes
     }
 
-    // format
-    // 3 codes: "nnn-cc,cc,cc" (commas get attached to prior digit in DisplayView)
-    // 2 codes: "nnn- cc cc"  ex. g COS
-    // 2 codes: "nnn-  cc c"  ex. STO 1
-    // 1 code:  "nnn-    cc"
-
+    // instruction format:
+    // 3 codes: "nnn-42,22,23" <=> f GTO SIN (commas get attached to prior digit in DisplayView)
+    // 3 codes: "nnn-42, 7, 4" <=> f 7 4
+    // 2 codes: "nnn- 43 24"   <=> g COS
+    // 2 codes: "nnn-  44 1"   <=> STO 1
+    // 1 code:  "nnn-    12"   <=> e^x
     var instruction: String {
         if instructions.isEmpty {
             instructions.append("000-")
             return "000-"
         } else {
             currentLine += 1
-            let lineNumber = currentLine.asThreeDigitString
-            var codes = ""
-            switch instructionCodes.count {
-            case 1:
-                codes = "    " + instructionCodes[0]
-            case 2:
-                if instructionCodes[1].first == " " {
-                    codes = "  " + instructionCodes[0] + instructionCodes[1]
-                } else {
-                    codes = " " + instructionCodes[0] + " " + instructionCodes[1]
-                }
-            case 3:
-                codes = instructionCodes[0] + "," + instructionCodes[1] + "," + instructionCodes[2]
-            default:
-                break
-            }
-            let instruction = "\(lineNumber)-\(codes)"
+            let instruction = "\(currentLine.asThreeDigitString)-\(codeString)"
             instructions.insert(instruction, at: currentLine)
             renumberInstructions()
             instructionCodes.removeAll()  // start new
             prefix = ""
             return instruction
         }
+    }
+    
+    // convert from array of codes to string, with specific spacing
+    // ex. [42, 22, 23] => "42,22,23"
+    //       [42, 7, 4] => "42, 7, 4"
+    //         [43, 24] => " 43 24"
+    //          [44, 1] => "  44 1"
+    var codeString: String {
+        var codes = ""
+        switch instructionCodes.count {
+        case 1:
+            codes = "    " + instructionCodes[0]
+        case 2:
+            if instructionCodes[1].first == " " {
+                // single digit second code (ex. ["12"," 3"])
+                codes = "  " + instructionCodes[0] + instructionCodes[1]
+            } else {
+                // two-digit second code (ex. ["12","34"])
+                codes = " " + instructionCodes[0] + " " + instructionCodes[1]
+            }
+        case 3:
+            codes = instructionCodes[0] + "," + instructionCodes[1] + "," + instructionCodes[2]
+        default:
+            break
+        }
+        return codes
+    }
+    
+    // convert from code string to array of codes
+    // ex. "42,22,23" => [42, 22, 23]
+    //     "42, 7, 4" => [42, 7, 4]
+    //       " 43 24" => [43, 24]
+    //       "  44 1" => [44, 1]
+    func codesFrom(codeString: String) -> [Int] {
+        let delimiter = codeString.contains(",") ? "," : " "
+        let codesArray = codeString.trimmingCharacters(in: .whitespaces).components(separatedBy: delimiter)
+        return codesArray.map { Int($0.trimmingCharacters(in: .whitespaces))! }
+    }
+    
+    // convert from array of codes to array of button labels
+    // ex. [42, 22, 23] => ["f", "GTO", "SIN"]
+    //         [43, 24] => ["g", "COS"]
+    //          [44, 1] => ["STO", "1"]
+    func buttonsFrom(keyCodes: [Int]) -> [String] {
+        keyCodes.map { Program.labels[String(format: "%2d", $0)]! }
     }
 }
 
