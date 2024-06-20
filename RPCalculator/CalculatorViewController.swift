@@ -1220,8 +1220,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             case "GSB":
                 brain.clearAll()
             case "R↓":
-                // CLEAR PRGM pressed
-                program.clearProgram()
+                // CLEAR PRGM pressed (goto line 0 without delete program)
+                program.currentLine = 0
             case "x≷y":
                 // CLEAR REG key pressed (clear storage registers, not stack)
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
