@@ -1419,9 +1419,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         switch prefix {
         case .none:
             switch keyName {
-            case "SST":
-                // single-step program
+            case "SST":  // not programmable
+                // single-step
                 if isProgramMode {
+                    // single-step program
                     displayString = program.forwardStep()
                 } else {
                     // while holding down SST button, display current line of code;
@@ -1437,6 +1438,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             case "R/S":
                 // run/stop [program]
                 if isProgramMode {
+                    // add to program
                     sendToProgram(keyName)
                 } else {
                     // run program
@@ -1463,6 +1465,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             case "R/S":
                 // PSE pressed (pause program)
                 if isProgramMode {
+                    // add to program
                     sendToProgram(keyName)
                 }  // else (no action in run mode)
             default:
@@ -1487,6 +1490,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             case "R/S":
                 // P/R pressed
                 isProgramMode.toggle()
+            case "GSB":
+                // RTN pressed
+                if isProgramMode {
+                    // add to program
+                    sendToProgram(keyName)
+                } else {
+                    // set program to line 0
+                    prepStackForOperation()
+                    program.currentLine = 0
+                }
             default:
                 break
             }
@@ -1550,6 +1563,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     
     // after releasing SST button: 1) execute current line, 2) display results, 3) increment current line (don't show)
     // pws: steps 1 & 2 not yet implemented
+    // note: if user entering digits and program line is not executable, the display is sent to the stack (TBD)
     @objc private func sstButtonReleased(_ button: UIButton) {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
         // 1) execute current program line (TBD)
