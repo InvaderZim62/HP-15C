@@ -42,14 +42,14 @@ class Program: Codable {
     // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
     //       minus sign is an "EN DASH" (U+2013)
 
-    static let keycodes: [String: String] = [  // [button label: key-code]
-         "√x": "11",  "ex": "12", "10x": "13",  "yx": "14", "1/x": "15",   "CHS": "16", "7": " 7", "8": " 8",  "9": " 9", "÷": "10",
-        "SST": "21", "GTO": "22", "SIN": "23", "COS": "24", "TAN": "25",   "EEX": "26", "4": " 4", "5": " 5",  "6": " 6", "×": "20",
-        "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "ENTER": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
-         "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
+    static let keycodes: [String: String] = [  // [button title: key-code]
+         "√x": "11",  "ex": "12", "10x": "13",  "yx": "14", "1/x": "15",           "CHS": "16", "7": " 7", "8": " 8",  "9": " 9", "÷": "10",
+        "SST": "21", "GTO": "22", "SIN": "23", "COS": "24", "TAN": "25",           "EEX": "26", "4": " 4", "5": " 5",  "6": " 6", "×": "20",
+        "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "E\nN\nT\nE\nR": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
+         "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                        "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
 
     // inverse of keycodes dictionary
-    static let labels = Dictionary(uniqueKeysWithValues: keycodes.map({ ($1, $0) }))
+    static let buttonTitles = Dictionary(uniqueKeysWithValues: keycodes.map({ ($1, $0) }))
     
     // MARK: - Codable
 
@@ -73,6 +73,20 @@ class Program: Codable {
     
     var currentInstruction: String {
         instructions[currentLine]
+    }
+    
+    func incrementCurrentLine() {
+        currentLine = (currentLine + 1) % instructions.count
+    }
+    
+    var currentInstructionCodes: [Int] {
+        let instruction = currentInstruction  // "nnn-42,22,23"
+        let codeString = String(instruction.suffix(from: codeStart))  // "42,22,23"
+        return codesFrom(codeString: codeString)  // [42, 22, 23]
+    }
+    
+    var currentInstructionTitles: [String] {
+        return titlesFrom(keyCodes: currentInstructionCodes)  // ["f", "GTO", "SIN"]
     }
 
     func enterProgramMode() {
@@ -127,6 +141,7 @@ class Program: Codable {
     // STO      STO
     // RCL      RCL
     // GTO_CHS  GTO CHS  // compound (two digits)
+    // LBL      f SST
     // FIX      f 7
     // SCI      f 8
     // ENG      f 9
@@ -149,8 +164,8 @@ class Program: Codable {
             // any time "f" or "g" is entered, the program instruction starts over
             prefix = buttonLabel
             instructionCodes = [Program.keycodes[buttonLabel]!]
-        case "GTO", "STO", "RCL":
-            if instructionCodes.isEmpty || prefix == "GTO" || prefix == "STO" || prefix == "RCL" {
+        case "GTO", "STO", "RCL", "SST":
+            if instructionCodes.isEmpty || prefix == "GTO" || prefix == "STO" || prefix == "RCL" || prefix == "LBL" {
                 // if there is no other current prefix, these three can override each other;
                 // start the program instruction over with the latest one
                 prefix = buttonLabel
@@ -159,7 +174,16 @@ class Program: Codable {
                 // compound prefix
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
+            } else if prefix == "f" && buttonLabel == "SST" {
+                prefix += buttonLabel
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else {
+                // instruction complete
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                return instruction
+            }
+        case "√x", "ex", "10x", "yx", "1/x":
+            if prefix == "fSST" {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return instruction
@@ -296,6 +320,7 @@ class Program: Codable {
     //       " 43 24" => [43, 24]
     //       "  44 1" => [44, 1]
     func codesFrom(codeString: String) -> [Int] {
+        guard !codeString.isEmpty else { return [] }
         let delimiter = codeString.contains(",") ? "," : " "
         let codesArray = codeString.trimmingCharacters(in: .whitespaces).components(separatedBy: delimiter)
         return codesArray.map { Int($0.trimmingCharacters(in: .whitespaces))! }
@@ -305,13 +330,30 @@ class Program: Codable {
     // ex. [42, 22, 23] => ["f", "GTO", "SIN"]
     //         [43, 24] => ["g", "COS"]
     //          [44, 1] => ["STO", "1"]
-    func buttonsFrom(keyCodes: [Int]) -> [String] {
-        keyCodes.map { Program.labels[String(format: "%2d", $0)]! }
+    func titlesFrom(keyCodes: [Int]) -> [String] {
+        keyCodes.map { Program.buttonTitles[String(format: "%2d", $0)]! }
+    }
+    
+    func isLabel(codes: [Int]) -> Bool {
+        // label if f-key A-E, or f-LBL A-E
+        (codes.count == 2 && codes[0] == 42 && codes[1] >= 11 && codes[1] <= 15) ||
+        (codes.count == 3 && codes[0] == 42 && codes[1] == 21 && codes[2] >= 11 && codes[2] <= 15)
     }
 }
 
 extension Int {
     var asThreeDigitString: String {
         String(format: "%03d", self)
+    }
+}
+
+extension String {
+    var isInstruction: Bool {
+        if self.count < 4 {
+            return false
+        } else {
+            let ndash = self.index(self.startIndex, offsetBy: 3)
+            return self[ndash] == "-"
+        }
     }
 }

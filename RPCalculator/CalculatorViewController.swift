@@ -49,6 +49,7 @@ import AVFoundation  // needed for AVAudioPlayer
 enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
+    case LBL  // ex. f LBL A (label in program)
     case GTO  // ex. GTO 5 (goto label 5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
     case FIX  // ex. f FIX 4 (format numbers in fixed-point with 4 decimal places)
@@ -279,6 +280,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             defaults.set(userIsEnteringDigits, forKey: "userIsEnteringDigits")
             defaults.set(userIsEnteringExponent, forKey: "userIsEnteringExponent")
             defaults.set(liftStack, forKey: "liftStack")
+            saveProgram()
+        }
+    }
+
+    // save program by itself when displayString is a program instruction, else displayStringNumber fails
+    private func saveProgram() {
+        if !isGettingDefaults {
+            let defaults = UserDefaults.standard
             if let data = try? JSONEncoder().encode(program) {
                 defaults.set(data, forKey: "program")  // note: variables added to program must also be added to Program.init and .encode
             }
@@ -485,7 +494,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     private func sendToProgram(_ keyName: String) {
         if let instruction = program.buildInstructionWith(keyName) {
             displayString = instruction
-            saveDefaults()
+            saveProgram()
         }
     }
     
@@ -1427,6 +1436,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 } else {
                     // while holding down SST button, display current line of code;
                     // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
+                    saveDisplayString = displayString
                     displayString = program.currentInstruction
                     sender.addTarget(self, action: #selector(sstButtonReleased), for: .touchUpInside)
                 }
@@ -1442,7 +1452,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                     sendToProgram(keyName)
                 } else {
                     // run program
-                    // pws: TBD
+                    let titles = program.currentInstructionTitles  // pws: for now, just print one instruction at a time
+                    _ = program.forwardStep()
+                    print(titles)
                 }
             case "GSB":
                 print("GSB")  // pws: TBD
@@ -1456,6 +1468,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 // "A"-"E" pressed (run program at Label A or B...)
                 // pws: not yet implemented
                 isRunMode = true
+            case "SST":
+                // LBL pressed
+                prefix = .LBL
+                if isProgramMode {
+                    // add to program
+                    sendToProgram(keyName)
+                }  // else (no action in run mode)
             case "GTO":
                 // HYP pressed
                 let tempButton = UIButton()
@@ -1566,10 +1585,20 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     // note: if user entering digits and program line is not executable, the display is sent to the stack (TBD)
     @objc private func sstButtonReleased(_ button: UIButton) {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
-        // 1) execute current program line (TBD)
-        // 2) display results (TBD)
-        _ = program.forwardStep()  // 3) increment current program line
-        updateDisplayString()
+        displayString = saveDisplayString
+        if !program.isLabel(codes: program.currentInstructionCodes) {
+            // current instruction is not a non-executable label
+            let titles = program.currentInstructionTitles
+            for title in titles {
+                print(title)
+                let button = buttons.first(where: { $0.currentTitle == title })
+                button?.sendActions(for: .touchDown) // pws: don't run a label (ex. ["f", "√x"])
+            }
+        } else {
+            print(program.currentInstructionTitles)
+        }
+        _ = program.forwardStep()
+//        updateDisplayString()
     }
     
     @objc private func bstButtonReleased(_ button: UIButton) {
