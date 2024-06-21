@@ -95,6 +95,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     var seed = 0  // HP-15C initial random number seed is zero
     var lastRandomNumberGenerated = 0.0
     var isGettingDefaults = false
+    var useSimButton = true  // true: call simulatePressingButton to play click sound, use false while running program instructions
     var gotoLineNumberDigits = [Int]()
     
     var displayStringNumber: Double {
@@ -177,7 +178,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     
     var isRunMode = false {
         didSet {
-            if isRunMode { displayString = " Running" }  // "R" shows as small "r" near top of screen (deconflict with "r" in Error)
+            if isRunMode { displayString = " Running" }  // use "R" to show "r" near top of screen; "r" shows in middle of screen (for "Error")
         }
     }
 
@@ -1469,8 +1470,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 // "A"-"E" pressed (run program at Label A or B...)
                 // pws: not yet implemented
                 isRunMode = true
+                useSimButton = false  // suppress button click sounds
             case "SST":
-                // LBL pressed
+                // LBL presYsed
                 prefix = .LBL
                 if isProgramMode {
                     // add to program
@@ -1552,6 +1554,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     // a click sound and darkens the button text, then creates a temporary target for Touch Up
     // Inside, which gets called when the button is released (calling simulateReleasingButton).
     private func simulatePressingButton(_ button: UIButton) {
+        guard useSimButton else { return }
         clickSoundPlayer?.play()
         buttonCoverViews[button]?.whiteLabel.textColor = .darkGray
         button.addTarget(self, action: #selector(simulateReleasingButton), for: .touchUpInside)
@@ -1597,8 +1600,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             for title in titles {
                 print(title)
                 let button = buttons.first(where: { $0.currentTitle == title })
-                button?.sendActions(for: .touchDown)  // call appropriate button action (calls simulatePressingButton)
-                button?.sendActions(for: .touchUpInside)  // (calls simulateReleasingButton)
+                useSimButton = false  // don't play click sound
+                button?.sendActions(for: .touchDown)
+                useSimButton = true
             }
         }
         _ = program.forwardStep()
