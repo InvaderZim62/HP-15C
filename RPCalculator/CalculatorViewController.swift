@@ -1064,10 +1064,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 //------------------
                 updateDisplayString()
                 return
-            case "√x":
-                // "A" pressed
+            case "√x", "ex", "10x", "yx", "1/x":
+                // label "A" - "E" pressed
                 let tempButton = UIButton()
-                tempButton.setTitle("√x", for: .normal)
+                tempButton.setTitle(keyName, for: .normal)
                 programKeyPressed(tempButton)  // better handled as program key
                 return
             default:
@@ -1294,6 +1294,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         
         if isProgramMode {
             sendToProgram(keyName)
+            // continue processing prefix for use in
         }
 
         switch prefix {
@@ -1419,7 +1420,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     }
 
     // program manipulation keys: SST, GTO, R/S, GSB
-    // sent from operationKeyPressed: f-√x ("A")
+    // sent from operationKeyPressed: f-√x ("A"), and all other labels "A"-"E"
     @IBAction func programKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1428,7 +1429,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         switch prefix {
         case .none:
             switch keyName {
-            case "SST":  // not programmable
+            case "SST":  // non-programmable
                 // single-step
                 if isProgramMode {
                     // single-step program
@@ -1493,11 +1494,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         case .g:
             prefix = nil
             switch keyName {
-            case "SST":
+            case "SST":  // non-programmable
                 // BST pressed (back step program)
                 displayString = program.backStep()
                 if !isProgramMode {
-                    // show previous line until button released, then return to normal display
+                    // show previous line until button released (don't execute), then return to normal display
                     sender.addTarget(self, action: #selector(bstButtonReleased), for: .touchUpInside)
                 }
             case "GTO":
@@ -1580,25 +1581,27 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         }
     }
     
+    // while holding down SST button, display current line of code;
     // after releasing SST button: 1) execute current line, 2) display results, 3) increment current line (don't show)
-    // pws: steps 1 & 2 not yet implemented
-    // note: if user entering digits and program line is not executable, the display is sent to the stack (TBD)
+    // note: if user entering digits and program line is not executable, the display is sent to the stack
     @objc private func sstButtonReleased(_ button: UIButton) {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
         displayString = saveDisplayString
-        if !program.isLabel(codes: program.currentInstructionCodes) {
-            // current instruction is not a non-executable label
+        if program.isLabel(codes: program.currentInstructionCodes) {
+            // non-executable instruction - if user was entering digits, send display to stack
+            prepStackForOperation()
+            print(program.currentInstructionTitles)
+        } else {
+            // executable instruction - run it
             let titles = program.currentInstructionTitles
             for title in titles {
                 print(title)
                 let button = buttons.first(where: { $0.currentTitle == title })
-                button?.sendActions(for: .touchDown) // pws: don't run a label (ex. ["f", "√x"])
+                button?.sendActions(for: .touchDown)  // call appropriate button action (calls simulatePressingButton)
+                button?.sendActions(for: .touchUpInside)  // (calls simulateReleasingButton)
             }
-        } else {
-            print(program.currentInstructionTitles)
         }
         _ = program.forwardStep()
-//        updateDisplayString()
     }
     
     @objc private func bstButtonReleased(_ button: UIButton) {

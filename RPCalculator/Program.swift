@@ -21,6 +21,24 @@
 //    003 is the line number = 3
 //     20 is row 2, col 10   = "x"
 //
+// Goto line number (GTO-CHS-nnn) can be issued in program mode or run mode (non-program mode)...
+//
+// program mode:
+// - programKeyPressed sends "GTO" to prefixKeyPressed
+// - prefixKeyPressed sends "GTO" to buildInstructionWith (and sets prefix = .GTO in CalculatorViewController)
+//   > buildInstructionWith changes prefix to "GTO" (sets instructionCodes = [22])
+// - operationKeyPressed sends "CHS" to buildInstructionWith (and sets prefix = nil in CalculatorViewController)
+//   > buildInstructionWith changes prefix to "GTOCHS" (sets instructionCodes = [], since changing line is non-programmable)
+// - digitKeyPressed sends numbers to buildInstructionWith
+//   > buildInstructionWith accumulates 3 line numbers, then increments program line number
+//
+// run mode:
+// - programKeyPressed sends "GTO" to prefixKeyPressed
+// - prefixKeyPressed changes prefix to .GTO (in CalculatorViewController)
+// - operationKeyPressed sends "CHS" to prefixKeyPressed
+// - prefixKeyPressed changes prefix to .GTO_CHS (in CalculatorViewController)
+// - digitKeyPressed accumulates 3 line numbers, then increments program line number
+//
 
 protocol ProgramDelegate: AnyObject {
     func setError(_ number: Int)
@@ -71,22 +89,8 @@ class Program: Codable {
     
     // MARK: - Start of code
     
-    var currentInstruction: String {
-        instructions[currentLine]
-    }
-    
     func incrementCurrentLine() {
         currentLine = (currentLine + 1) % instructions.count
-    }
-    
-    var currentInstructionCodes: [Int] {
-        let instruction = currentInstruction  // "nnn-42,22,23"
-        let codeString = String(instruction.suffix(from: codeStart))  // "42,22,23"
-        return codesFrom(codeString: codeString)  // [42, 22, 23]
-    }
-    
-    var currentInstructionTitles: [String] {
-        return titlesFrom(keyCodes: currentInstructionCodes)  // ["f", "GTO", "SIN"]
     }
 
     func enterProgramMode() {
@@ -107,7 +111,7 @@ class Program: Codable {
     func forwardStep() -> String {
         prefix = ""
         instructionCodes = []
-        currentLine = (currentLine + 1) % instructions.count
+        currentLine = (currentLine + 1) % instructions.count  // pws: prior to incrementing, if current instruction is RTN [43, 32], go to line 000
         return currentInstruction
     }
     
@@ -119,20 +123,18 @@ class Program: Codable {
         return currentInstruction
     }
     
-    func deleteCurrentInstruction() {
+    private func deleteCurrentInstruction() {
         guard currentLine > 0 else { return }
         instructions.remove(at: currentLine)
         renumberInstructions()
         currentLine -= 1  // leave at prior instruction
     }
     
-    func renumberInstructions() {
+    private func renumberInstructions() {
         for index in 0..<instructions.count {
             instructions[index] = index.asThreeDigitString + "-" + instructions[index].suffix(from: codeStart)
         }
     }
-
-    // MARK: - Start of code
 
     // Prefix   buttonLabel(s)
     // f        f    // basic (single digit)
@@ -158,6 +160,14 @@ class Program: Codable {
     // RCL_MUL  RCL ×
     // RCL_DIV  RCL ÷
 
+    // in program mode, CalculatorViewController sends all button labels directly to buildInstructionWith
+    // (except for "program buttons"); buildInstructionWith accumulates labels in the form of key codes,
+    // until a complete instruction is formed and returned; the complete instruction may have up to two
+    // prefixes; buildInstructionWith returns nil while prefixes are received.
+    
+    // some program buttons manipulate the program (SST, BST, ←, GTO-CHS, ...) and are not added to the
+    // instructions (return nil); others are added to the instructions (R/S, RTN, GTO, ...);
+
     func buildInstructionWith(_ buttonLabel: String) -> String? {
         switch buttonLabel {
         case "f", "g":
@@ -180,13 +190,13 @@ class Program: Codable {
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return instruction
+                return insertedInstruction
             }
         case "√x", "ex", "10x", "yx", "1/x":
             if prefix == "fSST" {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return instruction
+                return insertedInstruction
             }
         case "CHS":
             if prefix == "GTO" {  // non-programmable
@@ -223,7 +233,7 @@ class Program: Codable {
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return instruction
+                return insertedInstruction
             }
         case "+", "–", "×", "÷":  // minus sign is an "EN DASH"
             if prefix == "STO" || prefix == "RCL" {
@@ -233,17 +243,18 @@ class Program: Codable {
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return instruction
+                return insertedInstruction
             }
         case "R↓":
             if prefix == "f" {
-                // CLEAR PRGM
+                // CLEAR PRGM (non-programmable)
+                prefix = ""
                 clearProgram()
-                return instruction
+                return insertedInstruction
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return instruction
+                return insertedInstruction
             }
         case "←":
             switch prefix {
@@ -254,7 +265,7 @@ class Program: Codable {
                 // CLX
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return instruction
+                return insertedInstruction
             default:
                 prefix = ""
                 break  // non-programmable
@@ -262,18 +273,19 @@ class Program: Codable {
         default:
             // instruction complete
             instructionCodes.append(Program.keycodes[buttonLabel]!)
-            return instruction
+            return insertedInstruction
         }
         return nil  // continue adding instructionCodes
     }
 
-    // instruction format:
+    // create and insert instruction
+    // format:
     // 3 codes: "nnn-42,22,23" <=> f GTO SIN (commas get attached to prior digit in DisplayView)
     // 3 codes: "nnn-42, 7, 4" <=> f 7 4
     // 2 codes: "nnn- 43 24"   <=> g COS
     // 2 codes: "nnn-  44 1"   <=> STO 1
     // 1 code:  "nnn-    12"   <=> e^x
-    var instruction: String {
+    var insertedInstruction: String {
         if instructions.isEmpty {
             instructions.append("000-")
             return "000-"
@@ -288,7 +300,60 @@ class Program: Codable {
         }
     }
     
-    // convert from array of codes to string, with specific spacing
+    // MARK: - Utilities
+    
+    var currentInstruction: String {
+        instructions[currentLine]
+    }
+
+    // key-codes in current instruction
+    // ex. [42, 22, 23]
+    var currentInstructionCodes: [Int] {
+        let instruction = currentInstruction  // "nnn-42,22,23"
+        let codeString = String(instruction.suffix(from: codeStart))  // "42,22,23"
+        return codesFrom(codeString: codeString)  // [42, 22, 23]
+    }
+    
+    // button titles for current instruction
+    // ex. ["f", "GTO", "SIN"]
+    var currentInstructionTitles: [String] {
+        return titlesFrom(keyCodes: currentInstructionCodes)
+    }
+    
+    // when running a program, labels are non-executable
+    var isCurrentInstructionALabel: Bool {
+        isLabel(codes: currentInstructionCodes)
+    }
+
+    // a label is contained in a single instruction with these codes:
+    // [42, 11-15]     = "f A-E", or
+    // [42, 21, 11-15] = "f LBL A-E"
+    func isLabel(codes: [Int]) -> Bool {
+        (codes.count == 2 && codes[0] == 42 && codes[1] >= 11 && codes[1] <= 15) ||
+        (codes.count == 3 && codes[0] == 42 && codes[1] == 21 && codes[2] >= 11 && codes[2] <= 15)
+    }
+    
+    // convert from code string to array of codes
+    // ex. "42,22,23" => [42, 22, 23]
+    //     "42, 7, 4" => [42, 7, 4]
+    //       " 43 24" => [43, 24]
+    //       "  44 1" => [44, 1]
+    func codesFrom(codeString: String) -> [Int] {
+        guard !codeString.isEmpty else { return [] }
+        let delimiter = codeString.contains(",") ? "," : " "
+        let codesArray = codeString.trimmingCharacters(in: .whitespaces).components(separatedBy: delimiter)
+        return codesArray.map { Int($0.trimmingCharacters(in: .whitespaces))! }
+    }
+    
+    // convert from array of codes to array of button labels
+    // ex. [42, 22, 23] => ["f", "GTO", "SIN"]
+    //         [43, 24] => ["g", "COS"]
+    //          [44, 1] => ["STO", "1"]
+    func titlesFrom(keyCodes: [Int]) -> [String] {
+        keyCodes.map { Program.buttonTitles[String(format: "%2d", $0)]! }
+    }
+
+    // convert from array of codes to code string
     // ex. [42, 22, 23] => "42,22,23"
     //       [42, 7, 4] => "42, 7, 4"
     //         [43, 24] => " 43 24"
@@ -312,32 +377,6 @@ class Program: Codable {
             break
         }
         return codes
-    }
-    
-    // convert from code string to array of codes
-    // ex. "42,22,23" => [42, 22, 23]
-    //     "42, 7, 4" => [42, 7, 4]
-    //       " 43 24" => [43, 24]
-    //       "  44 1" => [44, 1]
-    func codesFrom(codeString: String) -> [Int] {
-        guard !codeString.isEmpty else { return [] }
-        let delimiter = codeString.contains(",") ? "," : " "
-        let codesArray = codeString.trimmingCharacters(in: .whitespaces).components(separatedBy: delimiter)
-        return codesArray.map { Int($0.trimmingCharacters(in: .whitespaces))! }
-    }
-    
-    // convert from array of codes to array of button labels
-    // ex. [42, 22, 23] => ["f", "GTO", "SIN"]
-    //         [43, 24] => ["g", "COS"]
-    //          [44, 1] => ["STO", "1"]
-    func titlesFrom(keyCodes: [Int]) -> [String] {
-        keyCodes.map { Program.buttonTitles[String(format: "%2d", $0)]! }
-    }
-    
-    func isLabel(codes: [Int]) -> Bool {
-        // label if f-key A-E, or f-LBL A-E
-        (codes.count == 2 && codes[0] == 42 && codes[1] >= 11 && codes[1] <= 15) ||
-        (codes.count == 3 && codes[0] == 42 && codes[1] == 21 && codes[2] >= 11 && codes[2] <= 15)
     }
 }
 
