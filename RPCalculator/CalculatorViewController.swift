@@ -46,6 +46,10 @@
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
 
+struct Pause {
+    static let time = 1.2
+}
+
 enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
@@ -499,6 +503,61 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         }
     }
     
+    private func runCurrentInstruction() {
+        if program.isLabel(codes: program.currentInstructionCodes) {
+            // non-executable instruction - if user was entering digits, send display to stack
+            prepStackForOperation()
+        } else {
+            // executable instruction - run it
+            let titles = program.currentInstructionTitles  // ex. ["f", "GTO", "SIN"]
+            for title in titles {
+                let button = buttons.first(where: { $0.currentTitle == title })
+                useSimButton = false  // don't play click sound
+                button?.sendActions(for: .touchDown)
+                useSimButton = true
+            }
+        }
+    }
+    
+    private func runProgramFrom(label: String) {
+        if program.gotoLabel(label) {
+            runProgramFromCurrentLine()
+        } else {
+            setError(4)
+        }
+    }
+    
+    private func runProgramFromCurrentLine() {
+        // run instructions from current line, until one of the following is found:
+        // - last instruction (go to line 0 and stop)
+        // - R/S instruction found (go to next line and stop)
+        // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
+        // - ignore any labels, and continue
+        while program.currentLineNumber > 0 {
+            if program.isCurrentInstructionARunStop {
+                // done running
+                _ = program.forwardStep()
+                break
+            } else if program.isCurrentInstructionAPause {
+                // pause and continue, recursively
+                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
+                    // show "running" while paused
+                    isRunMode = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
+                        _ = program.forwardStep()
+                        runProgramFromCurrentLine()
+                    }
+                }
+                return
+            } else {
+                // run instruction
+                runCurrentInstruction()
+                _ = program.forwardStep()
+            }
+        }
+        isRunMode = false
+    }
+
     // MARK: - Button actions
     
     // Note: It's somewhat arbitrary which action each button is assigned to (digitKeyPressed, operationKeyPressed,
@@ -659,7 +718,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                         prepStackForOperation()
                         setError(4)
                     } else {
-                        program.currentLine = gotoLineNumber
+                        program.currentLineNumber = gotoLineNumber
                     }
                 }
             default:
@@ -1122,7 +1181,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         if restoreFromError() { return }
         
         if isProgramMode {
-            sendToProgram("ENTER")
+            sendToProgram("E\nN\nT\nE\nR")  // ENTER (vertical)
             return
         }
 
@@ -1231,7 +1290,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 brain.clearAll()
             case "R↓":
                 // CLEAR PRGM pressed (goto line 0 without delete program)
-                program.currentLine = 0
+                program.currentLineNumber = 0
             case "x≷y":
                 // CLEAR REG key pressed (clear storage registers, not stack)
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
@@ -1453,10 +1512,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                     // add to program
                     sendToProgram(keyName)
                 } else {
-                    // run program
-                    let titles = program.currentInstructionTitles  // pws: for now, just print one instruction at a time
-                    _ = program.forwardStep()
-                    print(titles)
+                    // run program from current line
+                    isRunMode = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                        if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
+                        runProgramFromCurrentLine()
+                    }
                 }
             case "GSB":
                 print("GSB")  // pws: TBD
@@ -1467,12 +1528,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             prefix = nil
             switch keyName {
             case "√x", "ex", "10x", "yx", "1/x":
-                // "A"-"E" pressed (run program at Label A or B...)
-                // pws: not yet implemented
+                // f-"A", f-"B",... pressed (run program at Label A, B,...)
                 isRunMode = true
-                useSimButton = false  // suppress button click sounds
+                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                    runProgramFrom(label: keyName)
+                }
             case "SST":
-                // LBL presYsed
+                // LBL pressed
                 prefix = .LBL
                 if isProgramMode {
                     // add to program
@@ -1520,7 +1582,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 } else {
                     // set program to line 0
                     prepStackForOperation()
-                    program.currentLine = 0
+                    program.currentLineNumber = 0
                 }
             default:
                 break
@@ -1569,7 +1631,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     }
     
     @objc private func iButtonReleased(_ button: UIButton) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) {
             button.removeTarget(nil, action: nil, for: .touchUpInside)
             self.brain.swapRealImag()
             self.updateDisplayString()
@@ -1577,7 +1639,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     }
 
     @objc private func clearPrefixButtonReleased(_ button: UIButton) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) {
             button.removeTarget(nil, action: nil, for: .touchUpInside)
             self.displayView.showCommas = true
             self.updateDisplayString()
@@ -1590,21 +1652,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     @objc private func sstButtonReleased(_ button: UIButton) {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
         displayString = saveDisplayString
-        if program.isLabel(codes: program.currentInstructionCodes) {
-            // non-executable instruction - if user was entering digits, send display to stack
-            prepStackForOperation()
-            print(program.currentInstructionTitles)
-        } else {
-            // executable instruction - run it
-            let titles = program.currentInstructionTitles
-            for title in titles {
-                print(title)
-                let button = buttons.first(where: { $0.currentTitle == title })
-                useSimButton = false  // don't play click sound
-                button?.sendActions(for: .touchDown)
-                useSimButton = true
-            }
-        }
+        runCurrentInstruction()
         _ = program.forwardStep()
     }
     

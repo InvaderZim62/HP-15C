@@ -51,7 +51,7 @@ class Program: Codable {
     weak var delegate: ProgramDelegate?
     
     var instructions = [String]()
-    var currentLine = 0
+    var currentLineNumber = 0
     var prefix = ""
     var instructionCodes = [String]()  // used for building up compound instructions
     var gotoLineNumberDigits = [Int]()
@@ -78,25 +78,25 @@ class Program: Codable {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.instructions = try container.decode([String].self, forKey: .instructions)
-        self.currentLine = try container.decode(Int.self, forKey: .currentLine)
+        self.currentLineNumber = try container.decode(Int.self, forKey: .currentLine)
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.instructions, forKey: .instructions)
-        try container.encode(self.currentLine, forKey: .currentLine)
+        try container.encode(self.currentLineNumber, forKey: .currentLine)
     }
     
     // MARK: - Start of code
     
     func incrementCurrentLine() {
-        currentLine = (currentLine + 1) % instructions.count
+        currentLineNumber = (currentLineNumber + 1) % instructions.count
     }
 
     func enterProgramMode() {
         if instructions.count <= 1 {
             instructions = ["000-"]
-            currentLine = 0
+            currentLineNumber = 0
         }
         prefix = ""
         instructionCodes = []
@@ -105,34 +105,49 @@ class Program: Codable {
     func clearProgram() {
         instructions = []
         instructionCodes = []
-        currentLine = 0
+        currentLineNumber = 0
     }
     
     func forwardStep() -> String {
         prefix = ""
         instructionCodes = []
-        currentLine = (currentLine + 1) % instructions.count  // pws: prior to incrementing, if current instruction is RTN [43, 32], go to line 000
+        currentLineNumber = (currentLineNumber + 1) % instructions.count  // pws: prior to incrementing, if current instruction is RTN [43, 32], go to line 000
         return currentInstruction
     }
     
     func backStep() -> String {
         prefix = ""
         instructionCodes = []
-        currentLine = (currentLine - 1) % instructions.count
-        if currentLine < 0 { currentLine += instructions.count }
+        currentLineNumber = (currentLineNumber - 1) % instructions.count
+        if currentLineNumber < 0 { currentLineNumber += instructions.count }
         return currentInstruction
     }
     
+    // search forward through program, until label found; return false, if not found;
+    // leave program at line with label, or original location, if label not found
+    func gotoLabel(_ label: String) -> Bool {
+        var labelFound = false
+        let labelCodeString = "42,21,\(Program.keycodes[label]!)"  // ex. "42,21,11" for Label A
+        for _ in 0..<instructions.count {
+            if currentInstructionCodeString == labelCodeString {
+                labelFound = true
+                break
+            }
+            _ = forwardStep()
+        }
+        return labelFound
+    }
+    
     private func deleteCurrentInstruction() {
-        guard currentLine > 0 else { return }
-        instructions.remove(at: currentLine)
+        guard currentLineNumber > 0 else { return }
+        instructions.remove(at: currentLineNumber)
         renumberInstructions()
-        currentLine -= 1  // leave at prior instruction
+        currentLineNumber -= 1  // leave at prior instruction
     }
     
     private func renumberInstructions() {
         for index in 0..<instructions.count {
-            instructions[index] = index.asThreeDigitString + "-" + instructions[index].suffix(from: codeStart)
+            instructions[index] = index.asThreeDigitString + "-" + codeStringFromInstruction(instructions[index])
         }
     }
 
@@ -218,7 +233,7 @@ class Program: Codable {
                         delegate?.setError(4)  // have CalculatorViewController process the error
                     } else {
                         // line number within program
-                        currentLine = gotoLineNumber
+                        currentLineNumber = gotoLineNumber
                         return currentInstruction
                     }
                 }
@@ -290,9 +305,9 @@ class Program: Codable {
             instructions.append("000-")
             return "000-"
         } else {
-            currentLine += 1
-            let instruction = "\(currentLine.asThreeDigitString)-\(codeString)"
-            instructions.insert(instruction, at: currentLine)
+            currentLineNumber += 1
+            let instruction = "\(currentLineNumber.asThreeDigitString)-\(codeString)"
+            instructions.insert(instruction, at: currentLineNumber)
             renumberInstructions()
             instructionCodes.removeAll()  // start new
             prefix = ""
@@ -303,15 +318,24 @@ class Program: Codable {
     // MARK: - Utilities
     
     var currentInstruction: String {
-        instructions[currentLine]
+        instructions[currentLineNumber]
+    }
+    
+    // "001-42,22,23" => "42,22,23"
+    func codeStringFromInstruction(_ instruction: String) -> String {
+        String(instruction.suffix(from: codeStart))
+    }
+    
+    // code string from current instruction
+    // ex. "42,"22",23"
+    var currentInstructionCodeString: String {
+        codeStringFromInstruction(currentInstruction)
     }
 
     // key-codes in current instruction
     // ex. [42, 22, 23]
     var currentInstructionCodes: [Int] {
-        let instruction = currentInstruction  // "nnn-42,22,23"
-        let codeString = String(instruction.suffix(from: codeStart))  // "42,22,23"
-        return codesFrom(codeString: codeString)  // [42, 22, 23]
+        codesFrom(codeString: currentInstructionCodeString)
     }
     
     // button titles for current instruction
@@ -332,6 +356,27 @@ class Program: Codable {
         (codes.count == 2 && codes[0] == 42 && codes[1] >= 11 && codes[1] <= 15) ||
         (codes.count == 3 && codes[0] == 42 && codes[1] == 21 && codes[2] >= 11 && codes[2] <= 15)
     }
+
+    // stop running when R/S found
+    var isCurrentInstructionARunStop: Bool {
+        isRunStop(codes: currentInstructionCodes)
+    }
+    
+    func isRunStop(codes: [Int]) -> Bool {
+        codes == [31]
+    }
+    
+    var isCurrentInstructionAPause: Bool {
+        isPause(codes: currentInstructionCodes)
+    }
+    
+    func isPause(codes: [Int]) -> Bool {
+        codes == [42, 31]
+    }
+
+//    var isLastLine: Bool {
+//        currentLineNumber == instructions.count - 1
+//    }
     
     // convert from code string to array of codes
     // ex. "42,22,23" => [42, 22, 23]
