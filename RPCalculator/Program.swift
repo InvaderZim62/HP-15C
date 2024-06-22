@@ -208,11 +208,11 @@ class Program: Codable {
                 return insertedInstruction
             }
         case "√x", "ex", "10x", "yx", "1/x":
-            if prefix == "fSST" {
+//            if prefix == "fSST" {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return insertedInstruction
-            }
+//            }
         case "CHS":
             if prefix == "GTO" {  // non-programmable
                 // compound prefix
@@ -365,7 +365,16 @@ class Program: Codable {
     func isRunStop(codes: [Int]) -> Bool {
         codes == [31]
     }
+
+    // stop running and goto line 0 when RTN found
+    var isCurrentInstructionAReturn: Bool {
+        isReturn(codes: currentInstructionCodes)
+    }
     
+    func isReturn(codes: [Int]) -> Bool {
+        codes == [43, 32]
+    }
+
     var isCurrentInstructionAPause: Bool {
         isPause(codes: currentInstructionCodes)
     }

@@ -182,7 +182,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     
     var isRunMode = false {
         didSet {
-            if isRunMode { displayString = " Running" }  // use "R" to show "r" near top of screen; "r" shows in middle of screen (for "Error")
+            if isRunMode { displayView.displayString = " Running" }  // send directly to displayView, else displayStringNumber fails
         }
     }
 
@@ -504,7 +504,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     }
     
     private func runCurrentInstruction() {
-        if program.isLabel(codes: program.currentInstructionCodes) {
+        if program.isCurrentInstructionALabel {
             // non-executable instruction - if user was entering digits, send display to stack
             prepStackForOperation()
         } else {
@@ -535,14 +535,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         // - ignore any labels, and continue
         while program.currentLineNumber > 0 {
             if program.isCurrentInstructionARunStop {
-                // done running
+                // stop running - increment line number
                 _ = program.forwardStep()
-                break
+                break  // exit while
+            } else if program.isCurrentInstructionAReturn {
+                // stop running - goto line 0
+                program.currentLineNumber = 0
+                break  // exit while
             } else if program.isCurrentInstructionAPause {
                 // pause and continue, recursively
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
-                    // show "running" while paused
-                    isRunMode = true
+                    isRunMode = true  // show "running" when continuing after pause
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                         _ = program.forwardStep()
                         runProgramFromCurrentLine()
@@ -1511,7 +1514,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 if isProgramMode {
                     // add to program
                     sendToProgram(keyName)
-                } else {
+                } else if !isRunMode {
                     // run program from current line
                     isRunMode = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
@@ -1528,7 +1531,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             prefix = nil
             switch keyName {
             case "√x", "ex", "10x", "yx", "1/x":
-                // f-"A", f-"B",... pressed (run program at Label A, B,...)
+                // A - E pressed - run program from label A - E
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                     runProgramFrom(label: keyName)

@@ -181,6 +181,7 @@ class CalculatorBrain: Codable {
     
     func clearStorageRegisters() {
         storageRegisters.removeAll()
+        printMemory()
     }
     
     func clearRealStack() {
@@ -473,7 +474,7 @@ class CalculatorBrain: Codable {
             print(String(format: "   %@:  %@  % 8f", labels[index], realString, imagStack[index]))
         }
         print(String(format: "LSTx:  % 8f", lastXRegister))
-        print(String(format: " RCL 0: %8f  1: %8f  2: %8f  3: %8f", storageRegisters["0"] ?? 0, storageRegisters["1"] ?? 0, storageRegisters["2"] ?? 0, storageRegisters["3"] ?? 0))
+        print(String(format: " RCL 0: %8f  1: %8f  2: %8f  3: %8f  4: %8f", storageRegisters["0"] ?? 0, storageRegisters["1"] ?? 0, storageRegisters["2"] ?? 0, storageRegisters["3"] ?? 0, storageRegisters["4"] ?? 0))
         print("---------------------------------------------------------")
     }
 }
