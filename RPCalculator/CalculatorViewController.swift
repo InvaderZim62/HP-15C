@@ -537,11 +537,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             if program.isCurrentInstructionARunStop {
                 // stop running - increment line number
                 _ = program.forwardStep()
-                break  // exit while
+                break  // exit while loop
             } else if program.isCurrentInstructionAReturn {
                 // stop running - goto line 0
                 program.currentLineNumber = 0
-                break  // exit while
+                break  // exit while loop
             } else if program.isCurrentInstructionAPause {
                 // pause and continue, recursively
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
@@ -551,11 +551,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                         runProgramFromCurrentLine()
                     }
                 }
-                return
+                return  // stop and wait for pause to restart program
             } else {
                 // run instruction
+                //---------------------
                 runCurrentInstruction()
-                _ = program.forwardStep()
+                //---------------------
+                if brain.error == .none {
+                    _ = program.forwardStep()
+                } else {
+                    break  // stop for errors
+                }
             }
         }
         isRunMode = false
@@ -701,6 +707,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             case ".":
                 print("GTO .")  // pws: goto label starting with "."?
             case "EEX":
+                // EEX pressed - clear GTO and perform EEX
                 prefix = nil
                 let tempButton = UIButton()
                 tempButton.setTitle("EEX", for: .normal)
