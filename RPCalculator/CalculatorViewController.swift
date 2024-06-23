@@ -41,6 +41,7 @@
 //  - p61 implement underflow (displays 0.0)
 //  - backspace key doesn't restore display after ERROR
 //  - HP-15C resets prefix (f, g) and program mode during power cycle
+//  - stop program if any key pressed
 //
 
 import UIKit
@@ -513,7 +514,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             for title in titles {
                 let button = buttons.first(where: { $0.currentTitle == title })
                 useSimButton = false  // don't play click sound
+                //----------------------------------
                 button?.sendActions(for: .touchDown)
+                //----------------------------------
                 useSimButton = true
             }
         }

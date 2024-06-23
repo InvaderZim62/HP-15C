@@ -208,11 +208,9 @@ class Program: Codable {
                 return insertedInstruction
             }
         case "√x", "ex", "10x", "yx", "1/x":
-//            if prefix == "fSST" {
-                // instruction complete
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return insertedInstruction
-//            }
+            // instruction complete
+            instructionCodes.append(Program.keycodes[buttonLabel]!)
+            return insertedInstruction
         case "CHS":
             if prefix == "GTO" {  // non-programmable
                 // compound prefix
@@ -260,6 +258,15 @@ class Program: Codable {
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return insertedInstruction
             }
+        case "COS":
+            if prefix == "f" {
+                // (i) (non-programmable)
+                prefix = ""
+            } else {
+                // instruction complete
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                return insertedInstruction
+            }
         case "R↓":
             if prefix == "f" {
                 // CLEAR PRGM (non-programmable)
@@ -273,7 +280,9 @@ class Program: Codable {
             }
         case "←":
             switch prefix {
-            case "":  // non-programmable
+            case "":
+                // ←
+                // delete instruction (non-programmable)
                 deleteCurrentInstruction()
                 return currentInstruction
             case "g":
@@ -282,8 +291,8 @@ class Program: Codable {
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return insertedInstruction
             default:
+                // ex. PREFIX (non-programmable)
                 prefix = ""
-                break  // non-programmable
             }
         default:
             // instruction complete
