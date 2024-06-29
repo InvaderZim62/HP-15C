@@ -42,6 +42,7 @@
 //  - backspace key doesn't restore display after ERROR
 //  - HP-15C resets prefix (f, g) and program mode during power cycle
 //  - stop program if any key pressed
+//  - p90 implement program branching and control
 //
 
 import UIKit
@@ -57,6 +58,7 @@ enum Prefix: String {
     case LBL  // ex. f LBL A (label in program)
     case GTO  // ex. GTO 5 (goto label 5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
+    case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
     case FIX  // ex. f FIX 4 (format numbers in fixed-point with 4 decimal places)
     case SCI
     case ENG
@@ -504,6 +506,18 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         }
     }
     
+    private func solveEquationFrom(label: String){
+        // Assumed user entered estimate B and typed estimate A into display, before pressing SOLVE
+        // 1) store estimates A and B (separate from registers)
+        // 2) fill all registers with A, run program, store results f(A)
+        // loop:
+        //   3) fill all registers with B, run program, store results f(B)
+        //   4) compute C using Solve routine with A, B, f(A), f(B)
+        //   5) if root found, store A, B, and C in X, Y, and Z registers and stop
+        //   6) if not, store B, C, and f(B) in place of A, B, and f(A) and repeat loop
+        
+    }
+
     private func runCurrentInstruction() {
         if program.isCurrentInstructionALabel {
             // non-executable instruction - if user was entering digits, send display to stack
@@ -1143,6 +1157,23 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 tempButton.setTitle(keyName, for: .normal)
                 programKeyPressed(tempButton)  // better handled as program key
                 return
+            case "÷":
+                // SOLVE pressed
+                let tempButton = UIButton()
+                tempButton.setTitle("÷", for: .normal)
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+                return
+            default:
+                break
+            }
+        case .SOLVE:
+            switch keyName {
+            case "√x", "ex", "10x", "yx", "1/x":
+                // label "A" - "E" pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)  // better handled as program key
+                return
             default:
                 break
             }
@@ -1359,7 +1390,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
     // prefix keys: f, g, STO, RCL
     // prefix sent from programKeyPressed: GTO
-    // prefix sent from operationKeyPressed: GTO_CHS
+    // prefix sent from operationKeyPressed: CHS (for GTO-CHS),
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1406,6 +1437,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 } else {
                     prefix = .HYP
                 }
+            case "÷":
+                // "SOLVE" pressed
+                prefix = .SOLVE
             default:
                 break
             }
@@ -1493,7 +1527,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     }
 
     // program manipulation keys: SST, GTO, R/S, GSB
-    // sent from operationKeyPressed: f-√x ("A"), and all other labels "A"-"E"
+    // sent from operationKeyPressed: √x, ex, 10x, yx, 1/x (ex. f-√x for label A, or f-SOLVE-√x for solve label A)
     @IBAction func programKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1600,7 +1634,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             default:
                 break
             }
-            // there may be some odd combinations of program keys that do something or cause an error
+        case .SOLVE:
+            switch keyName {
+            case "√x", "ex", "10x", "yx", "1/x":
+                // A - E pressed - solve equation at label A - E
+                isRunMode = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                    solveEquationFrom(label: keyName)
+                }
+            default:
+                break
+            }
         default:
             break
         }

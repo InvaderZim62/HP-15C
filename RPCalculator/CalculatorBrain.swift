@@ -88,7 +88,7 @@ class CalculatorBrain: Codable {
         }
     }
 
-    private var realStack = [Double](repeating: 0.0, count: Constants.stackSize) {
+    private var realStack = [Double](repeating: 0.0, count: Constants.stackSize) {  // T, Z, Y, X
         didSet {
             // truncate stack to last 4 elements, then pad front with repeat of 0th element if size < 4
             realStack = realStack.suffix(Constants.stackSize)
@@ -96,7 +96,7 @@ class CalculatorBrain: Codable {
         }
     }
 
-    private var imagStack = [Double](repeating: 0.0, count: Constants.stackSize) {
+    private var imagStack = [Double](repeating: 0.0, count: Constants.stackSize) {  // T, Z, Y, X
         didSet {
             // truncate stack to last 4 elements, then pad front with repeat of 0th element if size < 4
             imagStack = imagStack.suffix(Constants.stackSize)
@@ -456,7 +456,7 @@ class CalculatorBrain: Codable {
             realStack = saveStack
             error = .code(0)  // reset in CalculatorViewController.restoreFromError
         } else if result.mag > Constants.maxValue {
-            error = result.real > 0 ? .overflow : .underflow  // pws wrong: underflow isn't negative overflow, it's mag < smallest allowable value
+            error = result.real > 0 ? .overflow : .underflow  // pws: underflow should be a number less than 1E-99 (not neg overflow)
         } else {
             if secondResult != nil {
                 pushOperand(secondResult!)
