@@ -601,10 +601,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 // run solve loop recursively, until root found
                 runSolveLoop(label: label) { [unowned self] in
                     // store A, B, and G in X, Y, and Z registers and stop
-                    brain.pushOperand(gamma)
+                    brain.pushOperand(falpha)
                     brain.pushOperand(beta)
                     brain.pushOperand(alpha)
                     updateDisplayString()
+                    brain.printMemory()
                 }
             }
         } else {
@@ -1438,10 +1439,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         prefix = nil
     }
 
-    // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), or .HYP1 (for g-"GTO")
+    // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), .HYP1 (for g-"GTO"),...
     // prefix keys: f, g, STO, RCL
     // prefix sent from programKeyPressed: GTO
-    // prefix sent from operationKeyPressed: CHS (for GTO-CHS),
+    // prefix sent from operationKeyPressed: CHS (for GTO-CHS), or ÷ (for f-"÷")
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1686,6 +1687,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 break
             }
         case .SOLVE:
+            prefix = nil
             switch keyName {
             case "√x", "ex", "10x", "yx", "1/x":
                 // A - E pressed - solve equation at label A - E
