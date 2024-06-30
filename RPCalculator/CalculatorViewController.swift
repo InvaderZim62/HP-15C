@@ -105,6 +105,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     var useSimButton = true  // true: call simulatePressingButton to play click sound, use false while running program instructions
     var gotoLineNumberDigits = [Int]()
     
+    // SOLVE vars
+    var alpha = 0.0
+    var beta = 0.0
+    var falpha = 0.0
+    var fbeta = 0.0
+    var gamma = 0.0
+    
+    var isRootFound: Bool {
+        abs(falpha) < 1E-9
+    }
+
     var displayStringNumber: Double {
         if userIsEnteringExponent {
             // convert "1.2345    01" to "1.2345e+01", before trying to convert to number
@@ -506,45 +517,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         }
     }
     
-    private func solveEquationFrom(label: String){
-        // Assumed user entered estimate B and typed estimate A into display, before pressing SOLVE
-        // 1) store estimates A and B (separate from registers)
-        // 2) fill all registers with A, run program, store results f(A)
-        // loop:
-        //   3) fill all registers with B, run program, store results f(B)
-        //   4) compute C using Solve routine with A, B, f(A), f(B)
-        //   5) if root found, store A, B, and C in X, Y, and Z registers and stop
-        //   6) if not, store B, C, and f(B) in place of A, B, and f(A) and repeat loop
-        
-    }
-
-    private func runCurrentInstruction() {
-        if program.isCurrentInstructionALabel {
-            // non-executable instruction - if user was entering digits, send display to stack
-            prepStackForOperation()
-        } else {
-            // executable instruction - run it
-            let titles = program.currentInstructionTitles  // ex. ["f", "GTO", "SIN"]
-            for title in titles {
-                let button = buttons.first(where: { $0.currentTitle == title })
-                useSimButton = false  // don't play click sound
-                //----------------------------------
-                button?.sendActions(for: .touchDown)
-                //----------------------------------
-                useSimButton = true
-            }
-        }
-    }
+    // MARK: - Run Program
     
-    private func runProgramFrom(label: String) {
+    private func runProgramFrom(label: String, completion: @escaping () -> Void) {
         if program.gotoLabel(label) {
-            runProgramFromCurrentLine()
+            runProgramFromCurrentLine(completion: completion)
         } else {
-            setError(4)
+            setError(4)  // label not found
         }
     }
     
-    private func runProgramFromCurrentLine() {
+    private func runProgramFromCurrentLine(completion: @escaping () -> Void) {
         // run instructions from current line, until one of the following is found:
         // - last instruction (go to line 0 and stop)
         // - R/S instruction found (go to next line and stop)
@@ -565,7 +548,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                     isRunMode = true  // show "running" when continuing after pause
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                         _ = program.forwardStep()
-                        runProgramFromCurrentLine()
+                        runProgramFromCurrentLine(completion: completion)
                     }
                 }
                 return  // stop and wait for pause to restart program
@@ -577,11 +560,79 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 if brain.error == .none {
                     _ = program.forwardStep()
                 } else {
-                    break  // stop for errors
+                    isRunMode = false
+                    return  // stop for errors
                 }
             }
         }
         isRunMode = false
+        completion()
+    }
+
+    private func runCurrentInstruction() {
+        if program.isCurrentInstructionALabel {
+            // non-executable instruction - if user was entering digits, send display to stack
+            prepStackForOperation()
+        } else {
+            // executable instruction - run it
+            let titles = program.currentInstructionTitles  // ex. ["f", "GTO", "SIN"]
+            for title in titles {
+                let button = buttons.first(where: { $0.currentTitle == title })
+                useSimButton = false  // don't play click sound
+                //----------------------------------
+                button?.sendActions(for: .touchDown)
+                //----------------------------------
+                useSimButton = true
+            }
+        }
+    }
+    
+    // MARK: - Solve
+    
+    private func findRootOfEquationAt(label: String) {
+        // assumed user entered estimate beta and typed estimate alpha into display, before pressing SOLVE
+        if program.gotoLabel(label) {
+            alpha = displayStringNumber
+            beta = brain.xRegister!
+            // fill all registers with alpha, run program, store results f(alpha)
+            brain.fillRegistersWith(alpha)
+            runProgramFrom(label: label) { [unowned self] in  // results left in display
+                falpha = displayStringNumber
+                // run solve loop recursively, until root found
+                runSolveLoop(label: label) { [unowned self] in
+                    // store A, B, and G in X, Y, and Z registers and stop
+                    brain.pushOperand(gamma)
+                    brain.pushOperand(beta)
+                    brain.pushOperand(alpha)
+                    updateDisplayString()
+                }
+            }
+        } else {
+            setError(4)  // label not found
+        }
+    }
+    
+    private func runSolveLoop(label: String, completion: @escaping () -> Void) {
+        if isRootFound {
+            completion()
+        } else {
+            // fill all registers with beta, run program, store results f(beta)
+            brain.fillRegistersWith(beta)
+            runProgramFrom(label: label) { [unowned self] in  // results left in display
+                fbeta = displayStringNumber
+                computeGamma()
+                // store beta, gamma, and f(beta) in place of alpha, beta, and f(alpha), and call recursively
+                alpha = beta
+                beta = gamma
+                falpha = fbeta
+                runSolveLoop(label: label, completion: completion)
+            }
+        }
+    }
+
+    // compute G using Solve routine with A, B, f(A), f(B)
+    func computeGamma() {
+        gamma = beta - (beta - alpha) * fbeta / (fbeta - falpha)  // pws: eventually, including secant bending
     }
 
     // MARK: - Button actions
@@ -1563,7 +1614,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                     isRunMode = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                         if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
-                        runProgramFromCurrentLine()
+                        runProgramFromCurrentLine() { }
                     }
                 }
             case "GSB":
@@ -1578,7 +1629,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 // A - E pressed - run program from label A - E
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                    runProgramFrom(label: keyName)
+                    runProgramFrom(label: keyName) { }
                 }
             case "SST":
                 // LBL pressed
@@ -1640,7 +1691,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 // A - E pressed - solve equation at label A - E
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                    solveEquationFrom(label: keyName)
+                    findRootOfEquationAt(label: keyName)
                 }
             default:
                 break

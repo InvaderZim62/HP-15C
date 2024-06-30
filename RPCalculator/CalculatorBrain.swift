@@ -165,6 +165,13 @@ class CalculatorBrain: Codable {
         printMemory()
     }
     
+    func fillRegistersWith(_ operand: Double) {
+        pushOperand(operand)
+        pushOperand(operand)
+        pushOperand(operand)
+        pushOperand(operand)
+    }
+    
     func swapRealImag() {
         let temp = imagStack.last
         xRegisterImag = xRegister
