@@ -17,6 +17,7 @@ struct Constants {
     static let D2R = Double.pi / 180
     static let G2R = Double.pi / 200  // gradians to radians
     static let maxValue = 9.999999999e99  // more cause overflow on HP-15C
+    static let maxSolveIterations = 100  // during Solve, show Error 8, if root not found after max iterations
 }
 
 enum Error: Equatable, Codable {
@@ -33,6 +34,7 @@ class CalculatorBrain: Codable {
     var lastXRegister = 0.0
     var error = Error.none
     var isConvertingPolar = false
+    var isSolving = false  // use to disable printMemory while solving for root
 
     var xRegister: Double? {
         get {
@@ -474,6 +476,7 @@ class CalculatorBrain: Codable {
     }
     
     func printMemory() {
+        guard !isSolving else { return }
         print("          Real         Imag")
         let labels = ["T", "Z", "Y", "X"]
         for index in 0..<realStack.count {

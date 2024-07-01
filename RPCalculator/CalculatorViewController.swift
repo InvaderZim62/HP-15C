@@ -106,6 +106,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     var gotoLineNumberDigits = [Int]()
     
     // SOLVE vars
+    var solveLoopCount = 0
     var alpha = 0.0
     var alphaPast = 0.0
     var beta = 0.0
@@ -116,6 +117,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     var leastNegFx = 0.0
     var xForLeastPosFx = 0.0
     var xForLeastNegFx = 0.0
+    let plotMax = 30  // half width of error plot in spaces
+    let errorScale = 10.0  // scale on residual f(x) for plotting
 
     var isRootFound: Bool {
         abs(falpha) < 1E-9
@@ -597,6 +600,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     private func findRootOfEquationAt(label: String) {
         // assumed user entered estimate beta and typed estimate alpha into display, before pressing SOLVE
         if program.gotoLabel(label) {
+            print(String(format: "\nSolving error (limited between +/-%.1f)", abs(Double(plotMax) / errorScale)))
+            brain.isSolving = true  // suppress printMemory
             alpha = displayStringNumber
             alphaPast = alpha
             beta = brain.xRegister!
@@ -605,6 +610,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
             runProgramFrom(label: label) { [unowned self] in  // results left in display
                 falpha = displayStringNumber
                 initializeBrackets()
+                solveLoopCount = 0
                 // run solve loop recursively, until root found
                 runSolveLoop(label: label) { [unowned self] in
                     // store A, B, and G in X, Y, and Z registers and stop
@@ -612,6 +618,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                     brain.pushOperand(beta)
                     brain.pushOperand(alpha)
                     updateDisplayString()
+                    brain.isSolving = false
                     brain.printMemory()
                 }
             }
@@ -621,7 +628,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     }
     
     private func runSolveLoop(label: String, completion: @escaping () -> Void) {
-        if isRootFound {
+        solveLoopCount += 1
+        printError()
+        if solveLoopCount >= Constants.maxSolveIterations {  // pws: HP-15C uses more sophisticated methods to give up search
+            print("root not found after \(solveLoopCount) iterations\n")
+            setError(8)
+            completion()
+        } else if isRootFound {
+            print("root found in \(solveLoopCount) iterations\n")
             completion()
         } else {
             // fill all registers with beta, run program, store results f(beta)
@@ -636,6 +650,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 falpha = fbeta
                 runSolveLoop(label: label, completion: completion)
             }
+        }
+    }
+
+    private func printError() {
+        let error = min(max(Int(falpha * errorScale), -plotMax), plotMax)
+        if error < 0 {
+            print(String(repeating: " ", count: plotMax + error) + "." + String(repeating: " ", count: -error - 1) + "|")
+        } else if error == 0 {
+            print(String(repeating: " ", count: plotMax) + ".")
+        } else {  // error > 0
+            print(String(repeating: " ", count: plotMax) + "|" + String(repeating: " ", count: error - 1) + ".")
         }
     }
 
