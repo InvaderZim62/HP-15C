@@ -107,11 +107,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     
     // SOLVE vars
     var alpha = 0.0
+    var alphaPast = 0.0
     var beta = 0.0
     var falpha = 0.0
     var fbeta = 0.0
     var gamma = 0.0
-    
+    var leastPosFx = 0.0
+    var leastNegFx = 0.0
+    var xForLeastPosFx = 0.0
+    var xForLeastNegFx = 0.0
+
     var isRootFound: Bool {
         abs(falpha) < 1E-9
     }
@@ -593,11 +598,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         // assumed user entered estimate beta and typed estimate alpha into display, before pressing SOLVE
         if program.gotoLabel(label) {
             alpha = displayStringNumber
+            alphaPast = alpha
             beta = brain.xRegister!
             // fill all registers with alpha, run program, store results f(alpha)
             brain.fillRegistersWith(alpha)
             runProgramFrom(label: label) { [unowned self] in  // results left in display
                 falpha = displayStringNumber
+                initializeBrackets()
                 // run solve loop recursively, until root found
                 runSolveLoop(label: label) { [unowned self] in
                     // store A, B, and G in X, Y, and Z registers and stop
@@ -623,6 +630,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 fbeta = displayStringNumber
                 computeGamma()
                 // store beta, gamma, and f(beta) in place of alpha, beta, and f(alpha), and call recursively
+                alphaPast = alpha
                 alpha = beta
                 beta = gamma
                 falpha = fbeta
@@ -631,9 +639,42 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         }
     }
 
-    // compute G using Solve routine with A, B, f(A), f(B)
+    // compute gamma using Solve routine with A, B, f(A), f(B)
+    // references: 
+    // William H. Kahan, https://people.eecs.berkeley.edu/~wkahan/Math128/SOLVEkey.pdf
+    // Patrick, https://www.hpmuseum.org/cgi-sys/cgiwrap/hpmuseum/archv013.cgi?read=44372
     func computeGamma() {
-        gamma = beta - (beta - alpha) * fbeta / (fbeta - falpha)  // pws: eventually, including secant bending
+        gamma = beta - (beta - alpha) * fbeta / (fbeta - falpha)  // secant method
+        if fbeta > 0 && fbeta < leastPosFx {
+            xForLeastPosFx = beta
+            leastPosFx = fbeta
+        }
+        if fbeta < 0 && fbeta > leastNegFx {
+            xForLeastNegFx = beta
+            leastNegFx = fbeta
+        }
+        let xForBracketMax = max(xForLeastNegFx, xForLeastPosFx)
+        let xForBracketMin = min(xForLeastNegFx, xForLeastPosFx)
+        if gamma > xForBracketMax || gamma < xForBracketMin {
+            // gamma outside bracket - bend gamma back inside
+            let r = (alphaPast - beta) / (gamma - beta) // pws: may hot need alpha past?
+            let t = (2 - r) / (3 - 2 * r)
+            gamma = beta + t * (alphaPast - beta)
+        }
+    }
+    
+    private func initializeBrackets() {
+        leastPosFx = Double.greatestFiniteMagnitude
+        leastNegFx = -Double.greatestFiniteMagnitude
+        xForLeastPosFx = Double.greatestFiniteMagnitude
+        xForLeastNegFx = -Double.greatestFiniteMagnitude
+        if falpha > 0 {
+            xForLeastPosFx = alpha
+            leastPosFx = falpha
+        } else {
+            xForLeastNegFx = alpha
+            leastNegFx = falpha
+        }
     }
 
     // MARK: - Button actions
