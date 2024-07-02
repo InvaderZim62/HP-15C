@@ -43,6 +43,7 @@
 //  - HP-15C resets prefix (f, g) and program mode during power cycle
 //  - stop program if any key pressed
 //  - p90 implement program branching and control
+//  - stack has NaN when running Solve example from HP Manual with starting guesses -2 and -8
 //
 
 import UIKit
@@ -265,6 +266,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         displayView.numberOfDigits = 11  // one digit for sign
         getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
         program.delegate = self  // must be called after getting defaults (overwrites program)
+        program.brain = brain
         solve.delegate = self
         solve.program = program
         solve.brain = brain
@@ -392,7 +394,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         return attributedString
     }
     
-    private func prepStackForOperation() {
+    func prepStackForOperation() {
         if userIsEnteringDigits {
             if liftStack {
                 // operation doesn't follow enter; ex. pi 3 -, or 4 sqrt 3 x
@@ -507,76 +509,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if let instruction = program.buildInstructionWith(keyName) {
             displayString = instruction
             saveProgram()
-        }
-    }
-    
-    // MARK: - Run Program
-    
-    func runProgramFrom(label: String, completion: @escaping () -> Void) {
-        if program.gotoLabel(label) {
-            runProgramFromCurrentLine(completion: completion)
-        } else {
-            setError(4)  // label not found
-        }
-    }
-    
-    private func runProgramFromCurrentLine(completion: @escaping () -> Void) {
-        // run instructions from current line, until one of the following is found:
-        // - last instruction (go to line 0 and stop)
-        // - R/S instruction found (go to next line and stop)
-        // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
-        // - ignore any labels, and continue
-        while program.currentLineNumber > 0 {
-            if program.isCurrentInstructionARunStop {
-                // stop running - increment line number
-                _ = program.forwardStep()
-                break  // exit while loop
-            } else if program.isCurrentInstructionAReturn {
-                // stop running - goto line 0
-                program.currentLineNumber = 0
-                break  // exit while loop
-            } else if program.isCurrentInstructionAPause {
-                // pause and continue, recursively
-                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
-                    isRunMode = true  // show "running" when continuing after pause
-                    DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
-                        _ = program.forwardStep()
-                        runProgramFromCurrentLine(completion: completion)
-                    }
-                }
-                return  // stop and wait for pause to restart program
-            } else {
-                // run instruction
-                //---------------------
-                runCurrentInstruction()
-                //---------------------
-                if brain.error == .none {
-                    _ = program.forwardStep()
-                } else {
-                    isRunMode = false
-                    return  // stop for errors
-                }
-            }
-        }
-        isRunMode = false
-        completion()
-    }
-
-    private func runCurrentInstruction() {
-        if program.isCurrentInstructionALabel {
-            // non-executable instruction - if user was entering digits, send display to stack
-            prepStackForOperation()
-        } else {
-            // executable instruction - run it
-            let titles = program.currentInstructionTitles  // ex. ["f", "GTO", "SIN"]
-            for title in titles {
-                let button = buttons.first(where: { $0.currentTitle == title })
-                useSimButton = false  // don't play click sound
-                //----------------------------------
-                button?.sendActions(for: .touchDown)
-                //----------------------------------
-                useSimButton = true
-            }
         }
     }
 
@@ -1559,7 +1491,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     isRunMode = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                         if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
-                        runProgramFromCurrentLine() { }
+                        program.runFromCurrentLine() { }
                     }
                 }
             case "GSB":
@@ -1574,7 +1506,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // A - E pressed - run program from label A - E
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                    runProgramFrom(label: keyName) { }
+                    program.runFrom(label: keyName) { }
                 }
             case "SST":
                 // LBL pressed
@@ -1706,7 +1638,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @objc private func sstButtonReleased(_ button: UIButton) {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
         displayString = saveDisplayString
-        runCurrentInstruction()
+        program.runCurrentInstruction()
         _ = program.forwardStep()
     }
     

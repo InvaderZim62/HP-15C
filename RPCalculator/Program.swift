@@ -40,15 +40,21 @@
 // - digitKeyPressed accumulates 3 line numbers, then increments program line number
 //
 
-protocol ProgramDelegate: AnyObject {
-    func setError(_ number: Int)
-}
+import UIKit
 
-import Foundation
+protocol ProgramDelegate: AnyObject {
+    func prepStackForOperation()
+    func setError(_ number: Int)
+    var buttons: [UIButton]! { get }
+    var isRunMode: Bool { get set }
+    var useSimButton: Bool { get set }
+}
 
 class Program: Codable {
     
     weak var delegate: ProgramDelegate?
+    
+    var brain: CalculatorBrain!
     
     var instructions = [String]()
     var currentLineNumber = 0
@@ -324,6 +330,76 @@ class Program: Codable {
         }
     }
     
+    // MARK: - Run Program
+    
+    func runFrom(label: String, completion: @escaping () -> Void) {
+        if gotoLabel(label) {
+            runFromCurrentLine(completion: completion)
+        } else {
+            delegate?.setError(4)  // label not found
+        }
+    }
+    
+    func runFromCurrentLine(completion: @escaping () -> Void) {
+        // run instructions from current line, until one of the following is found:
+        // - last instruction (go to line 0 and stop)
+        // - R/S instruction found (go to next line and stop)
+        // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
+        // - ignore any labels, and continue
+        while currentLineNumber > 0 {
+            if isCurrentInstructionARunStop {
+                // stop running - increment line number
+                _ = forwardStep()
+                break  // exit while loop
+            } else if isCurrentInstructionAReturn {
+                // stop running - goto line 0
+                currentLineNumber = 0
+                break  // exit while loop
+            } else if isCurrentInstructionAPause {
+                // pause and continue, recursively
+                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
+                    delegate?.isRunMode = true  // show "running" when continuing after pause
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
+                        _ = forwardStep()
+                        runFromCurrentLine(completion: completion)
+                    }
+                }
+                return  // stop and wait for pause to restart program
+            } else {
+                // run instruction
+                //---------------------
+                runCurrentInstruction()
+                //---------------------
+                if brain.error == .none {
+                    _ = forwardStep()
+                } else {
+                    delegate?.isRunMode = false
+                    return  // stop for errors
+                }
+            }
+        }
+        delegate?.isRunMode = false
+        completion()
+    }
+
+    func runCurrentInstruction() {
+        if isCurrentInstructionALabel {
+            // non-executable instruction - if user was entering digits, send display to stack
+            delegate?.prepStackForOperation()
+        } else {
+            // executable instruction - run it
+            let titles = currentInstructionTitles  // ex. ["f", "GTO", "SIN"]
+            for title in titles {
+                let button = delegate?.buttons.first(where: { $0.currentTitle == title })
+                delegate?.useSimButton = false  // don't play click sound
+                //----------------------------------
+                button?.sendActions(for: .touchDown)
+                //----------------------------------
+                delegate?.useSimButton = true
+            }
+        }
+    }
+
     // MARK: - Utilities
     
     var currentInstruction: String {

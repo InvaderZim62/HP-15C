@@ -8,7 +8,6 @@
 import Foundation
 
 protocol SolveDelegate: AnyObject {
-    func runProgramFrom(label: String, completion: @escaping () -> Void)
     func setError(_ number: Int)
     func updateDisplayString()
     var displayStringNumber: Double { get }
@@ -49,7 +48,7 @@ class Solve {
             beta = brain.xRegister!
             // fill all registers with alpha, run program, store results f(alpha)
             brain.fillRegistersWith(alpha)
-            delegate?.runProgramFrom(label: label) { [unowned self] in  // results left in display
+            program.runFrom(label: label) { [unowned self] in  // results left in display
                 falpha = delegate!.displayStringNumber
                 initializeBrackets()
                 solveLoopCount = 0
@@ -82,7 +81,7 @@ class Solve {
         } else {
             // fill all registers with beta, run program, store results f(beta)
             brain.fillRegistersWith(beta)
-            delegate?.runProgramFrom(label: label) { [unowned self] in  // results left in display
+            program.runFrom(label: label) { [unowned self] in  // results left in display
                 fbeta = delegate!.displayStringNumber
                 computeGamma()
                 // store beta, gamma, and f(beta) in place of alpha, beta, and f(alpha), and call recursively
