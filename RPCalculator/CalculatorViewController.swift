@@ -84,10 +84,11 @@ enum TrigMode: String, Codable {
     case GRAD = "G"  // 100 gradians = 90 degrees
 }
 
-class CalculatorViewController: UIViewController, ProgramDelegate {
+class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate {
     
     var brain = CalculatorBrain()
     var program = Program()
+    var solve = Solve()
     var clickSoundPlayer: AVAudioPlayer?
     var displayString = "" { didSet { displayView.displayString = displayString } }
     var displayFormat = DisplayFormat.fixed(4)
@@ -104,25 +105,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     var isGettingDefaults = false
     var useSimButton = true  // true: call simulatePressingButton to play click sound, use false while running program instructions
     var gotoLineNumberDigits = [Int]()
-    
-    // SOLVE vars
-    var solveLoopCount = 0
-    var alpha = 0.0
-    var alphaPast = 0.0
-    var beta = 0.0
-    var falpha = 0.0
-    var fbeta = 0.0
-    var gamma = 0.0
-    var leastPosFx = 0.0
-    var leastNegFx = 0.0
-    var xForLeastPosFx = 0.0
-    var xForLeastNegFx = 0.0
-    let plotMax = 30  // half width of error plot in spaces
-    let errorScale = 10.0  // scale on residual f(x) for plotting
-
-    var isRootFound: Bool {
-        abs(falpha) < 1E-9
-    }
 
     var displayStringNumber: Double {
         if userIsEnteringExponent {
@@ -283,6 +265,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         displayView.numberOfDigits = 11  // one digit for sign
         getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
         program.delegate = self  // must be called after getting defaults (overwrites program)
+        solve.delegate = self
+        solve.program = program
+        solve.brain = brain
         prepStackForOperation()  // HP-15C completes number entry, if power is cycled
         brain.printMemory()
         logoCircleView.layer.masksToBounds = true
@@ -432,7 +417,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     }
     
     // set display string to xRegister using current format (switch to scientific notation, if fixed format won't fit)
-    private func updateDisplayString() {
+    func updateDisplayString() {
         switch brain.error {
         case .code(let number):
             displayString = number < 10 ? "  Error  \(number)" :  "  Error \(number)"
@@ -527,7 +512,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     
     // MARK: - Run Program
     
-    private func runProgramFrom(label: String, completion: @escaping () -> Void) {
+    func runProgramFrom(label: String, completion: @escaping () -> Void) {
         if program.gotoLabel(label) {
             runProgramFromCurrentLine(completion: completion)
         } else {
@@ -592,113 +577,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 //----------------------------------
                 useSimButton = true
             }
-        }
-    }
-    
-    // MARK: - Solve
-    
-    private func findRootOfEquationAt(label: String) {
-        // assume user entered beta estimate and typed alpha estimate into display, before pressing SOLVE
-        if program.gotoLabel(label) {
-            print(String(format: "\nSolving error (plot resolution: %.2f, plot limits: +/-%.1f)", 1 / errorScale, abs(Double(plotMax) / errorScale)))
-            brain.isSolving = true  // suppress printMemory
-            alpha = displayStringNumber
-            alphaPast = alpha
-            beta = brain.xRegister!
-            // fill all registers with alpha, run program, store results f(alpha)
-            brain.fillRegistersWith(alpha)
-            runProgramFrom(label: label) { [unowned self] in  // results left in display
-                falpha = displayStringNumber
-                initializeBrackets()
-                solveLoopCount = 0
-                // run solve loop recursively, until root found
-                runSolveLoop(label: label) { [unowned self] in
-                    // store A, B, and G in X, Y, and Z registers and stop
-                    brain.pushOperand(falpha)
-                    brain.pushOperand(beta)
-                    brain.pushOperand(alpha)
-                    updateDisplayString()
-                    brain.isSolving = false
-                    brain.printMemory()
-                }
-            }
-        } else {
-            setError(4)  // label not found
-        }
-    }
-    
-    private func runSolveLoop(label: String, completion: @escaping () -> Void) {
-        solveLoopCount += 1
-        printError()
-        if solveLoopCount >= Constants.maxSolveIterations {  // pws: HP-15C uses more sophisticated methods to give up search
-            print("root not found after \(solveLoopCount) iterations\n")
-            setError(8)
-            completion()
-        } else if isRootFound {
-            print("root found in \(solveLoopCount) iterations\n")
-            completion()
-        } else {
-            // fill all registers with beta, run program, store results f(beta)
-            brain.fillRegistersWith(beta)
-            runProgramFrom(label: label) { [unowned self] in  // results left in display
-                fbeta = displayStringNumber
-                computeGamma()
-                // store beta, gamma, and f(beta) in place of alpha, beta, and f(alpha), and call recursively
-                alphaPast = alpha
-                alpha = beta
-                beta = gamma
-                falpha = fbeta
-                runSolveLoop(label: label, completion: completion)
-            }
-        }
-    }
-
-    // compute gamma using Solve routine with A, B, f(A), f(B)
-    // references: 
-    // William H. Kahan, https://people.eecs.berkeley.edu/~wkahan/Math128/SOLVEkey.pdf
-    // Patrick, https://www.hpmuseum.org/cgi-sys/cgiwrap/hpmuseum/archv013.cgi?read=44372
-    func computeGamma() {
-        gamma = beta - (beta - alpha) * fbeta / (fbeta - falpha)  // secant method
-        if fbeta > 0 && fbeta < leastPosFx {
-            xForLeastPosFx = beta
-            leastPosFx = fbeta
-        }
-        if fbeta < 0 && fbeta > leastNegFx {
-            xForLeastNegFx = beta
-            leastNegFx = fbeta
-        }
-        let xForBracketMax = max(xForLeastNegFx, xForLeastPosFx)
-        let xForBracketMin = min(xForLeastNegFx, xForLeastPosFx)
-        if gamma > xForBracketMax || gamma < xForBracketMin {
-            // gamma outside bracket - bend gamma back inside
-            let r = (alphaPast - beta) / (gamma - beta)
-            let t = (2 - r) / (3 - 2 * r)
-            gamma = beta + t * (alphaPast - beta)
-        }
-    }
-    
-    private func initializeBrackets() {
-        leastPosFx = Double.greatestFiniteMagnitude
-        leastNegFx = -Double.greatestFiniteMagnitude
-        xForLeastPosFx = Double.greatestFiniteMagnitude
-        xForLeastNegFx = -Double.greatestFiniteMagnitude
-        if falpha > 0 {
-            xForLeastPosFx = alpha
-            leastPosFx = falpha
-        } else {
-            xForLeastNegFx = alpha
-            leastNegFx = falpha
-        }
-    }
-
-    private func printError() {
-        let error = min(max(Int(falpha * errorScale), -plotMax), plotMax)
-        if error < 0 {
-            print(String(repeating: " ", count: plotMax + error) + "." + String(repeating: " ", count: -error - 1) + "|")
-        } else if error == 0 {
-            print(String(repeating: " ", count: plotMax) + ".")
-        } else {  // error > 0
-            print(String(repeating: " ", count: plotMax) + "|" + String(repeating: " ", count: error - 1) + ".")
         }
     }
 
@@ -1759,7 +1637,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
                 // A - E pressed - solve equation at label A - E
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                    findRootOfEquationAt(label: keyName)
+                    solve.findRootOfEquationAt(label: keyName)
                 }
             default:
                 break

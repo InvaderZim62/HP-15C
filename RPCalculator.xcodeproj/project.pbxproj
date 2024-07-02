@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A70BB5C2C346C51008EC0A6 /* Solve.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A70BB5B2C346C51008EC0A6 /* Solve.swift */; };
 		4AA20A5E25CD0E2A00012341 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A5D25CD0E2A00012341 /* AppDelegate.swift */; };
 		4AA20A6025CD0E2A00012341 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A5F25CD0E2A00012341 /* SceneDelegate.swift */; };
 		4AA20A6225CD0E2A00012341 /* CalculatorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A6125CD0E2A00012341 /* CalculatorViewController.swift */; };
@@ -25,6 +26,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4A70BB5B2C346C51008EC0A6 /* Solve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Solve.swift; sourceTree = "<group>"; };
 		4AA20A5A25CD0E2A00012341 /* RPCalculator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RPCalculator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AA20A5D25CD0E2A00012341 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4AA20A5F25CD0E2A00012341 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 				4AA20A6125CD0E2A00012341 /* CalculatorViewController.swift */,
 				4AA20A7525CDBBAF00012341 /* CalculatorBrain.swift */,
 				4AEBB0DA2C1CCD750000D2AF /* Program.swift */,
+				4A70BB5B2C346C51008EC0A6 /* Solve.swift */,
 				4AAA222F25E855C10035D219 /* DisplayFormat.swift */,
 				4AEBB0D72C17CDA50000D2AF /* Complex.swift */,
 				4AF8E86C25D8955800C52D10 /* Views */,
@@ -189,6 +192,7 @@
 				4AF8E86F25D895A500C52D10 /* CalculatorView.swift in Sources */,
 				4AA20A7625CDBBAF00012341 /* CalculatorBrain.swift in Sources */,
 				4AEBB0DB2C1CCD750000D2AF /* Program.swift in Sources */,
+				4A70BB5C2C346C51008EC0A6 /* Solve.swift in Sources */,
 				4AA20A8025CF84DB00012341 /* DigitView.swift in Sources */,
 				4AA20A6025CD0E2A00012341 /* SceneDelegate.swift in Sources */,
 				4AEBB0D82C17CDA50000D2AF /* Complex.swift in Sources */,
