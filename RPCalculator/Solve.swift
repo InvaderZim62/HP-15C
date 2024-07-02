@@ -112,7 +112,12 @@ class Solve {
         let xForBracketMin = min(xForLeastNegFx, xForLeastPosFx)
         if gamma > xForBracketMax || gamma < xForBracketMin {
             // gamma outside bracket - bend gamma back inside
-            let r = (alphaPast - beta) / (gamma - beta)
+            var r: Double
+            if gamma == beta {
+                r = 0  // secant parallel to x-axis
+            } else {
+                r = (alphaPast - beta) / (gamma - beta)
+            }
             let t = (2 - r) / (3 - 2 * r)
             gamma = beta + t * (alphaPast - beta)
         }
