@@ -598,9 +598,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
     // MARK: - Solve
     
     private func findRootOfEquationAt(label: String) {
-        // assumed user entered estimate beta and typed estimate alpha into display, before pressing SOLVE
+        // assume user entered beta estimate and typed alpha estimate into display, before pressing SOLVE
         if program.gotoLabel(label) {
-            print(String(format: "\nSolving error (limited between +/-%.1f)", abs(Double(plotMax) / errorScale)))
+            print(String(format: "\nSolving error (plot resolution: %.2f, plot limits: +/-%.1f)", 1 / errorScale, abs(Double(plotMax) / errorScale)))
             brain.isSolving = true  // suppress printMemory
             alpha = displayStringNumber
             alphaPast = alpha
@@ -653,17 +653,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         }
     }
 
-    private func printError() {
-        let error = min(max(Int(falpha * errorScale), -plotMax), plotMax)
-        if error < 0 {
-            print(String(repeating: " ", count: plotMax + error) + "." + String(repeating: " ", count: -error - 1) + "|")
-        } else if error == 0 {
-            print(String(repeating: " ", count: plotMax) + ".")
-        } else {  // error > 0
-            print(String(repeating: " ", count: plotMax) + "|" + String(repeating: " ", count: error - 1) + ".")
-        }
-    }
-
     // compute gamma using Solve routine with A, B, f(A), f(B)
     // references: 
     // William H. Kahan, https://people.eecs.berkeley.edu/~wkahan/Math128/SOLVEkey.pdf
@@ -682,7 +671,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         let xForBracketMin = min(xForLeastNegFx, xForLeastPosFx)
         if gamma > xForBracketMax || gamma < xForBracketMin {
             // gamma outside bracket - bend gamma back inside
-            let r = (alphaPast - beta) / (gamma - beta) // pws: may hot need alpha past?
+            let r = (alphaPast - beta) / (gamma - beta)
             let t = (2 - r) / (3 - 2 * r)
             gamma = beta + t * (alphaPast - beta)
         }
@@ -699,6 +688,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate {
         } else {
             xForLeastNegFx = alpha
             leastNegFx = falpha
+        }
+    }
+
+    private func printError() {
+        let error = min(max(Int(falpha * errorScale), -plotMax), plotMax)
+        if error < 0 {
+            print(String(repeating: " ", count: plotMax + error) + "." + String(repeating: " ", count: -error - 1) + "|")
+        } else if error == 0 {
+            print(String(repeating: " ", count: plotMax) + ".")
+        } else {  // error > 0
+            print(String(repeating: " ", count: plotMax) + "|" + String(repeating: " ", count: error - 1) + ".")
         }
     }
 
