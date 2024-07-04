@@ -32,7 +32,6 @@
 //
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
-//  - implement programming
 //  - some numbers don't allow entering exponent EEX (ex. 12345678 EEX doesn't, 1234567 EEX does, 1.2345678 EEX does)
 //  - p59 rounding displayed scientific numbers not implemented
 //  - p61 swapping "." and "," in displaying number is not implemented
@@ -43,7 +42,6 @@
 //  - HP-15C resets prefix (f, g) and program mode during power cycle
 //  - stop program if any key pressed
 //  - p90 implement program branching and control
-//  - stack has NaN when running Solve example from HP Manual with starting guesses -2 and -8
 //
 
 import UIKit
@@ -68,11 +66,13 @@ enum Prefix: String {
     case SF  // ex. g SF 8 (set flag 8 - enable complex mode)
     case CF  // ex. g CF 8 (clear flag 8 - disable complex mode)
     case STO
+    case STO_DOT  // ex. STO . 0 (.0 - .9 are valid storage registers)
     case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
     case STO_SUB
     case STO_MUL
     case STO_DIV
     case RCL
+    case RCL_DOT  // ex. RCL . 0 (.0 - .9 are valid storage registers)
     case RCL_ADD  // ex. RCL + 1 (ADD register 1 to display)
     case RCL_SUB
     case RCL_MUL
@@ -736,7 +736,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .STO:
             prefix = nil
             switch keyName {
-            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":  // did not implement registers ".0" through ".9"
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // store displayed number in register
                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
                 brain.storeResultInRegister(keyName, result: brain.xRegister!)
@@ -745,8 +745,39 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "EEX":
                 prepStackForOperation()
                 setError(11)
+            case ".":
+                // STO .
+                let tempButton = UIButton()
+                tempButton.setTitle(".", for: .normal)
+                prefix = .STO
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+                return
             default:
-                setError(99)  // eventually implement .# registers
+                setError(99)
+            }
+            liftStack = true
+        case .STO_DOT:
+            prefix = nil
+            switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // store displayed number in register
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+                brain.storeResultInRegister("DOT" + keyName, result: brain.xRegister!)
+                updateDisplayString()
+                brain.printMemory()
+            case "EEX":
+                // give up on STO . and re-enter EEX
+                prepStackForOperation()
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                digitKeyPressed(tempButton)
+            case ".":
+                // give up on STO . and re-enter "."
+                let tempButton = UIButton()
+                tempButton.setTitle(".", for: .normal)
+                digitKeyPressed(tempButton)
+            default:
+                setError(99)
             }
             liftStack = true
         case .RCL:
@@ -762,8 +793,40 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "EEX":
                 prepStackForOperation()
                 setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
+            case ".":
+                // RCL .
+                let tempButton = UIButton()
+                tempButton.setTitle(".", for: .normal)
+                prefix = .RCL
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+                return
             default:
-                setError(99)  // eventually implement .# registers
+                setError(99)
+            }
+            liftStack = true
+        case .RCL_DOT:
+            prefix = nil
+            switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // recall register, show in display
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+                displayString = String(brain.recallNumberFromStorageRegister("DOT" + keyName))
+                brain.pushOperand(displayStringNumber)
+                updateDisplayString()
+                brain.printMemory()
+            case "EEX":
+                // give up on RCL . and re-enter EEX
+                prepStackForOperation()
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                digitKeyPressed(tempButton)
+            case ".":
+                // give up on RCL . and re-enter "."
+                let tempButton = UIButton()
+                tempButton.setTitle(".", for: .normal)
+                digitKeyPressed(tempButton)
+            default:
+                setError(99)
             }
             liftStack = true
         case .STO_ADD:
@@ -1025,6 +1088,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 return
             }
             return
+        case .STO_DOT:
+            // STO . operation (give up on STO . and re-issue operation)
+            prefix = nil
+            let tempButton = UIButton()
+            tempButton.setTitle(keyName, for: .normal)
+            operationKeyPressed(tempButton)
+            return
         case .RCL:
             // RCL [+|–|×|÷]
             switch keyName {
@@ -1041,6 +1111,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 setError(3)
                 return
             }
+            return
+        case .RCL_DOT:
+            // RCL . operation (give up on RCL . and re-issue operation)
+            prefix = nil
+            let tempButton = UIButton()
+            tempButton.setTitle(keyName, for: .normal)
+            operationKeyPressed(tempButton)
             return
         case .f:
             switch keyName {
@@ -1319,6 +1396,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     // prefix keys: f, g, STO, RCL
     // prefix sent from programKeyPressed: GTO
     // prefix sent from operationKeyPressed: CHS (for GTO-CHS), or ÷ (for f-"÷")
+    // prefix sent from digitKeyPressed: . (for STO-".", or RCL-".")
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1399,6 +1477,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .f  // pws: HP-15C shows f after STO f, so what is STO f ENTER?
             case "g":
                 prefix = .g
+            case ".":
+                prefix = .STO_DOT
             case "RCL":
                 prefix = .RCL
             case "GTO":
@@ -1412,6 +1492,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .f
             case "g":
                 prefix = .g
+            case ".":
+                prefix = .RCL_DOT
             case "STO":
                 prefix = .STO
             default:
