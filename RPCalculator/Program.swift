@@ -202,10 +202,11 @@ class Program: Codable {
                 prefix = buttonLabel
                 instructionCodes = [Program.keycodes[buttonLabel]!]
             } else if (prefix == "f" || prefix == "g") && buttonLabel == "GTO" {
-                // compound prefix
+                // compound prefix (HYP or HYP-1)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else if prefix == "f" && buttonLabel == "SST" {
+                // compound prefix (LBL)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else {
@@ -242,11 +243,21 @@ class Program: Codable {
                     }
                 }
             } else if prefix == "f" && (buttonLabel == "7" || buttonLabel == "8" || buttonLabel == "9") {
-                // compound prefix
+                // compound prefix (FIX, SCI, or ENG)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else if prefix == "g" && (buttonLabel == "4" || buttonLabel == "5") {
-                // compound prefix
+                // compound prefix (SF or CF)
+                prefix += buttonLabel
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+            } else {
+                // instruction complete
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                return insertedInstruction
+            }
+        case ".":
+            if prefix == "LBL" {
+                // compound prefix (LBL .)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else {

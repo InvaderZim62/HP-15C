@@ -55,6 +55,7 @@ enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
     case LBL  // ex. f LBL A (label in program)
+    case LBL_DOT  // ex. f LBL . 2 (0 - 9, .0 - .9 are valid labels)
     case GTO  // ex. GTO 5 (goto label 5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
     case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
@@ -65,13 +66,13 @@ enum Prefix: String {
     case HYP1 = "h"  // ex. g HYP1 SIN (inverse hyperbolic sine)
     case SF  // ex. g SF 8 (set flag 8 - enable complex mode)
     case CF  // ex. g CF 8 (clear flag 8 - disable complex mode)
-    case STO
+    case STO  // ex. STO 0 (store display to register 0)
     case STO_DOT  // ex. STO . 0 (.0 - .9 are valid storage registers)
     case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
     case STO_SUB
     case STO_MUL
     case STO_DIV
-    case RCL
+    case RCL  // ex. RCL 0 (recall register 0 to display)
     case RCL_DOT  // ex. RCL . 0 (.0 - .9 are valid storage registers)
     case RCL_ADD  // ex. RCL + 1 (ADD register 1 to display)
     case RCL_SUB
@@ -1394,7 +1395,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
 
     // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), .HYP1 (for g-"GTO"),...
     // prefix keys: f, g, STO, RCL
-    // prefix sent from programKeyPressed: GTO
+    // prefix sent from programKeyPressed: SST (for f-SST), GTO
     // prefix sent from operationKeyPressed: CHS (for GTO-CHS), or ÷ (for f-"÷")
     // prefix sent from digitKeyPressed: . (for STO-".", or RCL-".")
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
@@ -1437,9 +1438,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
                 prefix = nil
                 isUserMode.toggle()
+            case "SST":
+                // "LBL" pressed
+                prefix = nil  // LBL key ignored in run mode
             case "GTO":
+                // "HYP" pressed
                 if isProgramMode {
-                    prefix = nil
+                    prefix = nil  // program keeps its own prefix
                 } else {
                     prefix = .HYP
                 }
@@ -1592,11 +1597,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 }
             case "SST":
                 // LBL pressed
-                prefix = .LBL
-                if isProgramMode {
-                    // add to program
-                    sendToProgram(keyName)
-                }  // else (no action in run mode)
+                let tempButton = UIButton()
+                tempButton.setTitle("SST", for: .normal)
+                prefix = .f
+                prefixKeyPressed(tempButton)  // better handled as prefix key
             case "GTO":
                 // HYP pressed
                 let tempButton = UIButton()
