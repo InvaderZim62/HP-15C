@@ -30,6 +30,33 @@
 //     displayString = String(format: displayFormat.string, 0.0)  // write number to display in current format
 //     displayString = displayString.padding(toLength: 9, withPad: " ", startingAt: 0) + "00"  // pad end of string with blanks
 //
+//  Example of similar keys pressed in program mode vs run mode, and how they're handled...
+//
+//  Program mode - add label A to program (f-SST-√x)
+//
+//    User           CalculatorViewController                     Program                                             Codes
+//    -------------  -------------------------------------------  -------------------------------------------------  --------
+//    press "f"      prefixKeyPressed.sendToProgram("f")          instructionCodes = [Program.keycodes["f"]!]          "42"
+//                   prefix = .f                                  prefix = "f"
+//                                                                return nil
+//    press "SST"    programKeyPressed.prefixKeyPressed("SST")
+//                   prefixKeyPressed.sendToProgram("SST")        instructionCodes.append(Program.keycodes["SST"]!)   "42 21"
+//                   prefix = nil                                 prefix += "SST" (= "fSST")
+//                                                                return nil
+//    press "√x"     operationKeyPressed.programKeyPressed("√x")
+//                   programKeyPressed.sendToProgram("√x")        instructionCodes.append(Program.keycodes["√x"]!)   "42 21 11"
+//                   prefix = nil                                 prefix = ""
+//                   displayString = "001-42,21,11"               return insertedInstruction; instructions.insert("001-42,21,11")
+//
+//  Run mode - run from label A (f-√x)
+//
+//    User           CalculatorViewController                     Program
+//    -------------  -------------------------------------------  -----------------------------------------------------------------
+//    press "f"      prefix = .f
+//
+//    press "√x"     operationKeyPressed.programKeyPressed("√x")
+//                   programKeyPres.program.runFrom(label: "√x")  gotoLabel("42,21,11"); runFromCurrentLine; loop through all lines
+//
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
 //  - some numbers don't allow entering exponent EEX (ex. 12345678 EEX doesn't, 1234567 EEX does, 1.2345678 EEX does)
@@ -42,6 +69,7 @@
 //  - HP-15C resets prefix (f, g) and program mode during power cycle
 //  - stop program if any key pressed
 //  - p90 implement program branching and control
+//  - if the user enters f-A in program mode, the HP-15C enters the instruction for GSB-A
 //
 
 import UIKit
@@ -651,16 +679,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .GTO:
             switch keyName {
             case ".":
-                print("GTO .")  // pws: goto label starting with "."?
+                print("GTO .")  // pws: goto label starting with "." number
             case "EEX":
                 // EEX pressed - clear GTO and perform EEX
                 prefix = nil
                 let tempButton = UIButton()
                 tempButton.setTitle("EEX", for: .normal)
                 digitKeyPressed(tempButton)
-            default:
+            default:  // reminder: this function only covers digit keys
                 prepStackForOperation()
-                setError(4)
+                setError(4)  // pws: this should only be "Error 4", if there are no program labels for this digit key
             }
         case .GTO_CHS:
             switch keyName {
@@ -1405,7 +1433,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         
         if isProgramMode {
             sendToProgram(keyName)
-            // continue processing prefix for use in
+            // continue processing prefix for use with program keys, ex. f-R/S (PSE), g-SST (BST)
         }
 
         switch prefix {
@@ -1440,7 +1468,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 isUserMode.toggle()
             case "SST":
                 // "LBL" pressed
-                prefix = nil  // LBL key ignored in run mode
+                prefix = nil  // LBL key ignored in run mode (sent to program, above)
             case "GTO":
                 // "HYP" pressed
                 if isProgramMode {
@@ -1551,11 +1579,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         switch prefix {
         case .none:
             switch keyName {
-            case "SST":  // non-programmable
+            case "SST":
                 // single-step
                 if isProgramMode {
-                    // single-step program
-                    displayString = program.forwardStep()
+                    // show next instruction; don't run
+                    sendToProgram(keyName)
                 } else {
                     // while holding down SST button, display current line of code;
                     // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
@@ -1574,7 +1602,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     // add to program
                     sendToProgram(keyName)
                 } else if !isRunMode {
-                    // run program from current line
+                    // run program from current line, to end (vs. running from a label, to end)
                     isRunMode = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                         if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
@@ -1619,11 +1647,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .g:
             prefix = nil
             switch keyName {
-            case "SST":  // non-programmable
+            case "SST":
                 // BST pressed (back step program)
-                displayString = program.backStep()
-                if !isProgramMode {
+                if isProgramMode {
+                    // show previous instruction; don't run
+                    sendToProgram(keyName)
+                } else {
                     // show previous line until button released (don't execute), then return to normal display
+                    displayString = program.backStep()
                     sender.addTarget(self, action: #selector(bstButtonReleased), for: .touchUpInside)
                 }
             case "GTO":

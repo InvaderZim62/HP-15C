@@ -164,7 +164,9 @@ class Program: Codable {
     // STO      STO
     // RCL      RCL
     // GTO_CHS  GTO CHS  // compound (two digits)
+    // SOLVE    f ÷
     // LBL      f SST
+    // LBL_DOT  f SST .
     // FIX      f 7
     // SCI      f 8
     // ENG      f 9
@@ -188,6 +190,9 @@ class Program: Codable {
     
     // some program buttons manipulate the program (SST, BST, ←, GTO-CHS, ...) and are not added to the
     // instructions (return nil); others are added to the instructions (R/S, RTN, GTO, ...);
+    
+    // all digit, operation, stack manipulation, and prefix buttons are automatically send here,
+    // so they have to be handled here, if they are non-programmable
 
     func buildInstructionWith(_ buttonLabel: String) -> String? {
         switch buttonLabel {
@@ -195,7 +200,7 @@ class Program: Codable {
             // any time "f" or "g" is entered, the program instruction starts over
             prefix = buttonLabel
             instructionCodes = [Program.keycodes[buttonLabel]!]
-        case "GTO", "STO", "RCL", "SST":
+        case "GTO", "STO", "RCL":
             if instructionCodes.isEmpty || prefix == "GTO" || prefix == "STO" || prefix == "RCL" || prefix == "LBL" {
                 // if there is no other current prefix, these three can override each other;
                 // start the program instruction over with the latest one
@@ -205,14 +210,25 @@ class Program: Codable {
                 // compound prefix (HYP or HYP-1)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-            } else if prefix == "f" && buttonLabel == "SST" {
-                // compound prefix (LBL)
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return insertedInstruction
+            }
+        case "SST":
+            switch prefix {
+            case "":
+                // return next line (SST)
+                return forwardStep()  // non-programmable
+            case "f":
+                // compound prefix (LBL)
+                prefix += buttonLabel
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+            case "g":
+                // return previous line (BST)
+                return backStep()  // non-programmable
+            default:
+                break
             }
         case "√x", "ex", "10x", "yx", "1/x":
             // instruction complete
@@ -278,7 +294,7 @@ class Program: Codable {
         case "COS":
             if prefix == "f" {
                 // (i) (non-programmable)
-                prefix = ""
+                prefix = ""  // ignored in program mode
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
@@ -289,7 +305,7 @@ class Program: Codable {
                 // CLEAR PRGM (non-programmable)
                 prefix = ""
                 clearProgram()
-                return insertedInstruction
+                return insertedInstruction  // returns line 000
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
