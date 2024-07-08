@@ -82,8 +82,10 @@ struct Pause {
 enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
-    case LBL  // ex. f LBL A (label in program)
+    case LBL  // ex. f LBL A (label in program), or LBL A (run program from label A)
     case LBL_DOT  // ex. f LBL . 2 (0 - 9, .0 - .9 are valid labels)
+    case GSB  // ex. GSB B (goto label B and run until RTN)
+    case GSB_DOT  // ex. GSB . 0 (0 - 9, .0 - .9 are valid labels)
     case GTO  // ex. GTO 5 (goto label 5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
     case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
@@ -713,7 +715,34 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 tempButton.setTitle(keyName, for: .normal)
                 digitKeyPressed(tempButton)
             }
-        case .FIX:
+        case .GSB:
+            switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // label 0-9 pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)  // better handled as program key
+                return
+            case ".":
+                // GSB . pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(".", for: .normal)
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+            default:
+                break
+            }
+        case .GSB_DOT:
+            switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // label .0-.9 pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)  // better handled as program key
+                return
+            default:
+                break
+            }
+       case .FIX:
             prefix = nil
             if let decimalPlaces = Int(keyName) {
                 // number after FIX pressed
@@ -1234,6 +1263,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 setError(4)
                 return
             }
+        case .GSB:
+            switch keyName {
+            case "√x", "ex", "10x", "yx", "1/x":
+                // label "A" - "E" pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)  // better handled as program key
+                return
+            default:
+                break
+            }
         case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key
             prepStackForOperation()
             setError(3)
@@ -1423,7 +1463,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
 
     // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), .HYP1 (for g-"GTO"),...
     // prefix keys: f, g, STO, RCL
-    // prefix sent from programKeyPressed: SST (for f-SST), GTO
+    // prefix sent from programKeyPressed: SST (for f-SST), GTO, GSB
     // prefix sent from operationKeyPressed: CHS (for GTO-CHS), or ÷ (for f-"÷")
     // prefix sent from digitKeyPressed: . (for STO-".", or RCL-".")
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
@@ -1449,6 +1489,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .RCL
             case "GTO":
                 prefix = .GTO  // build-up to GTO n (go to label n) or GTO CHS nnn (go to line nnn)
+            case "GSB":
+                prefix = .GSB  // build-up to GSB n (run from label n)
             default:
                 break
             }
@@ -1514,6 +1556,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .STO_DOT
             case "RCL":
                 prefix = .RCL
+            case "GSB":
+                prefix = .GSB
             case "GTO":
                 print("STO GTO")  // pws: not sure what this is
             default:
@@ -1529,6 +1573,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .RCL_DOT
             case "STO":
                 prefix = .STO
+            case "GSB":
+                prefix = .GSB
             default:
                 invalidKeySequenceEntered()
             }
@@ -1545,6 +1591,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "CHS":
                 prefix = .GTO_CHS
                 gotoLineNumberDigits = []
+            case "GSB":
+                prefix = .GSB
             default:
                 setError(99)  // shouldn't get here
             }
@@ -1561,8 +1609,25 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .RCL
             case "GTO":
                 prefix = .GTO
+            case "GSB":
+                prefix = .GSB
             default:
                 setError(99)  // shouldn't get here
+            }
+        case .GSB:
+            switch keyName {
+            case "f":
+                prefix = .f
+            case "g":
+                prefix = .g
+            case ".":
+                prefix = .GSB_DOT
+            case "STO":
+                prefix = .STO
+            case "RCL":
+                prefix = .RCL
+            default:
+                invalidKeySequenceEntered()
             }
         default:  // .FIX, .SCI, .ENG, .HYP, .HYP1 (not allowed to precede prefix key)
             invalidKeySequenceEntered()
@@ -1570,7 +1635,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
 
     // program manipulation keys: SST, GTO, R/S, GSB
-    // sent from operationKeyPressed: √x, ex, 10x, yx, 1/x (ex. f-√x for label A, or f-SOLVE-√x for solve label A)
+    // sent from operationKeyPressed: √x, ex, 10x, yx, 1/x (ex. f-√x for label A, f-SOLVE-√x for solve label A, GSB-√x for label A)
+    // sent from operationKeyPressed: 0-9 (ex. GSB-.-1 for run from label .1)
     @IBAction func programKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1610,7 +1676,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     }
                 }
             case "GSB":
-                print("GSB")  // pws: TBD
+                // GSB pressed
+                if isProgramMode {
+                    // add to program
+                    sendToProgram(keyName)
+                } else {
+                    // GSB-A acts the same as f-LBL-A (run from label A, until RTN)
+                    let tempButton = UIButton()
+                    tempButton.setTitle("GSB", for: .normal)
+                    prefixKeyPressed(tempButton)  // better handled as prefix key
+                }
             default:
                 break
             }
@@ -1675,6 +1750,30 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     // set program to line 0
                     prepStackForOperation()
                     program.currentLineNumber = 0
+                }
+            default:
+                break
+            }
+        case .GSB:
+            prefix = nil
+            switch keyName {
+            case "√x", "ex", "10x", "yx", "1/x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // A - E or 0 - 9 pressed - run program from label A - E or label 0 - 9
+                isRunMode = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                    program.runFrom(label: keyName) { }
+                }
+            default:
+                break
+            }
+        case .GSB_DOT:
+            prefix = nil
+            switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // .0 - .9 pressed - run program from label .0 - .9
+                isRunMode = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                    program.runFrom(label: "." + keyName) { }
                 }
             default:
                 break

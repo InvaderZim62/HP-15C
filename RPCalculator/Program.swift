@@ -133,7 +133,12 @@ class Program: Codable {
     // leave program at line with label, or original location, if label not found
     func gotoLabel(_ label: String) -> Bool {
         var labelFound = false
-        let labelCodeString = "42,21,\(Program.keycodes[label]!)"  // ex. "42,21,11" for Label A
+        var labelCodeString = ""
+        if label.first == "." {
+            labelCodeString = "42,21, \(label)"  // ex. "42,21, .1" for Label .1
+        } else {
+            labelCodeString = "42,21,\(Program.keycodes[label]!)"  // ex. "42,21,11" for Label A, "42,21, 1" for Label 1
+        }
         for _ in 0..<instructions.count {
             if currentInstructionCodeString == labelCodeString {
                 labelFound = true
@@ -158,15 +163,17 @@ class Program: Codable {
     }
 
     // Prefix   buttonLabel(s)
-    // f        f    // basic (single digit)
+    // f        f  // basic (single digit)
     // g        g
     // GTO      GTO
+    // GSB      GSB
     // STO      STO
     // RCL      RCL
     // GTO_CHS  GTO CHS  // compound (two digits)
     // SOLVE    f ÷
     // LBL      f SST
     // LBL_DOT  f SST .
+    // GSB_DOT  GSB .
     // FIX      f 7
     // SCI      f 8
     // ENG      f 9
@@ -201,8 +208,11 @@ class Program: Codable {
             prefix = buttonLabel
             instructionCodes = [Program.keycodes[buttonLabel]!]
         case "GTO", "STO", "RCL":
-            if instructionCodes.isEmpty || prefix == "GTO" || prefix == "STO" || prefix == "RCL" || prefix == "LBL" {
-                // if there is no other current prefix, these three can override each other;
+            if instructionCodes.isEmpty || 
+                prefix == "GTO" || prefix == "STO" || prefix == "RCL" ||
+                prefix == "fSST" || prefix == "fSST." ||
+                prefix == "GSB" || prefix == "GSB." {
+                // if there is no other current prefix, these seven can override each other;
                 // start the program instruction over with the latest one
                 prefix = buttonLabel
                 instructionCodes = [Program.keycodes[buttonLabel]!]
@@ -217,9 +227,6 @@ class Program: Codable {
             }
         case "SST":
             switch prefix {
-            case "":
-                // return next line (SST)
-                return forwardStep()  // non-programmable
             case "f":
                 // compound prefix (LBL)
                 prefix += buttonLabel
@@ -228,7 +235,17 @@ class Program: Codable {
                 // return previous line (BST)
                 return backStep()  // non-programmable
             default:
-                break
+                // return next line (SST)
+                return forwardStep()  // non-programmable
+            }
+        case "GSB":
+            if prefix == "g" {
+                // instruction complete (RTN)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                return insertedInstruction
+            } else {
+                prefix = buttonLabel
+                instructionCodes = [Program.keycodes[buttonLabel]!]
             }
         case "√x", "ex", "10x", "yx", "1/x":
             // instruction complete
@@ -266,14 +283,22 @@ class Program: Codable {
                 // compound prefix (SF or CF)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
+            } else if prefix == "fSST." || prefix == "GSB." {
+                // instruction complete (LBL . 0, or GSB . 1)
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                return insertedInstruction
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return insertedInstruction
             }
         case ".":
-            if prefix == "LBL" {
+            if prefix == "fSST" {
                 // compound prefix (LBL .)
+                prefix += buttonLabel
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+            } else if prefix == "GSB" {
+                // compound prefix (GSB .)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
             } else {
@@ -339,8 +364,10 @@ class Program: Codable {
     // format:
     // 3 codes: "nnn-42,22,23" <=> f GTO SIN (commas get attached to prior digit in DisplayView)
     // 3 codes: "nnn-42, 7, 4" <=> f 7 4
+    // 3 codes: "nnn-42,21,.1" <=> f LBL .1
     // 2 codes: "nnn- 43 24"   <=> g COS
     // 2 codes: "nnn-  44 1"   <=> STO 1
+    // 2 codes: "nnn-  32 .2"  <=> GSB .2
     // 1 code:  "nnn-    12"   <=> e^x
     var insertedInstruction: String {
         if instructions.isEmpty {
@@ -433,25 +460,29 @@ class Program: Codable {
         instructions[currentLineNumber]
     }
     
-    // "001-42,22,23" => "42,22,23"
+    // ex. "001-42,22,23" => "42,22,23"
+    //     "001-42,21,.1" => "42,21,.1"
     func codeStringFromInstruction(_ instruction: String) -> String {
         String(instruction.suffix(from: codeStart))
     }
     
     // code string from current instruction
-    // ex. "42,"22",23"
+    // ex. "001-42,22,23" => "42,22,23"
+    //     "001-42,21,.1" => "42,21,.1"
     var currentInstructionCodeString: String {
         codeStringFromInstruction(currentInstruction)
     }
 
     // key-codes in current instruction
-    // ex. [42, 22, 23]
+    // ex. "001-42,22,23" => [42, 22, 23]
+    //     "001-42,21,.1" => [42, 21, 48, 1]
     var currentInstructionCodes: [Int] {
         codesFrom(codeString: currentInstructionCodeString)
     }
     
     // button titles for current instruction
-    // ex. ["f", "GTO", "SIN"]
+    // ex.    [42, 22, 23] => ["f", "GTO", "SIN"]
+    //     [42, 21, 48, 1] => ["f", "SST", ".", "1"]
     var currentInstructionTitles: [String] {
         return titlesFrom(keyCodes: currentInstructionCodes)
     }
@@ -462,11 +493,14 @@ class Program: Codable {
     }
 
     // a label is contained in a single instruction with these codes:
-    // [42, 11-15]     = "f A-E", or
-    // [42, 21, 11-15] = "f LBL A-E"
+    // [42, 21, 11-15] = "f LBL A-E", or
+    // [42, 21, 1] = "f LBL 0-9]
+    // [42, 21, 48, 1] = "f LBL . 0-9]
     func isLabel(codes: [Int]) -> Bool {
-        (codes.count == 2 && codes[0] == 42 && codes[1] >= 11 && codes[1] <= 15) ||
-        (codes.count == 3 && codes[0] == 42 && codes[1] == 21 && codes[2] >= 11 && codes[2] <= 15)
+        codes[0] == 42 && codes[1] == 21 && (
+            (codes.count == 3 && (codes[2] >= 0 && codes[2] <= 9) || (codes[2] >= 11 && codes[2] <= 15)) ||
+            (codes.count == 4 && (codes[3] >= 0 && codes[3] <= 9))
+        )
     }
 
     // stop running when R/S found
@@ -494,36 +528,43 @@ class Program: Codable {
     func isPause(codes: [Int]) -> Bool {
         codes == [42, 31]
     }
-
-//    var isLastLine: Bool {
-//        currentLineNumber == instructions.count - 1
-//    }
     
     // convert from code string to array of codes
     // ex. "42,22,23" => [42, 22, 23]
     //     "42, 7, 4" => [42, 7, 4]
+    //    "42,21, .1" => [42, 21, 48, 1]
     //       " 43 24" => [43, 24]
     //       "  44 1" => [44, 1]
+    //     "  32  .2" => [32, 48, 1]
+    //       "    12" => [12]
     func codesFrom(codeString: String) -> [Int] {
         guard !codeString.isEmpty else { return [] }
-        let delimiter = codeString.contains(",") ? "," : " "
-        let codesArray = codeString.trimmingCharacters(in: .whitespaces).components(separatedBy: delimiter)
+        let modifiedCodeString = codeString.replacingOccurrences(of: " .", with: "48,")
+        let delimiter = modifiedCodeString.contains(",") ? "," : " "
+        let codesArray = modifiedCodeString.trimmingCharacters(in: .whitespaces).components(separatedBy: delimiter)
         return codesArray.map { Int($0.trimmingCharacters(in: .whitespaces))! }
     }
     
     // convert from array of codes to array of button labels
     // ex. [42, 22, 23] => ["f", "GTO", "SIN"]
+    //       [42, 7, 4] => ["f", "7", "4"]
+    //  [42, 21, 48, 1] => ["f", "SST", ".", "1"]
     //         [43, 24] => ["g", "COS"]
     //          [44, 1] => ["STO", "1"]
+    //      [32, 48, 1] => ["GSB", ".", "1"]
+    //             [12] => ["ex"]
     func titlesFrom(keyCodes: [Int]) -> [String] {
         keyCodes.map { Program.buttonTitles[String(format: "%2d", $0)]! }
     }
 
-    // convert from array of codes to code string
-    // ex. [42, 22, 23] => "42,22,23"
-    //       [42, 7, 4] => "42, 7, 4"
-    //         [43, 24] => " 43 24"
-    //          [44, 1] => "  44 1"
+    // convert from array of instruction codes to code string
+    // ex.    ["42", "22", "23"] => "42,22,23"
+    //        ["42", " 7", " 4"] => "42, 7, 4"
+    //  ["42", "21", "48", " 1"] => "42,21, .1"
+    //              ["43", "24"] => " 43 24"
+    //              ["44", " 1"] => "  44 1"
+    //        ["32", "48", " 1"] => "  32 .1"
+    //                    ["12"] => "    12"
     var codeString: String {
         var codes = ""
         switch instructionCodes.count {
@@ -531,14 +572,23 @@ class Program: Codable {
             codes = "    " + instructionCodes[0]
         case 2:
             if instructionCodes[1].first == " " {
-                // single digit second code (ex. ["12"," 3"])
+                // single digit second code, ex. ["44"," 1"] => "  44 1"
                 codes = "  " + instructionCodes[0] + instructionCodes[1]
             } else {
-                // two-digit second code (ex. ["12","34"])
+                // two-digit second code (ex. ["43","24"])
                 codes = " " + instructionCodes[0] + " " + instructionCodes[1]
             }
         case 3:
-            codes = instructionCodes[0] + "," + instructionCodes[1] + "," + instructionCodes[2]
+            if instructionCodes[1] == "48" {
+                // GSB to decimal label, ex. ["32", "48", " 1"] => "  32 .1"
+                codes = "  " + instructionCodes[0] + " ." + String(instructionCodes[2].last!)
+            } else {
+                // all other three-code instructions, ex. ["42", "22", "23"] => "42,22,23"
+                codes = instructionCodes[0] + "," + instructionCodes[1] + "," + instructionCodes[2]
+            }
+        case 4:
+            // decimal label, ex. ["42", "21", "48", " 1"] => "42,21,.1"
+            codes = instructionCodes[0] + "," + instructionCodes[1] + ", ." + String(instructionCodes[3].last!)
         default:
             break
         }
