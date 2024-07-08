@@ -24,38 +24,48 @@
 //     Autoshrink: Minimum Font Size
 //         number: (smallest desired scalable size)
 //
-//  Useful functions...
-//     let lastDigit = displayString.removeLast()     // remove last digit and return it
-//     displayString.removeLast(n)                    // removes last n digits without returning them
-//     displayString = String(format: displayFormat.string, 0.0)  // write number to display in current format
-//     displayString = displayString.padding(toLength: 9, withPad: " ", startingAt: 0) + "00"  // pad end of string with blanks
+//  HP-15C tips...
+//  - labels A-E, 0-9, .0-.9
+//    - in program mode, enter labels using f-LBL A-E, f-LBL 0-9, or f-LBL .0-.9
+//    - run a program from labels  A-E  by entering f A-E or GSB A-E
+//    - run a program from labels  0-9  by entering GSB 0-9 (f-LBL 0-9 doesn't work)
+//    - run a program from labels .0-.9 by entering GSB .0-.9 (f-LBL .0-.9 doesn't work)
+//  - goto line number
+//    - in run mode or program mode, change the current line number using GTO CHS nnn (three-digit line number)
+//    - in run mode, f-CLEAR-PRGM goes to line 0
+//    - in program mode, f-CLEAR-PRGM deletes the program
+//  - single-step through a program
+//    - in run mode, holding down SST displays current instruction; releasing executes instruction,
+//      and increments line number; if instruction is RTN, program cycles back to line 1
+//    - in run mode, holding down g-BST displays previous instruction; releasing does not execute instruction
+//    - in program mode, SST and g-BST increments or decrements the current line number (without executing)
 //
 //  Example of similar keys pressed in program mode vs run mode, and how they're handled...
 //
-//  Program mode - add label A to program (f-SST-√x)
+//    Program mode - add label A to program (f-SST-√x)
 //
-//    User           CalculatorViewController                     Program                                             Codes
-//    -------------  -------------------------------------------  -------------------------------------------------  --------
-//    press "f"      prefixKeyPressed.sendToProgram("f")          instructionCodes = [Program.keycodes["f"]!]          "42"
-//                   prefix = .f                                  prefix = "f"
-//                                                                return nil
-//    press "SST"    programKeyPressed.prefixKeyPressed("SST")
-//                   prefixKeyPressed.sendToProgram("SST")        instructionCodes.append(Program.keycodes["SST"]!)   "42 21"
-//                   prefix = nil                                 prefix += "SST" (= "fSST")
-//                                                                return nil
-//    press "√x"     operationKeyPressed.programKeyPressed("√x")
-//                   programKeyPressed.sendToProgram("√x")        instructionCodes.append(Program.keycodes["√x"]!)   "42 21 11"
-//                   prefix = nil                                 prefix = ""
-//                   displayString = "001-42,21,11"               return insertedInstruction; instructions.insert("001-42,21,11")
+//      User           CalculatorViewController                     Program                                             Codes
+//      -------------  -------------------------------------------  -------------------------------------------------  --------
+//      press "f"      prefixKeyPressed.sendToProgram("f")          instructionCodes = [Program.keycodes["f"]!]          "42"
+//                     prefix = .f                                  prefix = "f"
+//                                                                  return nil
+//      press "SST"    programKeyPressed.prefixKeyPressed("SST")
+//                     prefixKeyPressed.sendToProgram("SST")        instructionCodes.append(Program.keycodes["SST"]!)   "42 21"
+//                     prefix = nil                                 prefix += "SST" (= "fSST")
+//                                                                  return nil
+//      press "√x"     operationKeyPressed.programKeyPressed("√x")
+//                     programKeyPressed.sendToProgram("√x")        instructionCodes.append(Program.keycodes["√x"]!)   "42 21 11"
+//                     prefix = nil                                 prefix = ""
+//                     displayString = "001-42,21,11"               return insertedInstruction; instructions.insert("001-42,21,11")
 //
-//  Run mode - run from label A (f-√x)
+//    Run mode - run from label A (f-√x)
 //
-//    User           CalculatorViewController                     Program
-//    -------------  -------------------------------------------  -----------------------------------------------------------------
-//    press "f"      prefix = .f
+//      User           CalculatorViewController                     Program
+//      -------------  -------------------------------------------  -----------------------------------------------------------------
+//      press "f"      prefix = .f
 //
-//    press "√x"     operationKeyPressed.programKeyPressed("√x")
-//                   programKeyPres.program.runFrom(label: "√x")  gotoLabel("42,21,11"); runFromCurrentLine; loop through all lines
+//      press "√x"     operationKeyPressed.programKeyPressed("√x")
+//                     programKeyPres.program.runFrom(label: "√x")  gotoLabel("42,21,11"); runFromCurrentLine; loop through all lines
 //
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
@@ -1653,6 +1663,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 } else {
                     // while holding down SST button, display current line of code;
                     // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
+                    if program.currentLineNumber == 0 { _ = program.forwardStep() }
                     saveDisplayString = displayString
                     displayString = program.currentInstruction
                     sender.addTarget(self, action: #selector(sstButtonReleased), for: .touchUpInside)

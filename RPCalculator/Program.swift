@@ -497,7 +497,8 @@ class Program: Codable {
     // [42, 21, 1] = "f LBL 0-9]
     // [42, 21, 48, 1] = "f LBL . 0-9]
     func isLabel(codes: [Int]) -> Bool {
-        codes[0] == 42 && codes[1] == 21 && (
+        guard !codes.isEmpty else { return false }
+        return codes[0] == 42 && codes[1] == 21 && (
             (codes.count == 3 && (codes[2] >= 0 && codes[2] <= 9) || (codes[2] >= 11 && codes[2] <= 15)) ||
             (codes.count == 4 && (codes[3] >= 0 && codes[3] <= 9))
         )
