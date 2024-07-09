@@ -131,7 +131,7 @@ class Program: Codable {
     
     // search forward through program, until label found; return false, if not found;
     // leave program at line with label, or original location, if label not found
-    func gotoLabel(_ label: String) -> Bool {
+    func gotoLabel(_ label: String) -> Bool {  // label is button title (ex. "√x" for label A, or ".1" for label .1)
         var labelFound = false
         var labelCodeString = ""
         if label.first == "." {
@@ -388,34 +388,49 @@ class Program: Codable {
     
     func runFrom(label: String, completion: @escaping () -> Void) {
         if gotoLabel(label) {
-            runFromCurrentLine(completion: completion)
+            // label found
+            runFromCurrentLine(returnTo: 0)
+            delegate?.isRunMode = false
+            completion()
         } else {
             delegate?.setError(4)  // label not found
         }
     }
     
-    func runFromCurrentLine(completion: @escaping () -> Void) {
+    // may not be at a label (ex. called after pause)
+    func runFromCurrentLine(returnTo lineToReturnTo: Int) {
         // run instructions from current line, until one of the following is found:
         // - last instruction (go to line 0 and stop)
         // - R/S instruction found (go to next line and stop)
+        // - GSB instruction found (go to GSB label and continue)
+        // - RTN instruction found (return line 0 or line after last GSB)
         // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
         // - ignore any labels, and continue
         while currentLineNumber > 0 {
             if isCurrentInstructionARunStop {
                 // stop running - increment line number
                 _ = forwardStep()
-                break  // exit while loop
+                return
+            } else if let label = labelIfCurrentInstructionIsGoSub {
+                // goto subroutine label and continue running, until return found, then return to instruction after go-sub
+                let lineToReturnTo = (currentLineNumber + 1) % instructions.count
+                if gotoLabel(label) {
+                    // label found
+                    runFromCurrentLine(returnTo: lineToReturnTo)
+                } else {
+                    delegate?.setError(4)
+                }
             } else if isCurrentInstructionAReturn {
-                // stop running - goto line 0
-                currentLineNumber = 0
-                break  // exit while loop
+                // stop running - goto line to return to
+                currentLineNumber = lineToReturnTo
+                return
             } else if isCurrentInstructionAPause {
                 // pause and continue, recursively
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                     delegate?.isRunMode = true  // show "running" when continuing after pause
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                         _ = forwardStep()
-                        runFromCurrentLine(completion: completion)
+                        runFromCurrentLine(returnTo: lineToReturnTo)
                     }
                 }
                 return  // stop and wait for pause to restart program
@@ -425,15 +440,13 @@ class Program: Codable {
                 runCurrentInstruction()
                 //---------------------
                 if brain.error == .none {
-                    _ = forwardStep()
+                    _ = forwardStep()  // increment currentLineNumber
                 } else {
                     delegate?.isRunMode = false
                     return  // stop for errors
                 }
             }
         }
-        delegate?.isRunMode = false
-        completion()
     }
 
     func runCurrentInstruction() {
@@ -521,6 +534,27 @@ class Program: Codable {
     func isReturn(codes: [Int]) -> Bool {
         codes == [43, 32]
     }
+    
+    // ex. GSB A  = [32, 11]    => "√x" (A)
+    //     GSB 1  = [32, 1]     => " 1"
+    //     GSB .1 = [32, 48, 1] => ".1"
+    var labelIfCurrentInstructionIsGoSub: String? {
+        if isGoSub(codes: currentInstructionCodes) {
+            var labelString = ""
+            if currentInstructionCodes[1] == 48 {
+                labelString = ".\(currentInstructionCodes[2])"
+            } else {
+                labelString = Program.buttonTitles[String(format: "%2d", currentInstructionCodes[1])]!
+            }
+            return labelString
+        } else {
+            return nil
+        }
+    }
+    
+    func isGoSub(codes: [Int]) -> Bool {
+        codes[0] == 32
+    }
 
     var isCurrentInstructionAPause: Bool {
         isPause(codes: currentInstructionCodes)
@@ -536,12 +570,12 @@ class Program: Codable {
     //    "42,21, .1" => [42, 21, 48, 1]
     //       " 43 24" => [43, 24]
     //       "  44 1" => [44, 1]
-    //     "  32  .2" => [32, 48, 1]
+    //      "  32 .1" => [32, 48, 1]
     //       "    12" => [12]
     func codesFrom(codeString: String) -> [Int] {
         guard !codeString.isEmpty else { return [] }
-        let modifiedCodeString = codeString.replacingOccurrences(of: " .", with: "48,")
-        let delimiter = modifiedCodeString.contains(",") ? "," : " "
+        let delimiter = codeString.contains(",") ? "," : " "
+        let modifiedCodeString = codeString.replacingOccurrences(of: " .", with: " 48\(delimiter)")
         let codesArray = modifiedCodeString.trimmingCharacters(in: .whitespaces).components(separatedBy: delimiter)
         return codesArray.map { Int($0.trimmingCharacters(in: .whitespaces))! }
     }

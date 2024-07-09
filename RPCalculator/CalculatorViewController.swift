@@ -32,7 +32,7 @@
 //    - run a program from labels .0-.9 by entering GSB .0-.9 (f-LBL .0-.9 doesn't work)
 //  - goto line number
 //    - in run mode or program mode, change the current line number using GTO CHS nnn (three-digit line number)
-//    - in run mode, f-CLEAR-PRGM goes to line 0
+//    - in run mode, f-CLEAR-PRGM or g-RTN goes to line 0
 //    - in program mode, f-CLEAR-PRGM deletes the program
 //  - single-step through a program
 //    - in run mode, holding down SST displays current instruction; releasing executes instruction,
@@ -1683,7 +1683,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     isRunMode = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                         if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
-                        program.runFromCurrentLine() { }
+                        program.runFromCurrentLine(returnTo: program.currentLineNumber)
+                        isRunMode = false
                     }
                 }
             case "GSB":
