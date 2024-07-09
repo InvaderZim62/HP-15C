@@ -61,6 +61,7 @@ class Program: Codable {
     var prefix = ""
     var instructionCodes = [String]()  // used for building up compound instructions
     var gotoLineNumberDigits = [Int]()
+    var returnToLineNumbers = [Int]()
     let codeStart = "nnn-".index("nnn-".startIndex, offsetBy: 4)
 
     // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
@@ -111,6 +112,7 @@ class Program: Codable {
     func clearProgram() {
         instructions = []
         instructionCodes = []
+        returnToLineNumbers = []
         currentLineNumber = 0
     }
     
@@ -129,7 +131,7 @@ class Program: Codable {
         return currentInstruction
     }
     
-    // search forward through program, until label found; return false, if not found;
+    // search forward through program from current line (loop at end), until label found; return false, if not found;
     // leave program at line with label, or original location, if label not found
     func gotoLabel(_ label: String) -> Bool {  // label is button title (ex. "√x" for label A, or ".1" for label .1)
         var labelFound = false
@@ -389,8 +391,7 @@ class Program: Codable {
     func runFrom(label: String, completion: @escaping () -> Void) {
         if gotoLabel(label) {
             // label found
-            runFromCurrentLine(returnTo: 0)
-            delegate?.isRunMode = false
+            runFromCurrentLine()
             completion()
         } else {
             delegate?.setError(4)  // label not found
@@ -398,7 +399,7 @@ class Program: Codable {
     }
     
     // may not be at a label (ex. called after pause)
-    func runFromCurrentLine(returnTo lineToReturnTo: Int) {
+    func runFromCurrentLine() {
         // run instructions from current line, until one of the following is found:
         // - last instruction (go to line 0 and stop)
         // - R/S instruction found (go to next line and stop)
@@ -413,16 +414,11 @@ class Program: Codable {
                 return
             } else if let label = labelIfCurrentInstructionIsGoSub {
                 // goto subroutine label and continue running, until return found, then return to instruction after go-sub
-                let lineToReturnTo = (currentLineNumber + 1) % instructions.count
-                if gotoLabel(label) {
-                    // label found
-                    runFromCurrentLine(returnTo: lineToReturnTo)
-                } else {
-                    delegate?.setError(4)
-                }
+                returnToLineNumbers.append((currentLineNumber + 1) % instructions.count)
+                runFrom(label: label) { }
             } else if isCurrentInstructionAReturn {
-                // stop running - goto line to return to
-                currentLineNumber = lineToReturnTo
+                // go to previous subroutine call or start or program
+                currentLineNumber = returnToLineNumbers.popLast() ?? 0
                 return
             } else if isCurrentInstructionAPause {
                 // pause and continue, recursively
@@ -430,7 +426,7 @@ class Program: Codable {
                     delegate?.isRunMode = true  // show "running" when continuing after pause
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                         _ = forwardStep()
-                        runFromCurrentLine(returnTo: lineToReturnTo)
+                        runFromCurrentLine()
                     }
                 }
                 return  // stop and wait for pause to restart program
@@ -449,10 +445,24 @@ class Program: Codable {
         }
     }
 
+    // called from either runFromCurrentLine (looping through several instructions) or during single-stepping (SST);
     func runCurrentInstruction() {
         if isCurrentInstructionALabel {
             // non-executable instruction - if user was entering digits, send display to stack
             delegate?.prepStackForOperation()
+        } else if let label = labelIfCurrentInstructionIsGoSub {
+            // goto subroutine label
+            returnToLineNumbers.append(currentLineNumber)
+            if gotoLabel(label) {
+                // label found
+                _ = backStep()  // back-step, since SST increments current line number
+            } else {
+                delegate?.setError(4)  // label not found
+            }
+        } else if isCurrentInstructionAReturn {
+            // go to previous subroutine call or start or program
+            currentLineNumber = returnToLineNumbers.popLast() ?? 0
+            return
         } else {
             // executable instruction - run it
             let titles = currentInstructionTitles  // ex. ["f", "GTO", "SIN"]

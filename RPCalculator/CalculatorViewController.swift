@@ -1683,7 +1683,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     isRunMode = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                         if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
-                        program.runFromCurrentLine(returnTo: program.currentLineNumber)
+                        program.runFromCurrentLine()
                         isRunMode = false
                     }
                 }
@@ -1708,7 +1708,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // A - E pressed - run program from label A - E
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                    program.runFrom(label: keyName) { }
+                    program.runFrom(label: keyName) {
+                        self.isRunMode = false
+                    }
                 }
             case "SST":
                 // LBL pressed
@@ -1773,7 +1775,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // A - E or 0 - 9 pressed - run program from label A - E or label 0 - 9
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                    program.runFrom(label: keyName) { }
+                    program.runFrom(label: keyName) {
+                        self.isRunMode = false
+                    }
                 }
             default:
                 break
@@ -1785,7 +1789,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // .0 - .9 pressed - run program from label .0 - .9
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                    program.runFrom(label: "." + keyName) { }
+                    program.runFrom(label: "." + keyName) {
+                        self.isRunMode = false
+                    }
                 }
             default:
                 break
