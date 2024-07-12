@@ -164,33 +164,57 @@ class Program: Codable {
         }
     }
 
-    // Prefix   buttonLabel(s)
-    // f        f  // basic (single digit)
-    // g        g
-    // GTO      GTO
-    // GSB      GSB
-    // STO      STO
-    // RCL      RCL
-    // GTO_CHS  GTO CHS  // compound (two digits)
-    // SOLVE    f ÷
-    // LBL      f SST
-    // LBL_DOT  f SST .
-    // GSB_DOT  GSB .
-    // FIX      f 7
-    // SCI      f 8
-    // ENG      f 9
-    // HYP      f GTO
-    // HYP1     g GTO
-    // SF       g 4
-    // CF       g 5
-    // STO_ADD  STO +
-    // STO_SUB  STO –
-    // STO_MUL  STO ×
-    // STO_DIV  STO ÷
-    // RCL_ADD  RCL +
-    // RCL_SUB  RCL –
-    // RCL_MUL  RCL ×
-    // RCL_DIV  RCL ÷
+    // Everything that says "prog if followed by..." is added to the instructions once the follow-up
+    // keys are entered.  If another key is entered before the specified follow-up, the sequence is
+    // cleared, and re-started with the new key.  Any key sequence not listed, is added to the
+    // instructions, as is.
+    
+    // SST     = SST      non-prog (fwd step)
+    // GTO     = GTO      prog if followed by A-E, 0-9, ".", I, CHS
+    // GTO .   = GTO .    prog if followed by 0-9
+    // GTO CHS = GTO CHS  non-prog if followed by nnn (goto nnn)
+    // GSB     = GSB      prog if followed by A-E, 0-9, ".", I
+    // GSB .   = GSB .    prog if followed by 0-9
+    // ←       = ←        non-prog (delete instruction)
+    
+    // STO     = STO      prog if followed by A-E, 0-9, ".", (i), I
+    // STO .   = STO .    prog if followed by 0-9
+    // STO +   = STO +    prog if followed by A-E, 0-9, ".", (i), I
+    // STO + . = STO + .  prog if followed by 0-9
+    // STO –   = STO –    prog if followed by A-E, 0-9, ".", (i), I
+    // STO – . = STO – .  prog if followed by 0-9
+    // STO ×   = STO ×    prog if followed by A-E, 0-9, ".", (i), I
+    // STO × . = STO × .  prog if followed by 0-9
+    // STO ÷   = STO ÷    prog if followed by A-E, 0-9, ".", (i), I
+    // STO ÷ . = STO ÷ .  prog if followed by 0-9
+    
+    // RCL (same as above)
+
+    // f GTO   = HYP      prog if followed by SIN, COS, TAN
+    // f RCL   = USER     non-prog (toggles user mode)
+    // f COS   = (i)      non-prog (no action)
+    // f R↓    = PRGM     non-prog (clear instructions)
+    // f ←     = PREFIX   non-prog (no action)
+    // f ÷     = SOLVE    prog if followed by A-E, 0-9, "."
+    // f ÷ .   = SOLVE    prog if followed by 0-9
+    // f ×     = ∫xy      prog if followed by A-E, 0-9, "."
+    // f × .   = ∫xy      prog if followed by 0-9
+    // f SST   = LBL      prog if followed by A-E, 0-9, "."
+    // f SST . = LBL .    prog if followed by 0-9
+    // f 7     = FIX      prog if followed by 0-9, I
+    // f 8     = SCI      prog if followed by 0-9, I
+    // f 9     = ENG      prog if followed by 0-9, I
+    // f 4     = x≷  ?    prog if followed by 0-9, (i), I
+    // f 5     = DSE ?    prog if followed by 0-9, (i), I
+    // f 6     = ISG ?    prog if followed by 0-9, (i), I
+    
+    // g GTO   = HYP1     prog if followed by SIN, COS, TAN
+    // g RCL   = MEM      non-prog (shows memory layout?)
+    // g SST   = BST      non-prog (back step)
+    // g 4     = SF       prog if followed by 0-9, I
+    // g 5     = CF       prog if followed by 0-9, I
+    // g 6     = f?  ?    prog if followed by 0-9, I
+    // g -     = TEST     prog if followed by 0-9
 
     // in program mode, CalculatorViewController sends all button labels directly to buildInstructionWith
     // (except for "program buttons"); buildInstructionWith accumulates labels in the form of key codes,
@@ -209,23 +233,29 @@ class Program: Codable {
             // any time "f" or "g" is entered, the program instruction starts over
             prefix = buttonLabel
             instructionCodes = [Program.keycodes[buttonLabel]!]
-        case "GTO", "STO", "RCL":
-            if instructionCodes.isEmpty || 
-                prefix == "GTO" || prefix == "STO" || prefix == "RCL" ||
-                prefix == "fSST" || prefix == "fSST." ||
-                prefix == "GSB" || prefix == "GSB." {
-                // if there is no other current prefix, these seven can override each other;
+        case "GTO", "GSB", "STO", "RCL":  // pws: what about STO .1 or RCL .1 ?
+            if prefix == "f" || prefix == "g" {
+                if buttonLabel == "GTO" {
+                    // compound prefix (HYP or HYP-1)
+                    prefix += buttonLabel
+                    instructionCodes.append(Program.keycodes[buttonLabel]!)
+                } else if buttonLabel == "RCL" {
+                    if prefix == "f" {
+                        // USER (non-programable)
+                        // pws: TBD toggle USER mode
+                    } else {
+                        // MEM (non-programmable)
+                        // pws: TBD show memory layout?
+                    }
+                } else {
+                    // instruction complete
+                    instructionCodes.append(Program.keycodes[buttonLabel]!)
+                    return insertedInstruction
+                }
+            } else {
                 // start the program instruction over with the latest one
                 prefix = buttonLabel
                 instructionCodes = [Program.keycodes[buttonLabel]!]
-            } else if (prefix == "f" || prefix == "g") && buttonLabel == "GTO" {
-                // compound prefix (HYP or HYP-1)
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
-            } else {
-                // instruction complete
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return insertedInstruction
             }
         case "SST":
             switch prefix {
@@ -239,15 +269,6 @@ class Program: Codable {
             default:
                 // return next line (SST)
                 return forwardStep()  // non-programmable
-            }
-        case "GSB":
-            if prefix == "g" {
-                // instruction complete (RTN)
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
-                return insertedInstruction
-            } else {
-                prefix = buttonLabel
-                instructionCodes = [Program.keycodes[buttonLabel]!]
             }
         case "√x", "ex", "10x", "yx", "1/x":
             // instruction complete
@@ -277,16 +298,16 @@ class Program: Codable {
                         return currentInstruction
                     }
                 }
-            } else if prefix == "f" && (buttonLabel == "7" || buttonLabel == "8" || buttonLabel == "9") {
-                // compound prefix (FIX, SCI, or ENG)
+            } else if prefix == "f" && (buttonLabel == "4" || buttonLabel == "5" || buttonLabel == "6" || buttonLabel == "7" || buttonLabel == "8" || buttonLabel == "9") {
+                // compound prefix (x≷, DSE, ISG, FIX, SCI, or ENG)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-            } else if prefix == "g" && (buttonLabel == "4" || buttonLabel == "5") {
-                // compound prefix (SF or CF)
+            } else if prefix == "g" && (buttonLabel == "4" || buttonLabel == "5" || buttonLabel == "6") {
+                // compound prefix (SF, CF, f?)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-            } else if prefix == "fSST." || prefix == "GSB." {
-                // instruction complete (LBL . 0, or GSB . 1)
+            } else if prefix.last == "." {
+                // instruction complete (GTO .n, GSB .n, STO .n, STO + .n, RCL .n, RCL + .n, SOLVE .n, ∫xy .n, LBL . n)
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return insertedInstruction
             } else {
@@ -295,15 +316,12 @@ class Program: Codable {
                 return insertedInstruction
             }
         case ".":
-            if prefix == "fSST" {
-                // compound prefix (LBL .)
+            switch prefix {
+            case "GTO", "GSB", "STO", "STO+", "STO–", "STO×", "STO÷", "RCL", "RCL+", "RCL–", "RCL×", "RCL÷", "f÷", "f×", "fSST":
+                // compound prefix (GTO ., GSB ., ...)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
-            } else if prefix == "GSB" {
-                // compound prefix (GSB .)
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
-            } else {
+            default:
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
                 return insertedInstruction

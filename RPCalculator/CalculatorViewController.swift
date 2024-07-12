@@ -75,11 +75,10 @@
 //  - make display blink when +/-overflow (9.999999 99) ex. 1 EEX 99 Enter 10 x
 //  - on real HP-15C, following overflow, entering <- key causes blinking to stop, but leaves 9.999999 99 in display (xRegister)
 //  - p61 implement underflow (displays 0.0)
-//  - backspace key doesn't restore display after ERROR
-//  - HP-15C resets prefix (f, g) and program mode during power cycle
 //  - stop program if any key pressed
 //  - p90 implement program branching and control
 //  - if the user enters f-A in program mode, the HP-15C enters the instruction for GSB-A
+//  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
 //
 
 import UIKit
@@ -97,6 +96,7 @@ enum Prefix: String {
     case GSB  // ex. GSB B (goto label B and run until RTN)
     case GSB_DOT  // ex. GSB . 0 (0 - 9, .0 - .9 are valid labels)
     case GTO  // ex. GTO 5 (goto label 5)
+    case GTO_DOT  // ex. GTO . 5 (goto label .5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
     case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
     case FIX  // ex. f FIX 4 (format numbers in fixed-point with 4 decimal places)
@@ -690,8 +690,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
         case .GTO:
             switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // label 0-9 pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)  // better handled as program key
+                return
             case ".":
-                print("GTO .")  // pws: goto label starting with "." number
+                // GTO . pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(".", for: .normal)
+                prefixKeyPressed(tempButton)  // better handled as prefix key
             case "EEX":
                 // EEX pressed - clear GTO and perform EEX
                 prefix = nil
@@ -1260,10 +1269,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 tempButton.setTitle("CHS", for: .normal)
                 prefixKeyPressed(tempButton)  // better handled as prefix key
                 return
-            case "√x":
-                // do nothing (just add to stack)
-                prefix = nil
-                prepStackForOperation()
+            case "√x", "ex", "10x", "yx", "1/x":
+                // label "A" - "E" pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)  // better handled as program key
                 return
             case "SIN", "COS", "÷", "×", "-", "+", "→R", "→P", "→H.MS", "→H", "→RAD", "→DEG":
                 // perform operation without prefix
@@ -1556,6 +1566,28 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             default:
                 break
             }
+            
+            // attempt to make more generic
+//        case .STO, .RCL, .GSB, .GTO, .GTO_CHS:
+//            switch keyName {
+//            case "f":
+//                prefix = .f  // pws: HP-15C shows f after STO f, so what is STO f ENTER?
+//            case "g":
+//                prefix = .g
+//            case ".":
+//                prefix = .STO_DOT
+//            case "STO":
+//                prefix = .STO
+//            case "RCL":
+//                prefix = .RCL
+//            case "GSB":
+//                prefix = .GSB
+//            case "GTO":
+//                prefix = .GTO
+//            default:
+//                setError(99)  // shouldn't get here
+//            }
+            
         case .STO:
             switch keyName {
             case "f":
@@ -1569,7 +1601,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "GSB":
                 prefix = .GSB
             case "GTO":
-                print("STO GTO")  // pws: not sure what this is
+                prefix = .GTO
             default:
                 setError(99)  // shouldn't get here
             }
@@ -1585,6 +1617,25 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .STO
             case "GSB":
                 prefix = .GSB
+            case "GTO":
+                prefix = .GTO
+            default:
+                invalidKeySequenceEntered()
+            }
+        case .GSB:
+            switch keyName {
+            case "f":
+                prefix = .f
+            case "g":
+                prefix = .g
+            case ".":
+                prefix = .GSB_DOT
+            case "STO":
+                prefix = .STO
+            case "RCL":
+                prefix = .RCL
+            case "GTO":
+                prefix = .GTO
             default:
                 invalidKeySequenceEntered()
             }
@@ -1594,6 +1645,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .f
             case "g":
                 prefix = .g
+            case ".":
+                prefix = .GTO_DOT
             case "STO":
                 prefix = .STO
             case "RCL":
@@ -1617,27 +1670,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .STO
             case "RCL":
                 prefix = .RCL
-            case "GTO":
-                prefix = .GTO
             case "GSB":
                 prefix = .GSB
+            case "GTO":
+                prefix = .GTO
             default:
                 setError(99)  // shouldn't get here
-            }
-        case .GSB:
-            switch keyName {
-            case "f":
-                prefix = .f
-            case "g":
-                prefix = .g
-            case ".":
-                prefix = .GSB_DOT
-            case "STO":
-                prefix = .STO
-            case "RCL":
-                prefix = .RCL
-            default:
-                invalidKeySequenceEntered()
             }
         default:  // .FIX, .SCI, .ENG, .HYP, .HYP1 (not allowed to precede prefix key)
             invalidKeySequenceEntered()
@@ -1645,6 +1683,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
 
     // program manipulation keys: SST, GTO, R/S, GSB
+    // sent from digitKeyPressed: 0-9 (ex. GSB-0 for label 0)
     // sent from operationKeyPressed: √x, ex, 10x, yx, 1/x (ex. f-√x for label A, f-SOLVE-√x for solve label A, GSB-√x for label A)
     // sent from operationKeyPressed: 0-9 (ex. GSB-.-1 for run from label .1)
     @IBAction func programKeyPressed(_ sender: UIButton) {
@@ -1768,6 +1807,54 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             default:
                 break
             }
+        case .STO:
+            prefix = nil
+            switch keyName {
+            case "GSB":
+                let tempButton = UIButton()
+                tempButton.setTitle("GSB", for: .normal)
+                prefix = .STO
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+            case "GTO":
+                let tempButton = UIButton()
+                tempButton.setTitle("GTO", for: .normal)
+                prefix = .STO
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+            default:
+                break
+            }
+        case .RCL:
+            prefix = nil
+            switch keyName {
+            case "GSB":
+                let tempButton = UIButton()
+                tempButton.setTitle("GSB", for: .normal)
+                prefix = .RCL
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+            case "GTO":
+                let tempButton = UIButton()
+                tempButton.setTitle("GTO", for: .normal)
+                prefix = .RCL
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+            default:
+                break
+            }
+        case .GTO:
+            prefix = nil
+            switch keyName {
+            case "√x", "ex", "10x", "yx", "1/x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // A - E or 0 - 9 pressed
+                if !program.gotoLabel(keyName) {  // would only be here in non-program mode
+                    setError(4)
+                }
+            case "GSB":
+                let tempButton = UIButton()
+                tempButton.setTitle("GSB", for: .normal)
+                prefix = .GTO
+                prefixKeyPressed(tempButton)  // better handled as prefix key
+            default:
+                break
+            }
         case .GSB:
             prefix = nil
             switch keyName {
@@ -1779,6 +1866,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                         self.isRunMode = false
                     }
                 }
+            case "GTO":
+                let tempButton = UIButton()
+                tempButton.setTitle("GTO", for: .normal)
+                prefix = .GSB
+                prefixKeyPressed(tempButton)  // better handled as prefix key
             default:
                 break
             }
