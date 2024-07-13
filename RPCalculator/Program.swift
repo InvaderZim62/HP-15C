@@ -416,11 +416,12 @@ class Program: Codable {
         }
     }
     
-    // may not be at a label (ex. called after pause)
+    // may not be at a label (ex. if called after pause)
     func runFromCurrentLine() {
         // run instructions from current line, until one of the following is found:
         // - last instruction (go to line 0 and stop)
         // - R/S instruction found (go to next line and stop)
+        // - GTO instruction found (go to GTO label and continue)
         // - GSB instruction found (go to GSB label and continue)
         // - RTN instruction found (return line 0 or line after last GSB)
         // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
@@ -430,6 +431,9 @@ class Program: Codable {
                 // stop running - increment line number
                 _ = forwardStep()
                 return
+            } else if let label = labelIfCurrentInstructionIsGoto {  // note: if adding a section here, also add to runCurrentInstruction
+                // goto subroutine label and continue running
+                runFrom(label: label) { }
             } else if let label = labelIfCurrentInstructionIsGoSub {
                 // goto subroutine label and continue running, until return found, then return to instruction after go-sub
                 returnToLineNumbers.append((currentLineNumber + 1) % instructions.count)
@@ -468,6 +472,14 @@ class Program: Codable {
         if isCurrentInstructionALabel {
             // non-executable instruction - if user was entering digits, send display to stack
             delegate?.prepStackForOperation()
+        } else if let label = labelIfCurrentInstructionIsGoto {
+            // goto label
+            if gotoLabel(label) {
+                // label found
+                _ = backStep()  // back-step, since SST increments current line number
+            } else {
+                delegate?.setError(4)  // label not found
+            }
         } else if let label = labelIfCurrentInstructionIsGoSub {
             // goto subroutine label
             returnToLineNumbers.append(currentLineNumber)
@@ -561,6 +573,27 @@ class Program: Codable {
     
     func isReturn(codes: [Int]) -> Bool {
         codes == [43, 32]
+    }
+    
+    // ex. GTO A  = [22, 11]    => "√x" (A)
+    //     GTO 1  = [22, 1]     => " 1"
+    //     GTO .1 = [22, 48, 1] => ".1"
+    var labelIfCurrentInstructionIsGoto: String? {
+        if isGoto(codes: currentInstructionCodes) {
+            var labelString = ""
+            if currentInstructionCodes[1] == 48 {
+                labelString = ".\(currentInstructionCodes[2])"
+            } else {
+                labelString = Program.buttonTitles[String(format: "%2d", currentInstructionCodes[1])]!
+            }
+            return labelString
+        } else {
+            return nil
+        }
+    }
+    
+    func isGoto(codes: [Int]) -> Bool {
+        codes[0] == 22
     }
     
     // ex. GSB A  = [32, 11]    => "√x" (A)

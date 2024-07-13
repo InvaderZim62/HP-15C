@@ -711,6 +711,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prepStackForOperation()
                 setError(4)  // pws: this should only be "Error 4", if there are no program labels for this digit key
             }
+        case .GTO_DOT:
+            switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // label .0-.9 pressed
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)  // better handled as program key
+                return
+            default:
+                break
+            }
         case .GTO_CHS:
             switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
@@ -1685,7 +1696,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     // program manipulation keys: SST, GTO, R/S, GSB
     // sent from digitKeyPressed: 0-9 (ex. GSB-0 for label 0)
     // sent from operationKeyPressed: √x, ex, 10x, yx, 1/x (ex. f-√x for label A, f-SOLVE-√x for solve label A, GSB-√x for label A)
-    // sent from operationKeyPressed: 0-9 (ex. GSB-.-1 for run from label .1)
+    // sent from operationKeyPressed: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 (ex. GSB-.-1 for run from label .1, GTO-.-0 for goto label .0)
     @IBAction func programKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1843,7 +1854,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             switch keyName {
             case "√x", "ex", "10x", "yx", "1/x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
-                // A - E or 0 - 9 pressed
+                // A - E or 0 - 9 pressed - goto label A - E or 0 - 9
                 if !program.gotoLabel(keyName) {  // would only be here in non-program mode
                     setError(4)
                 }
@@ -1852,6 +1863,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 tempButton.setTitle("GSB", for: .normal)
                 prefix = .GTO
                 prefixKeyPressed(tempButton)  // better handled as prefix key
+            default:
+                break
+            }
+        case .GTO_DOT:
+            prefix = nil
+            switch keyName {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                // .0 - .9 pressed - goto label .0 - .9
+                if !program.gotoLabel("." + keyName) {  // would only be here in non-program mode
+                    setError(4)
+                }
             default:
                 break
             }
