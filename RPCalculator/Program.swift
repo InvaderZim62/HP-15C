@@ -192,9 +192,9 @@ class Program: Codable {
 
     // f GTO   = HYP      prog if followed by SIN, COS, TAN
     // f RCL   = USER     non-prog (toggles user mode)
-    // f COS   = (i)      non-prog (no action)
+    // f COS   = (i)      non-prog (no action - ignore)
     // f R↓    = PRGM     non-prog (clear instructions)
-    // f ←     = PREFIX   non-prog (no action)
+    // f ←     = PREFIX   non-prog (no action - ignore)
     // f ÷     = SOLVE    prog if followed by A-E, 0-9, "."
     // f ÷ .   = SOLVE    prog if followed by 0-9
     // f ×     = ∫xy      prog if followed by A-E, 0-9, "."
@@ -339,7 +339,7 @@ class Program: Codable {
         case "COS":
             if prefix == "f" {
                 // (i) (non-programmable)
-                prefix = ""  // ignored in program mode
+                prefix = ""  // ignored in program mode (show imaginary part of complex number in normal mode)
             } else {
                 // instruction complete
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
@@ -467,7 +467,9 @@ class Program: Codable {
         }
     }
 
-    // called from either runFromCurrentLine (looping through several instructions) or during single-stepping (SST);
+    // called from either runFromCurrentLine (looping through several instructions) or during
+    // single-stepping (SST); handle labels, gotos, gosubs, and returns separately, otherwise
+    // parse current instruction and "press" buttons to implement it
     func runCurrentInstruction() {
         if isCurrentInstructionALabel {
             // non-executable instruction - if user was entering digits, send display to stack

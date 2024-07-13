@@ -719,6 +719,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 tempButton.setTitle(keyName, for: .normal)
                 programKeyPressed(tempButton)  // better handled as program key
                 return
+            case ".":
+                // cancel GTO_DOT - re-enter "."
+                prefix = nil
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                digitKeyPressed(tempButton)
+                return
             default:
                 break
             }
@@ -768,6 +775,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 let tempButton = UIButton()
                 tempButton.setTitle(keyName, for: .normal)
                 programKeyPressed(tempButton)  // better handled as program key
+                return
+            case ".":
+                // cancel GSB_DOT - re-enter "."
+                prefix = nil
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                digitKeyPressed(tempButton)
                 return
             default:
                 break
@@ -1162,7 +1176,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .STO:
             // STO [+|–|×|÷]
             switch keyName {
-            case "+":
+            case "+":  // don't move [+|–|×|÷] to prefixKeyPressed (too many)
                 prefix = .STO_ADD  // ex. add display to number stored in register (next key)
             case "–":  // minus sign is an "EN DASH"
                 prefix = .STO_SUB
@@ -1170,6 +1184,19 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .STO_MUL
             case "÷":
                 prefix = .STO_DIV
+            case "SIN":
+                // cancel STO, and perform SIN
+                prefix = nil
+                break
+            case "COS":
+                // STO to register number stored in I (integer portion of absolute value of number stored in I)
+                print("STO (i)")  // TBD
+            case "TAN":
+                // STO to register I
+                print("STO I")  // TBD
+            case "CHS":
+                // ignore
+                return
             default:
                 prepStackForOperation()
                 setError(3)
@@ -1177,7 +1204,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
             return
         case .STO_DOT:
-            // STO . operation (give up on STO . and re-issue operation)
+            // STO . operation (cancel "STO ." and re-issue operation)
             prefix = nil
             let tempButton = UIButton()
             tempButton.setTitle(keyName, for: .normal)
@@ -1194,6 +1221,19 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .RCL_MUL
             case "÷":
                 prefix = .RCL_DIV
+            case "SIN":
+                // cancel RCL, and perform SIN
+                prefix = nil
+                break
+            case "COS":
+                // RCL from register number stored in I (integer portion of absolute value of number stored in I)
+                print("RCL (i)")  // TBD
+            case "TAN":
+                // RCL from register I
+                print("RCL I")  // TBD
+            case "CHS":
+                // ignore
+                return
             default:
                 prepStackForOperation()
                 setError(3)
@@ -1201,7 +1241,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
             return
         case .RCL_DOT:
-            // RCL . operation (give up on RCL . and re-issue operation)
+            // RCL . operation (cancel "RCL ." and re-issue operation)
             prefix = nil
             let tempButton = UIButton()
             tempButton.setTitle(keyName, for: .normal)
@@ -1302,6 +1342,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 tempButton.setTitle(keyName, for: .normal)
                 programKeyPressed(tempButton)  // better handled as program key
                 return
+            case "CHS":
+                // perform operation without prefix
+                prefix = nil
             default:
                 break
             }
@@ -1492,7 +1535,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         prefix = nil
     }
 
-    // set prefix to .f (for "f"), .g (for "g"), .GTO (for "GTO"), .HYP (for f-"GTO"), .HYP1 (for g-"GTO"),...
     // prefix keys: f, g, STO, RCL
     // prefix sent from programKeyPressed: SST (for f-SST), GTO, GSB
     // prefix sent from operationKeyPressed: CHS (for GTO-CHS), or ÷ (for f-"÷")
@@ -1650,6 +1692,21 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             default:
                 invalidKeySequenceEntered()
             }
+        case .GSB_DOT:
+            switch keyName {
+            case "f":
+                prefix = .f
+            case "g":
+                prefix = .g
+            case "STO":
+                prefix = .STO
+            case "RCL":
+                prefix = .RCL
+            case "GTO":
+                prefix = .GTO
+            default:
+                invalidKeySequenceEntered()
+            }
         case .GTO:
             switch keyName {
             case "f":
@@ -1665,6 +1722,21 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "CHS":
                 prefix = .GTO_CHS
                 gotoLineNumberDigits = []
+            case "GSB":
+                prefix = .GSB
+            default:
+                setError(99)  // shouldn't get here
+            }
+        case .GTO_DOT:
+            switch keyName {
+            case "f":
+                prefix = .f
+            case "g":
+                prefix = .g
+            case "STO":
+                prefix = .STO
+            case "RCL":
+                prefix = .RCL
             case "GSB":
                 prefix = .GSB
             default:
