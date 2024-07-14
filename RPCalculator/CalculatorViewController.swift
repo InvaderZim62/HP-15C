@@ -616,16 +616,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .f:
             prefix = nil
             switch keyName {
-            case "1":
-                // →R pressed (convert to rectangular coordinates)
-                prefix = .f
-                operationKeyPressed(sender)  // better handled as operation
-            case "2":
-                // →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
-                prefix = .f
-                operationKeyPressed(sender)  // better handled as operation
-            case "3":
-                // →RAD pressed
+            case "1", "2", "3":
+                // 1: →R pressed (convert to rectangular coordinates)
+                // 2: →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
+                // 3: →RAD pressed
                 prefix = .f
                 operationKeyPressed(sender)  // better handled as operation
             case "7":
@@ -643,16 +637,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .g:
             prefix = nil
             switch keyName {
-            case "1":
-                // →P pressed (convert to polar coordinates)
-                prefix = .g
-                operationKeyPressed(sender)  // better handled as operation
-            case "2":
-                // →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
-                prefix = .g
-                operationKeyPressed(sender)  // better handled as operation
-            case "3":
-                // →DEG pressed
+            case "1", "2", "3":
+                // 1: →P pressed (convert to polar coordinates)
+                // 2: →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
+                // 3: →DEG pressed
                 prefix = .g
                 operationKeyPressed(sender)  // better handled as operation
             case "4":
@@ -723,7 +711,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     }
                 }
             default:
-                // ".", "EXE" - resend without prefix
+                // ".", "EXE" - re-send without prefix
                 prefix = nil
                 gotoLineNumberDigits = []
                 digitKeyPressed(sender)
@@ -738,17 +726,19 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // GSB . pressed
                 prefixKeyPressed(sender)  // better handled as prefix key
             default:
+                prefix = nil
                 break
             }
         case .GSB_DOT:
+            prefix = nil
             switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // label .0-.9 pressed
+                prefix = .GSB_DOT
                 programKeyPressed(sender)  // better handled as program key
                 return
             case ".":
                 // cancel GSB_DOT - re-enter "."
-                prefix = nil
                 digitKeyPressed(sender)
                 return
             default:
@@ -1155,7 +1145,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "÷":
                 prefix = .RCL_DIV
             case "SIN":
-                // cancel RCL, and perform SIN
+                // cancel prefix, and perform SIN
                 prefix = nil
                 break
             case "COS":
@@ -1456,14 +1446,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
 
     // prefix keys: f, g, STO, RCL
-    // prefix sent from programKeyPressed: SST (for f-SST), GTO, GSB
-    // prefix sent from operationKeyPressed: CHS (for GTO-CHS), or ÷ (for f-"÷")
-    // prefix sent from digitKeyPressed: . (for STO-".", or RCL-".")
+    // prefix sent from programKeyPressed: GTO, GSB, SST (for f-SST),
+    //                                     GTO (for f-GTO, g-, GTO-GTO, GTO_DOT-, GSB-, GSB_DOT-, SOLVE-),
+    //                                     GSB (for            GTO-GSB, GTO_DOT-, GSB-, GSB_DOT-, SOLVE-)
+    // prefix sent from operationKeyPressed: CHS (for GTO-CHS), "÷" (for f-"÷")
+    // prefix sent from digitKeyPressed: "." (for GTO-".", GSB-, STO-, RCL-)
     @IBAction func prefixKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        let keyName = sender.currentTitle!
-        
+        var keyName = sender.currentTitle!
+        if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
+
         if isProgramMode {
             sendToProgram(keyName)
             // continue processing prefix for use with program keys, ex. f-R/S (PSE), g-SST (BST)
@@ -1536,6 +1529,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 break
             }
         default:
+            // handle switching back and forth between prefixes (before completing command)
             switch keyName {
             case "f":
                 prefix = .f
@@ -1558,9 +1552,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .STO
             case "RCL":
                 prefix = .RCL
-            case "CHS":  
-                assert(prefix == .GTO, "if you got this, add 'if prefix == .GTO {...}' below") // pws: remove after confirming
+            case "CHS":
                 // only gets here with prefix = .GTO
+                assert(prefix == .GTO, "if you got this, add 'if prefix == .GTO {...}' below") // pws: remove after confirming
                 prefix = .GTO_CHS
                 gotoLineNumberDigits = []
             case "GSB":
@@ -1574,9 +1568,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
 
     // program manipulation keys: SST, GTO, R/S, GSB
-    // sent from digitKeyPressed: 0-9 (ex. GSB-0 for label 0)
-    // sent from operationKeyPressed: √x, ex, 10x, yx, 1/x (ex. f-√x for label A, f-SOLVE-√x for solve label A, GSB-√x for label A)
-    // sent from operationKeyPressed: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 (ex. GSB-.-1 for run from label .1, GTO-.-0 for goto label .0)
+    // sent from digitKeyPressed if not in program mode: 0-9 (ex. GSB-0 for label 0, GSB_DOT-, GTO-, GTO_DOT-)
+    // sent from operationKeyPressed if not in program mode: √x, ex, 10x, yx, 1/x (ex. f-√x for label A, SOLVE-, GTO-, GSB-)
     @IBAction func programKeyPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
@@ -1638,12 +1631,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                         self.isRunMode = false
                     }
                 }
-            case "SST":
-                // LBL pressed
-                prefix = .f
-                prefixKeyPressed(sender)  // better handled as prefix key
-            case "GTO":
-                // HYP pressed
+            case "SST", "GTO":
+                // LBL or HYP pressed
                 prefix = .f
                 prefixKeyPressed(sender)  // better handled as prefix key
             case "R/S":
@@ -1652,6 +1641,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     // add to program
                     sendToProgram(keyName)
                 }  // else (no action in run mode)
+            case "GSB":
+                // Σ pressed
+                print("Σ pressed")  // pws: not sure what this is, yet
             default:
                 break
             }
@@ -1696,11 +1688,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 if !program.gotoLabel(keyName) {  // would only be here in non-program mode
                     setError(4)
                 }
-            case "SST":
+            case "SST", "R/S":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
                 programKeyPressed(sender)
             default:
+                // GTO, GSB
                 prefixKeyPressed(sender)  // better handled as prefix key
             }
         case .GTO_DOT:
@@ -1711,12 +1704,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 if !program.gotoLabel("." + keyName) {  // would only be here in non-program mode
                     setError(4)
                 }
-            case "SST":
+            case "SST", "R/S":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
                 programKeyPressed(sender)
             default:
-                break
+                // GTO, GSB
+                prefixKeyPressed(sender)  // better handled as prefix key
             }
         case .GSB:
             switch keyName {
@@ -1729,11 +1723,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                         self.isRunMode = false
                     }
                 }
-            case "SST":
+            case "SST", "R/S":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
                 programKeyPressed(sender)
             default:
+                // GTO, GSB
                 prefixKeyPressed(sender)  // better handled as prefix key
             }
         case .GSB_DOT:
@@ -1747,12 +1742,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                         self.isRunMode = false
                     }
                 }
-            case "SST":
+            case "SST", "R/S":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
                 programKeyPressed(sender)
             default:
-                break
+                // GTO, GSB
+                prefixKeyPressed(sender)  // better handled as prefix key
             }
         case .SOLVE:
             prefix = nil
@@ -1763,15 +1759,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                     solve.findRootOfEquationAt(label: keyName)
                 }
-            case "SST":
+            case "SST", "R/S":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
                 programKeyPressed(sender)
             default:
-                break
+                // GTO, GSB
+                prefixKeyPressed(sender)  // better handled as prefix key
             }
         default:
-            prefixKeyPressed(sender)  // better handled as prefix key
+            assert(false, "shouldn't get here")  // pws: remove after testing
+            break  // shouldn't get here
         }
     }
     
