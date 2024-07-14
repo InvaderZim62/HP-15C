@@ -476,6 +476,7 @@ class CalculatorBrain: Codable {
     }
     
     func printMemory() {
+        return
         guard !isSolving else { return }
         print("          Real         Imag")
         let labels = ["T", "Z", "Y", "X"]

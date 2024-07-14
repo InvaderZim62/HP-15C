@@ -1196,6 +1196,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 print("STO I")  // TBD
             case "CHS":
                 // ignore
+                prefix = nil
                 return
             default:
                 prepStackForOperation()
@@ -1233,6 +1234,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 print("RCL I")  // TBD
             case "CHS":
                 // ignore
+                prefix = nil
                 return
             default:
                 prepStackForOperation()
@@ -1619,149 +1621,41 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             default:
                 break
             }
-            
-            // attempt to make more generic
-//        case .STO, .RCL, .GSB, .GTO, .GTO_CHS:
-//            switch keyName {
-//            case "f":
-//                prefix = .f  // pws: HP-15C shows f after STO f, so what is STO f ENTER?
-//            case "g":
-//                prefix = .g
-//            case ".":
-//                prefix = .STO_DOT
-//            case "STO":
-//                prefix = .STO
-//            case "RCL":
-//                prefix = .RCL
-//            case "GSB":
-//                prefix = .GSB
-//            case "GTO":
-//                prefix = .GTO
-//            default:
-//                setError(99)  // shouldn't get here
-//            }
-            
-        case .STO:
-            switch keyName {
-            case "f":
-                prefix = .f  // pws: HP-15C shows f after STO f, so what is STO f ENTER?
-            case "g":
-                prefix = .g
-            case ".":
-                prefix = .STO_DOT
-            case "RCL":
-                prefix = .RCL
-            case "GSB":
-                prefix = .GSB
-            case "GTO":
-                prefix = .GTO
-            default:
-                setError(99)  // shouldn't get here
-            }
-        case .RCL:
+        default:
             switch keyName {
             case "f":
                 prefix = .f
             case "g":
                 prefix = .g
             case ".":
-                prefix = .RCL_DOT
-            case "STO":
-                prefix = .STO
-            case "GSB":
-                prefix = .GSB
-            case "GTO":
-                prefix = .GTO
-            default:
-                invalidKeySequenceEntered()
-            }
-        case .GSB:
-            switch keyName {
-            case "f":
-                prefix = .f
-            case "g":
-                prefix = .g
-            case ".":
-                prefix = .GSB_DOT
+                switch prefix {
+                case .STO:
+                    prefix = .STO_DOT
+                case .RCL:
+                    prefix = .RCL_DOT
+                case .GSB:
+                    prefix = .GSB_DOT
+                case .GTO:
+                    prefix = .GTO_DOT
+                default:
+                    break
+                }
             case "STO":
                 prefix = .STO
             case "RCL":
                 prefix = .RCL
-            case "GTO":
-                prefix = .GTO
-            default:
-                invalidKeySequenceEntered()
-            }
-        case .GSB_DOT:
-            switch keyName {
-            case "f":
-                prefix = .f
-            case "g":
-                prefix = .g
-            case "STO":
-                prefix = .STO
-            case "RCL":
-                prefix = .RCL
-            case "GTO":
-                prefix = .GTO
-            default:
-                invalidKeySequenceEntered()
-            }
-        case .GTO:
-            switch keyName {
-            case "f":
-                prefix = .f
-            case "g":
-                prefix = .g
-            case ".":
-                prefix = .GTO_DOT
-            case "STO":
-                prefix = .STO
-            case "RCL":
-                prefix = .RCL
-            case "CHS":
+            case "CHS":  
+                assert(prefix == .GTO, "if you got this, add 'if prefix == .GTO {...}' below") // pws: remove after confirming
+                // only gets here with prefix = .GTO
                 prefix = .GTO_CHS
                 gotoLineNumberDigits = []
             case "GSB":
                 prefix = .GSB
-            default:
-                setError(99)  // shouldn't get here
-            }
-        case .GTO_DOT:
-            switch keyName {
-            case "f":
-                prefix = .f
-            case "g":
-                prefix = .g
-            case "STO":
-                prefix = .STO
-            case "RCL":
-                prefix = .RCL
-            case "GSB":
-                prefix = .GSB
-            default:
-                setError(99)  // shouldn't get here
-            }
-        case .GTO_CHS:
-            gotoLineNumberDigits = []
-            switch keyName {
-            case "f":
-                prefix = .f
-            case "g":
-                prefix = .g
-            case "STO":
-                prefix = .STO
-            case "RCL":
-                prefix = .RCL
-            case "GSB":
-                prefix = .GSB
             case "GTO":
                 prefix = .GTO
             default:
                 setError(99)  // shouldn't get here
             }
-        default:  // .FIX, .SCI, .ENG, .HYP, .HYP1 (not allowed to precede prefix key)
-            invalidKeySequenceEntered()
         }
     }
 
@@ -1890,53 +1784,24 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             default:
                 break
             }
-        case .STO:
-            prefix = nil
-            switch keyName {
-            case "GSB":
-                let tempButton = UIButton()
-                tempButton.setTitle("GSB", for: .normal)
-                prefix = .STO
-                prefixKeyPressed(tempButton)  // better handled as prefix key
-            case "GTO":
-                let tempButton = UIButton()
-                tempButton.setTitle("GTO", for: .normal)
-                prefix = .STO
-                prefixKeyPressed(tempButton)  // better handled as prefix key
-            default:
-                break
-            }
-        case .RCL:
-            prefix = nil
-            switch keyName {
-            case "GSB":
-                let tempButton = UIButton()
-                tempButton.setTitle("GSB", for: .normal)
-                prefix = .RCL
-                prefixKeyPressed(tempButton)  // better handled as prefix key
-            case "GTO":
-                let tempButton = UIButton()
-                tempButton.setTitle("GTO", for: .normal)
-                prefix = .RCL
-                prefixKeyPressed(tempButton)  // better handled as prefix key
-            default:
-                break
-            }
         case .GTO:
-            prefix = nil
             switch keyName {
             case "√x", "ex", "10x", "yx", "1/x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // A - E or 0 - 9 pressed - goto label A - E or 0 - 9
+                prefix = nil
                 if !program.gotoLabel(keyName) {  // would only be here in non-program mode
                     setError(4)
                 }
-            case "GSB":
+            case "SST":
+                // clear prefix and re-call programKeyPressed
+                prefix = nil
                 let tempButton = UIButton()
-                tempButton.setTitle("GSB", for: .normal)
-                prefix = .GTO
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)
             default:
-                break
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                prefixKeyPressed(tempButton)  // better handled as prefix key
             }
         case .GTO_DOT:
             prefix = nil
@@ -1946,27 +1811,36 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 if !program.gotoLabel("." + keyName) {  // would only be here in non-program mode
                     setError(4)
                 }
+            case "SST":
+                // clear prefix and re-call programKeyPressed
+                prefix = nil
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)
             default:
                 break
             }
         case .GSB:
-            prefix = nil
             switch keyName {
             case "√x", "ex", "10x", "yx", "1/x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // A - E or 0 - 9 pressed - run program from label A - E or label 0 - 9
+                prefix = nil
                 isRunMode = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                     program.runFrom(label: keyName) {
                         self.isRunMode = false
                     }
                 }
-            case "GTO":
+            case "SST":
+                // clear prefix and re-call programKeyPressed
+                prefix = nil
                 let tempButton = UIButton()
-                tempButton.setTitle("GTO", for: .normal)
-                prefix = .GSB
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)
             default:
-                break
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                prefixKeyPressed(tempButton)  // better handled as prefix key
             }
         case .GSB_DOT:
             prefix = nil
@@ -1979,6 +1853,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                         self.isRunMode = false
                     }
                 }
+            case "SST":
+                // clear prefix and re-call programKeyPressed
+                prefix = nil
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)
             default:
                 break
             }
@@ -1991,11 +1871,19 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                     solve.findRootOfEquationAt(label: keyName)
                 }
+            case "SST":
+                // clear prefix and re-call programKeyPressed
+                prefix = nil
+                let tempButton = UIButton()
+                tempButton.setTitle(keyName, for: .normal)
+                programKeyPressed(tempButton)
             default:
                 break
             }
         default:
-            break
+            let tempButton = UIButton()
+            tempButton.setTitle(keyName, for: .normal)
+            prefixKeyPressed(tempButton)  // better handled as prefix key
         }
     }
     
