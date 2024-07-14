@@ -618,22 +618,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             switch keyName {
             case "1":
                 // →R pressed (convert to rectangular coordinates)
-                let tempButton = UIButton()
-                tempButton.setTitle("1", for: .normal)
                 prefix = .f
-                operationKeyPressed(tempButton)  // better handled as operation
+                operationKeyPressed(sender)  // better handled as operation
             case "2":
                 // →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
-                let tempButton = UIButton()
-                tempButton.setTitle("2", for: .normal)
                 prefix = .f
-                operationKeyPressed(tempButton)  // better handled as operation
+                operationKeyPressed(sender)  // better handled as operation
             case "3":
                 // →RAD pressed
-                let tempButton = UIButton()
-                tempButton.setTitle("3", for: .normal)
                 prefix = .f
-                operationKeyPressed(tempButton)  // better handled as operation
+                operationKeyPressed(sender)  // better handled as operation
             case "7":
                 // FIX pressed
                 prefix = .FIX  // wait for next digit
@@ -651,22 +645,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             switch keyName {
             case "1":
                 // →P pressed (convert to polar coordinates)
-                let tempButton = UIButton()
-                tempButton.setTitle("1", for: .normal)
                 prefix = .g
-                operationKeyPressed(tempButton)  // better handled as operation
+                operationKeyPressed(sender)  // better handled as operation
             case "2":
                 // →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
-                let tempButton = UIButton()
-                tempButton.setTitle("2", for: .normal)
                 prefix = .g
-                operationKeyPressed(tempButton)  // better handled as operation
+                operationKeyPressed(sender)  // better handled as operation
             case "3":
                 // →DEG pressed
-                let tempButton = UIButton()
-                tempButton.setTitle("3", for: .normal)
                 prefix = .g
-                operationKeyPressed(tempButton)  // better handled as operation
+                operationKeyPressed(sender)  // better handled as operation
             case "4":
                 // SF pressed (set flag)
                 prefix = .SF
@@ -692,21 +680,15 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // label 0-9 pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)  // better handled as program key
+                programKeyPressed(sender)  // better handled as program key
                 return
             case ".":
                 // GTO . pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(".", for: .normal)
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
             case "EEX":
                 // EEX pressed - clear GTO and perform EEX
                 prefix = nil
-                let tempButton = UIButton()
-                tempButton.setTitle("EEX", for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             default:  // reminder: this function only covers digit keys
                 prepStackForOperation()
                 setError(4)  // pws: this should only be "Error 4", if there are no program labels for this digit key
@@ -715,16 +697,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // label .0-.9 pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)  // better handled as program key
+                programKeyPressed(sender)  // better handled as program key
                 return
             case ".":
                 // cancel GTO_DOT - re-enter "."
                 prefix = nil
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
                 return
             default:
                 break
@@ -748,23 +726,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // ".", "EXE" - resend without prefix
                 prefix = nil
                 gotoLineNumberDigits = []
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
         case .GSB:
             switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // label 0-9 pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)  // better handled as program key
+                programKeyPressed(sender)  // better handled as program key
                 return
             case ".":
                 // GSB . pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(".", for: .normal)
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
             default:
                 break
             }
@@ -772,16 +744,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             switch keyName {
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 // label .0-.9 pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)  // better handled as program key
+                programKeyPressed(sender)  // better handled as program key
                 return
             case ".":
                 // cancel GSB_DOT - re-enter "."
                 prefix = nil
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
                 return
             default:
                 break
@@ -795,9 +763,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 updateDisplayString()
             } else {
                 // if not a number, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
         case .SCI:
             prefix = nil
@@ -808,9 +774,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 updateDisplayString()
             } else {
                 // if not a number, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
         case .ENG:
             prefix = nil
@@ -821,9 +785,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 updateDisplayString()
             } else {
                 // if not a number, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
         case .SF:
             prefix = nil
@@ -849,10 +811,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 setError(11)
             case ".":
                 // STO .
-                let tempButton = UIButton()
-                tempButton.setTitle(".", for: .normal)
                 prefix = .STO
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
                 return
             default:
                 setError(99)
@@ -870,14 +830,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "EEX":
                 // give up on STO . and re-enter EEX
                 prepStackForOperation()
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             case ".":
                 // give up on STO . and re-enter "."
-                let tempButton = UIButton()
-                tempButton.setTitle(".", for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             default:
                 setError(99)
             }
@@ -897,10 +853,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
             case ".":
                 // RCL .
-                let tempButton = UIButton()
-                tempButton.setTitle(".", for: .normal)
                 prefix = .RCL
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
                 return
             default:
                 setError(99)
@@ -919,14 +873,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "EEX":
                 // give up on RCL . and re-enter EEX
                 prepStackForOperation()
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             case ".":
                 // give up on RCL . and re-enter "."
-                let tempButton = UIButton()
-                tempButton.setTitle(".", for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             default:
                 setError(99)
             }
@@ -948,9 +898,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
             liftStack = true
         case .STO_SUB:
@@ -970,9 +918,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
             liftStack = true
         case .STO_MUL:
@@ -992,9 +938,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
             liftStack = true
         case .STO_DIV:
@@ -1018,9 +962,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
             liftStack = true
         case .RCL_ADD:
@@ -1039,9 +981,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
             liftStack = true
         case .RCL_SUB:
@@ -1060,9 +1000,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
             liftStack = true
         case .RCL_MUL:
@@ -1081,9 +1019,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
             liftStack = true
         case .RCL_DIV:
@@ -1107,9 +1043,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             default:
                 // if not a valid register name, ignore prefix and resend digit (EEX or .)
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                digitKeyPressed(tempButton)
+                digitKeyPressed(sender)
             }
             liftStack = true
         default:  // .HYP, .HYP1 (not allowed to precede stack manipulation key)
@@ -1207,9 +1141,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .STO_DOT:
             // STO . operation (cancel "STO ." and re-issue operation)
             prefix = nil
-            let tempButton = UIButton()
-            tempButton.setTitle(keyName, for: .normal)
-            operationKeyPressed(tempButton)
+            operationKeyPressed(sender)
             return
         case .RCL:
             // RCL [+|–|×|÷]
@@ -1245,9 +1177,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .RCL_DOT:
             // RCL . operation (cancel "RCL ." and re-issue operation)
             prefix = nil
-            let tempButton = UIButton()
-            tempButton.setTitle(keyName, for: .normal)
-            operationKeyPressed(tempButton)
+            operationKeyPressed(sender)
             return
         case .f:
             switch keyName {
@@ -1288,15 +1218,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 return
             case "√x", "ex", "10x", "yx", "1/x":
                 // label "A" - "E" pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)  // better handled as program key
+                programKeyPressed(sender)  // better handled as program key
                 return
             case "÷":
                 // SOLVE pressed
-                let tempButton = UIButton()
-                tempButton.setTitle("÷", for: .normal)
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
                 return
             default:
                 break
@@ -1305,9 +1231,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             switch keyName {
             case "√x", "ex", "10x", "yx", "1/x":
                 // label "A" - "E" pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)  // better handled as program key
+                programKeyPressed(sender)  // better handled as program key
                 return
             default:
                 break
@@ -1318,15 +1242,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             switch keyName {
             case "CHS":
                 // goto line number
-                let tempButton = UIButton()
-                tempButton.setTitle("CHS", for: .normal)
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
                 return
             case "√x", "ex", "10x", "yx", "1/x":
                 // label "A" - "E" pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)  // better handled as program key
+                programKeyPressed(sender)  // better handled as program key
                 return
             case "SIN", "COS", "÷", "×", "-", "+", "→R", "→P", "→H.MS", "→H", "→RAD", "→DEG":
                 // perform operation without prefix
@@ -1340,9 +1260,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             switch keyName {
             case "√x", "ex", "10x", "yx", "1/x":
                 // label "A" - "E" pressed
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)  // better handled as program key
+                programKeyPressed(sender)  // better handled as program key
                 return
             case "CHS":
                 // perform operation without prefix
@@ -1575,10 +1493,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .g
             case "STO":
                 // "FRAC" pressed
-                let tempButton = UIButton()
-                tempButton.setTitle("STO", for: .normal)
                 prefix = .f
-                operationKeyPressed(tempButton)  // better handled as operation
+                operationKeyPressed(sender)  // better handled as operation
             case "RCL":
                 // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
                 prefix = nil
@@ -1605,10 +1521,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prefix = .f
             case "STO":
                 // "INT" pressed
-                let tempButton = UIButton()
-                tempButton.setTitle("STO", for: .normal)
                 prefix = .g
-                operationKeyPressed(tempButton)  // better handled as operation
+                operationKeyPressed(sender)  // better handled as operation
             case "RCL":
                 // "MEM" pressed
                 print("MEM")  // pws: TBD
@@ -1686,9 +1600,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 }
             case "GTO":
                 // build-up to GTO CHS nnn (go to line nnn)
-                let tempButton = UIButton()
-                tempButton.setTitle("GTO", for: .normal)
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
             case "R/S":
                 // run/stop [program]
                 if isProgramMode {
@@ -1710,9 +1622,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     sendToProgram(keyName)
                 } else {
                     // GSB-A acts the same as f-LBL-A (run from label A, until RTN)
-                    let tempButton = UIButton()
-                    tempButton.setTitle("GSB", for: .normal)
-                    prefixKeyPressed(tempButton)  // better handled as prefix key
+                    prefixKeyPressed(sender)  // better handled as prefix key
                 }
             default:
                 break
@@ -1730,16 +1640,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 }
             case "SST":
                 // LBL pressed
-                let tempButton = UIButton()
-                tempButton.setTitle("SST", for: .normal)
                 prefix = .f
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
             case "GTO":
                 // HYP pressed
-                let tempButton = UIButton()
-                tempButton.setTitle("GTO", for: .normal)
                 prefix = .f
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
             case "R/S":
                 // PSE pressed (pause program)
                 if isProgramMode {
@@ -1764,10 +1670,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 }
             case "GTO":
                 // HYP-1 pressed
-                let tempButton = UIButton()
-                tempButton.setTitle("GTO", for: .normal)
                 prefix = .g
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
             case "R/S":
                 // P/R pressed
                 isProgramMode.toggle()
@@ -1795,13 +1699,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "SST":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)
+                programKeyPressed(sender)
             default:
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
             }
         case .GTO_DOT:
             prefix = nil
@@ -1814,9 +1714,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "SST":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)
+                programKeyPressed(sender)
             default:
                 break
             }
@@ -1834,13 +1732,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "SST":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)
+                programKeyPressed(sender)
             default:
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                prefixKeyPressed(tempButton)  // better handled as prefix key
+                prefixKeyPressed(sender)  // better handled as prefix key
             }
         case .GSB_DOT:
             prefix = nil
@@ -1856,9 +1750,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "SST":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)
+                programKeyPressed(sender)
             default:
                 break
             }
@@ -1874,16 +1766,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             case "SST":
                 // clear prefix and re-call programKeyPressed
                 prefix = nil
-                let tempButton = UIButton()
-                tempButton.setTitle(keyName, for: .normal)
-                programKeyPressed(tempButton)
+                programKeyPressed(sender)
             default:
                 break
             }
         default:
-            let tempButton = UIButton()
-            tempButton.setTitle(keyName, for: .normal)
-            prefixKeyPressed(tempButton)  // better handled as prefix key
+            prefixKeyPressed(sender)  // better handled as prefix key
         }
     }
     
