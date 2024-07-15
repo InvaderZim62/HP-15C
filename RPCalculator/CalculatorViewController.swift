@@ -553,7 +553,434 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
 
+    // MARK: - Button action utilities
+    
+    private func keyNameFrom(button: UIButton) -> String {
+        simulatePressingButton(button)
+        var keyName = button.currentTitle!
+        if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
+        
+//        if isProgramMode {
+//            sendToProgram(keyName)
+//            prefix = nil
+//            return
+//        }
+        
+        return keyName
+    }
+    
+    private func handleUserMode() {  // only call for keys A-E
+        if isUserMode {
+            // swap the primary functions and f-shifted functions of keys A-E
+            if prefix == nil {
+                prefix = .f
+            } else if prefix == .f {
+                prefix = nil
+            }
+        }
+    }
+    
+    private func performOperationFor(_ keyName: String) {
+        prepStackForOperation()
+        brain.lastXRegister = brain.xRegister!  // save xRegister before pushing operation onto stack
+        
+        let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
+        prefix = nil  // must come after previous line
+        //-------------------------------------------------
+        brain.performOperation(oneLetterPrefix + keyName)
+        //-------------------------------------------------
+        updateDisplayString()
+    }
+    
+    private func runProgramFrom(label: String) {
+        isRunMode = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+            program.runFrom(label: label) {
+                self.isRunMode = false
+            }
+        }
+    }
+    
+    private func handleAThruEButton(_ button: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: button)
+        handleUserMode()
+        
+        switch prefix {
+        case .none, .g:
+            performOperationFor(keyName)
+        case .f, .GSB:
+            runProgramFrom(label: keyName)
+        case .LBL:
+            if isProgramMode {
+                sendToProgram(keyName)
+            }  // else ignore
+        case .SOLVE:
+            isRunMode = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                solve.findRootOfEquationAt(label: keyName)
+            }
+        case .GTO:
+            if !program.gotoLabel(keyName) {
+                setError(4)
+            }
+        default:
+            break
+        }
+        prefix = nil
+    }
+    
+    private func handleNumberedButton(_ button: UIButton, fAction: () -> Void, gAction: () -> Void) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: button)
+        
+        switch prefix {
+        case .none:
+            handleDigitEntry(keyName: keyName)
+        case .f:
+            prefix = .FIX
+        case .g:
+            prefix = nil
+            trigMode = .DEG
+        case .GTO:
+            prefix = nil
+            if !program.gotoLabel(keyName) {  // would only be here in non-program mode
+                setError(4)
+            }
+        case .GTO_DOT:
+            prefix = nil
+            if !program.gotoLabel("." + keyName) {  // would only be here in non-program mode
+                setError(4)
+            }
+        case .GSB:
+            prefix = nil
+            runProgramFrom(label: keyName)
+        case .GSB_DOT:
+            prefix = nil
+            runProgramFrom(label: "." + keyName)
+        case .GTO_CHS:
+            handleGotoLineNumberDigit(digit: Int(keyName)!)
+        case .STO:
+            storeDisplayToRegister(keyName)
+        case .STO_DOT:
+            storeDisplayToRegister("DOT" + keyName)
+        case .RCL:
+            recallRegister(keyName)
+        case .RCL_DOT:
+            recallRegister("DOT" + keyName)
+        case .STO_ADD:
+            applyDisplayToRegister(keyName, using: { $0 + $1 })
+        case .STO_SUB:
+            applyDisplayToRegister(keyName, using: { $0 - $1 })
+        case .STO_MUL:
+            applyDisplayToRegister(keyName, using: { $0 * $1 })
+        case .STO_DIV:
+            applyDisplayToRegister(keyName, using: { $0 / $1 })
+        case .RCL_ADD:
+            applyRegisterToDisplay(keyName, using: { $0 + $1 })
+        case .RCL_SUB:
+            applyRegisterToDisplay(keyName, using: { $0 - $1 })
+        case .RCL_MUL:
+            applyRegisterToDisplay(keyName, using: { $0 * $1 })
+        case .RCL_DIV:
+            applyRegisterToDisplay(keyName, using: { $0 / $1 })
+        default:
+            break
+        }
+    }
+    
+    // use for buttons 0-9, ., EEX (without prefix)
+    private func handleDigitEntry(keyName: String) {
+        if keyName == "EEX" {
+            if !userIsEnteringExponent {
+                userIsEnteringExponent = true
+                if !userIsEnteringDigits {
+                    // EEX pressed by itself, set mantissa to 1 (exponent will be 00)
+                    userIsEnteringDigits = true
+                    displayString = "1"
+                }
+                var paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                if displayString.prefix(1) == "-" { paddingLength += 1 }  // negative sign pushes numbers to right
+                displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
+            }
+        } else if userIsEnteringDigits {
+            // add digit to display (only one decimal per number, and none in exponent)
+            if !(keyName == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {
+                if userIsEnteringExponent {
+                    // slide second digit of exponent left and put new digit in its place
+                    let exponent2 = String(displayString.removeLast())
+                    displayString.removeLast(1)
+                    displayString += exponent2 + keyName
+                } else {
+                    //--------------------------------------------------------
+                    displayString += keyName  // append entered digit to display
+                    //--------------------------------------------------------
+                }
+            }
+        } else {
+            // start clean display with digit
+            if keyName == "." {
+                displayString = "0."  // precede leading decimal point with a zero
+            } else {
+                displayString = keyName
+            }
+            userIsEnteringDigits = true
+        }
+        saveDefaults()
+    }
+    
+    private func handleGotoLineNumberDigit(digit: Int) {
+        gotoLineNumberDigits.append(digit)
+        if gotoLineNumberDigits.count == 3 {
+            prefix = nil
+            let gotoLineNumber = 100 * gotoLineNumberDigits[0] + 10 * gotoLineNumberDigits[1] + gotoLineNumberDigits[2]
+            if gotoLineNumber >= program.instructions.count {
+                // line number past end of program
+                prepStackForOperation()
+                setError(4)
+            } else {
+                program.currentLineNumber = gotoLineNumber
+            }
+        }
+    }
+    
+    // call with register name "0" - "9", ".0" - ".9"
+    private func storeDisplayToRegister(_ registerName: String) {
+        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+        brain.storeResultInRegister(registerName, result: brain.xRegister!)
+        updateDisplayString()
+        brain.printMemory()
+    }
+    
+    // call with register name "0" - "9", ".0" - ".9"
+    private func recallRegister(_ registerName: String) {
+        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+        displayString = String(brain.recallNumberFromStorageRegister(registerName))
+        brain.pushOperand(displayStringNumber)
+        updateDisplayString()
+        brain.printMemory()
+    }
+    
+    private func applyDisplayToRegister(_ registerName: String, using operation: ((Double, Double) -> Double)) {
+        if userIsEnteringDigits {
+            brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+        }
+        let result = operation(brain.recallNumberFromStorageRegister(registerName), brain.xRegister!)
+        if result.isNaN || result.isInfinite {
+            displayString = "nan"  // triggers displayView to show "  Error  0"
+        } else {
+            brain.storeResultInRegister(registerName, result: result)
+            updateDisplayString()
+        }
+        brain.printMemory()
+    }
+    
+    private func applyRegisterToDisplay(_ register: String, using operation: ((Double, Double) -> Double)) {
+        if userIsEnteringDigits {
+            brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+        }
+        let result = operation(brain.xRegister!, brain.recallNumberFromStorageRegister(register))
+        if result.isNaN || result.isInfinite {
+            displayString = "nan"  // triggers displayView to show "  Error  0"
+        } else {
+            brain.xRegister = result
+            updateDisplayString()
+        }
+        brain.printMemory()
+    }
+    
     // MARK: - Button actions
+    
+    @IBAction func sqrtXButtonPressed(_ sender: UIButton) {  // pws: potentially have these 5 buttons point to a single IBAction
+        handleAThruEButton(sender)
+    }
+    
+    @IBAction func eXButtonPressed(_ sender: UIButton) {
+        handleAThruEButton(sender)
+    }
+    
+    @IBAction func tenXButtonPressed(_ sender: UIButton) {
+        handleAThruEButton(sender)
+    }
+    
+    @IBAction func yXButtonPressed(_ sender: UIButton) {
+        handleAThruEButton(sender)
+    }
+    
+    @IBAction func inverseButtonPressed(_ sender: UIButton) {
+        handleAThruEButton(sender)
+    }
+    
+    @IBAction func chsButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            if userIsEnteringExponent {
+                // change sign of exponent, during entry
+                let exponent2 = String(displayString.removeLast())
+                let exponent1 = String(displayString.removeLast())
+                var sign = String(displayString.removeLast())
+                sign = sign == " " ? "-" : " "  // toggle sign
+                displayString += sign + exponent1 + exponent2
+                return
+            } else if userIsEnteringDigits {
+                // change sign of mantissa, during entry
+                if displayString.first == "-" {
+                    displayString.removeFirst()
+                } else {
+                    displayString = "-" + displayString
+                }
+                return
+            }  // else CHS pressed with existing number on display (push "nCHS" onto stack, below)
+            performOperationFor(keyName)
+        case .GTO:
+            // GTO-CHS - build-up to goto line number
+            prefix = .GTO_CHS
+            gotoLineNumberDigits = []
+        case .GSB:
+            // GSB-CHS - perform operation (CHS) without prefix
+            prefix = nil
+            performOperationFor(keyName)
+        default:
+            break
+        }
+    }
+    
+    @IBAction func sevenButtonPressed(_ sender: UIButton) {
+        let fAction = {
+            self.prefix = .FIX
+        }
+        let gAction = {
+            self.prefix = nil
+            self.trigMode = .DEG
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
+    }
+    
+    @IBAction func eightButtonPressed(_ sender: UIButton) {
+        let fAction = {
+            self.prefix = .SCI
+        }
+        let gAction = {
+            self.prefix = nil
+            self.trigMode = .RAD
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
+    }
+    
+    @IBAction func nineButtonPressed(_ sender: UIButton) {
+        let fAction = {
+            self.prefix = .ENG
+        }
+        let gAction = {
+            self.prefix = nil
+            self.trigMode = .GRAD
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
+    }
+    
+    @IBAction func divideButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func sstButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func gtoButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func sinButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func cosButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func tanButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func eexButtonPressed(_ sender: UIButton) {
+        
+        // handle case .STO_ADD, .STO_SUB,... .RCL_MUL, .RCL_DIV
+        // by setting prefix = nil and re-sending EEX
+    }
+    
+    @IBAction func fourButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func fiveButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func sixButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func multiplyButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func rsButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func gsbButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func rDownArrowButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func xyButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func leftArrowButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func enterButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func oneButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func twoButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func threeButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func subtractButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func onButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func fButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func gButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func stoButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func rclButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func zeroButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func decimalPointButtonPressed(_ sender: UIButton) {
+        
+        // handle case .STO_ADD, .STO_SUB,... .RCL_MUL, .RCL_DIV
+        // by setting prefix = nil and re-sending EEX
+    }
+    
+    @IBAction func sumationPlusButtonPressed(_ sender: UIButton) {
+    }
+    
+    @IBAction func addButtonPressed(_ sender: UIButton) {
+    }
+
     
     // Note: It's somewhat arbitrary which action each button is assigned to (digitKeyPressed, operationKeyPressed,
     // stackManipulationKeyPressed).  Obvious ones are enterKeyPressed, prefixKeyPressed, and onKeyPressed.  In some
