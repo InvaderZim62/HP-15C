@@ -32,7 +32,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="XsV-V8-DOZ"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="Yxk-ch-0Sw"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3YW-EI-K6Q">
@@ -42,7 +42,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="programKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="33U-5k-ivQ"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="jIt-FR-cFE"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VcU-fc-56n">
@@ -52,7 +52,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="programKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="3zI-nP-sue"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="wMp-MU-ocS"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="brU-1e-oDO">
@@ -78,7 +78,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="jww-a0-loD"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="xvq-P2-RaQ"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="L2H-mW-DOQ">
@@ -88,7 +88,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="programKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="e24-V0-AnE"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="wPf-iU-ULF"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6a5-D3-Dg0">
@@ -98,7 +98,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="programKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="x68-Ta-kwg"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="RtI-dp-nkX"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Y3T-9L-9Js">
@@ -109,7 +109,7 @@
                                                             <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="prefixKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="1jJ-4p-RZM"/>
+                                                            <action selector="fgPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="Z5r-cY-OtI"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -124,7 +124,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="K42-FN-feh"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="7Bp-dQ-zCF"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BdM-wH-neP">
@@ -134,7 +134,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="TdU-sf-Hrp"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="olb-ts-mE8"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="JVN-x9-13v">
@@ -144,7 +144,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="stackManipulationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="xcY-g1-llC"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="36K-Yb-56U"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MfT-tL-nrP">
@@ -155,7 +155,7 @@
                                                             <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="prefixKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="PUo-tJ-ojM"/>
+                                                            <action selector="fgPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="FHy-jw-iSy"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -170,7 +170,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="nF8-2B-Rcu"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="cri-Uq-EKR"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ecA-fI-Fl5">
@@ -180,7 +180,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="ph3-hZ-GDu"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="XZi-RC-TMX"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hjt-hs-qUU">
@@ -190,7 +190,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="stackManipulationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="sUb-rH-2qN"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="rJk-uq-JOs"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2OP-Ow-yxb">
@@ -200,7 +200,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="prefixKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="k5e-gM-hOc"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="okY-IV-aD5"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -215,7 +215,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="w09-Ea-azA"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="5d2-8j-RvI"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3Ae-cH-hK7">
@@ -225,7 +225,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="4da-SJ-j7Z"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="iV5-r9-6xx"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SVP-tO-mZW">
@@ -235,7 +235,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="stackManipulationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="1Ep-MY-nCZ"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="AQr-mg-FN6"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g2t-79-lvh">
@@ -245,7 +245,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="prefixKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="zTs-yC-6jF"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="DhT-5H-TMO"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -260,7 +260,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="PaY-U9-Jb8"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="miw-d0-Uzt"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hko-O0-5bX">
@@ -270,7 +270,7 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="dqS-62-f7V"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="p4b-jT-g5o"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="characterWrap" translatesAutoresizingMaskIntoConstraints="NO" id="J89-H6-tLf">
@@ -286,7 +286,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="enterKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="IWn-Qk-IMv"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="ZlO-zs-TPp"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -302,7 +302,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="nqN-xr-uL8"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="Esx-JL-lV2"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Rje-aQ-XFS">
@@ -313,7 +313,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="tbx-oq-jvU"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="zPA-jI-FBo"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nqH-Ei-Hah">
@@ -324,7 +324,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="YeL-NG-CKT"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="xAY-Jb-oFx"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="W4I-mQ-YhT">
@@ -335,7 +335,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="b7L-Lo-TxP"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="vf4-BS-jmd"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -351,7 +351,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="ecf-0Z-jgU"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="Vfy-MD-GAg"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7LX-Kl-ywd">
@@ -362,7 +362,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="Za9-CV-3Cb"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="ZpL-wh-sCY"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6CY-EM-EGB">
@@ -373,7 +373,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="mhI-cl-4kD"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="CyJ-ZQ-3I4"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cIO-lf-oSp">
@@ -384,7 +384,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="RL2-Us-4b7"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="jfK-SH-ck5"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>
@@ -400,7 +400,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="y1g-7m-9lm"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="BIv-dD-D7A"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eml-Um-1M8">
@@ -411,7 +411,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="n8Z-lC-sYj"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="3vg-xy-QfO"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sCU-EM-Z75">
@@ -422,7 +422,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="digitKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="t3H-cW-Ess"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="RbN-Fn-XUN"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bNW-Ui-4d7">
@@ -431,6 +431,9 @@ R</string>
                                                         <state key="normal" title="Σ+">
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
+                                                        <connections>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="9vI-Er-Efd"/>
+                                                        </connections>
                                                     </button>
                                                 </subviews>
                                             </stackView>
@@ -445,7 +448,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="cNC-3W-2Cg"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="JQv-MV-iju"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VcD-x9-Z65">
@@ -456,7 +459,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="wIM-Vt-FR0"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="BQZ-QD-SZ7"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Md9-bx-8Ew">
@@ -467,7 +470,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="QGS-WL-GcQ"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="96T-vz-EUN"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zAF-Do-b02">
@@ -478,7 +481,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="operationKeyPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="Mry-NA-5hB"/>
+                                                            <action selector="buttonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="N11-ST-pW2"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>

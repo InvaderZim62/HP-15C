@@ -555,6 +555,112 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
 
     // MARK: - Button actions
     
+    @IBAction func fgPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        var keyName = sender.currentTitle!
+
+        if isProgramMode {
+            sendToProgram(keyName)
+        }
+        
+        if keyName == "f" {
+            prefix = .f
+        } else if keyName == "g" {
+            prefix = .g
+        }
+    }
+
+    @IBAction func buttonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        var keyName = sender.currentTitle!
+        if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
+
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
+
+        if isUserMode {
+            // swap the primary functions and f-shifted functions of keys A-E
+            switch keyName {
+            case "√x", "ex", "10x", "yx", "1/x":
+                if prefix == nil {
+                    prefix = .f
+                } else if prefix == .f {
+                    prefix = nil
+                }
+            default:
+                break
+            }
+        }
+        
+        switch prefix {
+        case .f:
+            <#code#>
+        case .g:
+            <#code#>
+        case .LBL:
+            <#code#>
+        case .LBL_DOT:
+            <#code#>
+        case .GSB:
+            <#code#>
+        case .GSB_DOT:
+            <#code#>
+        case .GTO:
+            <#code#>
+        case .GTO_DOT:
+            <#code#>
+        case .GTO_CHS:
+            <#code#>
+        case .SOLVE:
+            <#code#>
+        case .FIX:
+            <#code#>
+        case .SCI:
+            <#code#>
+        case .ENG:
+            <#code#>
+        case .HYP:
+            <#code#>
+        case .HYP1:
+            <#code#>
+        case .SF:
+            <#code#>
+        case .CF:
+            <#code#>
+        case .STO:
+            <#code#>
+        case .STO_DOT:
+            <#code#>
+        case .STO_ADD:
+            <#code#>
+        case .STO_SUB:
+            <#code#>
+        case .STO_MUL:
+            <#code#>
+        case .STO_DIV:
+            <#code#>
+        case .RCL:
+            <#code#>
+        case .RCL_DOT:
+            <#code#>
+        case .RCL_ADD:
+            <#code#>
+        case .RCL_SUB:
+            <#code#>
+        case .RCL_MUL:
+            <#code#>
+        case .RCL_DIV:
+            <#code#>
+        case nil:
+            <#code#>
+        }
+    }
+    
     // Note: It's somewhat arbitrary which action each button is assigned to (digitKeyPressed, operationKeyPressed,
     // stackManipulationKeyPressed).  Obvious ones are enterKeyPressed, prefixKeyPressed, and onKeyPressed.  In some
     // cases, the prefix function of the key is not well suited to the same action as the primary function of the key
