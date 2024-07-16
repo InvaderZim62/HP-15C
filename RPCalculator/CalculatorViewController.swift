@@ -907,24 +907,189 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func sstButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            // single-step
+            if isProgramMode {
+                // show next instruction; don't run
+                sendToProgram(keyName)
+            } else {
+                // while holding down SST button, display current line of code;
+                // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
+                if program.currentLineNumber == 0 { _ = program.forwardStep() }
+                saveDisplayString = displayString
+                displayString = program.currentInstruction
+                sender.addTarget(self, action: #selector(sstButtonReleased), for: .touchUpInside)
+            }
+        case .f:
+            // "LBL" pressed
+            prefix = nil  // LBL key ignored in run mode (pws: sent to program, above)
+        case .g:
+            // BST pressed (back step program)
+            prefix = nil
+            if isProgramMode {
+                // show previous instruction; don't run
+                sendToProgram(keyName)
+            } else {
+                // show previous line until button released (don't execute), then return to normal display
+                displayString = program.backStep()
+                sender.addTarget(self, action: #selector(bstButtonReleased), for: .touchUpInside)
+            }
+        default:
+            // clear prefix and re-run
+            prefix = nil
+            sstButtonPressed(sender)
+        }
     }
     
     @IBAction func gtoButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            prefix = .GTO  // build-up to GTO n (go to label n) or GTO CHS nnn (go to line nnn)
+        case .f:
+            // "HYP" pressed
+            if isProgramMode {
+                prefix = nil  // program keeps its own prefix
+            } else {
+                prefix = .HYP
+            }
+        case .g:
+            // "HYP1" pressed
+            if isProgramMode {
+                prefix = nil
+            } else {
+                prefix = .HYP1
+            }
+        default:
+            break
+        }
     }
     
     @IBAction func sinButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            performOperationFor(keyName)
+        case .f:
+            // "DIM" pressed
+            print("TBD: DIM")
+        default:
+            // clear prefix and re-run
+            prefix = nil
+            sinButtonPressed(sender)
+        }
     }
     
     @IBAction func cosButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            performOperationFor(keyName)
+        case .f:
+            // "(i)" pressed (show imaginary part of number if complex, else Error 3)
+            if isComplexMode {
+                // show imaginary part of number, until 1.2 sec after button is released
+                prefix = nil
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+                brain.swapRealImag()
+                updateDisplayString()
+                sender.addTarget(self, action: #selector(iButtonReleased), for: .touchUpInside)
+                return
+            } else {
+                prepStackForOperation()
+                setError(3)
+            }
+        case .STO:
+            // STO to register number stored in I (integer portion of absolute value of number stored in I)
+            print("TBD: STO (i)")
+        case .RCL:
+            // RCL from register number stored in I (integer portion of absolute value of number stored in I)
+            print("TBD: RCL (i)")
+        default:
+            // clear prefix and re-run
+            prefix = nil
+            cosButtonPressed(sender)
+        }
     }
     
     @IBAction func tanButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            performOperationFor(keyName)
+        case .f:
+            // "I" pressed (imaginary number entered)
+            prefix = nil
+            isComplexMode = true
+            prepStackForOperation()
+            //----------------------
+            brain.moveRealXToImagX()
+            //----------------------
+            displayString = String(brain.xRegister!)  // show real part
+            updateDisplayString()
+        case .STO:
+            // STO to register I
+            print("TBD: STO I")
+        case .RCL:
+            // RCL from register I
+            print("TBD: RCL I")
+        default:
+            // clear prefix and re-run
+            prefix = nil
+            tanButtonPressed(sender)
+        }
     }
     
     @IBAction func eexButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
         
-        // handle case .STO_ADD, .STO_SUB,... .RCL_MUL, .RCL_DIV
-        // by setting prefix = nil and re-sending EEX
+        switch prefix {
+        case .none:
+            handleDigitEntry(keyName: keyName)
+        case .f:
+            // "I" pressed (imaginary number entered)
+            prefix = nil
+            isComplexMode = true
+            prepStackForOperation()
+            //----------------------
+            brain.moveRealXToImagX()
+            //----------------------
+            displayString = String(brain.xRegister!)  // show real part
+            updateDisplayString()
+        case .g:
+            // pi pressed
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            displayString = String(Double.pi)  // 3.141592653589793
+            brain.pushOperand(Double.pi)
+            updateDisplayString()
+        case .STO:
+            prepStackForOperation()
+            setError(11)
+        case .STO_DOT, .RCL_DOT:
+            // give up on STO/RCL . and re-enter EEX
+            prepStackForOperation()
+            eexButtonPressed(sender)
+        case .RCL:
+            prepStackForOperation()
+            setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
+        default:
+            // clear prefix and re-run
+            prefix = nil
+            eexButtonPressed(sender)
+        }
     }
     
     @IBAction func fourButtonPressed(_ sender: UIButton) {
@@ -984,21 +1149,250 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func rsButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            // run/stop [program]
+            if isProgramMode {
+                // add to program
+                sendToProgram(keyName)
+            } else if !isRunMode {
+                // run program from current line, to end (vs. running from a label, to end)
+                isRunMode = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                    if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
+                    program.runFromCurrentLine()
+                    isRunMode = false
+                }
+            }
+        case .f:
+            // PSE pressed (pause program)
+            if isProgramMode {
+                // add to program
+                sendToProgram(keyName)
+            }  // else (no action in run mode)
+        case .g:
+            // P/R pressed
+            isProgramMode.toggle()
+        default:
+            // clear prefix and re-run
+            prefix = nil
+            rsButtonPressed(sender)
+        }
     }
     
     @IBAction func gsbButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            // GSB pressed
+            if isProgramMode {
+                // add to program
+                sendToProgram(keyName)
+            } else {
+                // build-up to GSB n (run from label n)
+                prefix = .GSB
+            }
+        case .f:
+            // Σ pressed
+            // from Handbook p.20: "Clears statistics storage registers, display, and
+            // the memory stack (described in section 3)."
+            brain.clearAll()  // pws: this clears too much
+        case .g:
+            // RTN pressed
+            if isProgramMode {
+                // add to program
+                sendToProgram(keyName)
+            } else {
+                // set program to line 0
+                prepStackForOperation()
+                program.currentLineNumber = 0
+            }
+        default:
+            // clear prefix and re-run
+            prefix = nil
+            gsbButtonPressed(sender)
+        }
     }
     
     @IBAction func rDownArrowButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            // R↓ key pressed (roll stack down)
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.rollStack(directionDown: true)
+        case .f:
+            // CLEAR PRGM pressed (goto line 0 without delete program)
+            program.currentLineNumber = 0
+        case .g:
+            // R↑ key pressed (roll stack up)
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.rollStack(directionDown: false)
+        default:  // pws: verify all the default sections push display onto stack if user entering digits, before re-running there funcs
+            // clear prefix and re-run
+            prefix = nil
+            rDownArrowButtonPressed(sender)
+        }
+        
+        userIsEnteringDigits = false
+        updateDisplayString()
+        userIsEnteringExponent = false
     }
     
     @IBAction func xyButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            // x≷y key pressed (swap x-y registers)
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.swapXyRegisters()
+        case .f:
+            // CLEAR REG key pressed (clear storage registers, not stack)
+            prefix = nil
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.clearStorageRegisters()
+        case .g:
+            prefix = nil
+            print("TBD: RND")
+        default:  // pws: verify all the default sections push display onto stack if user entering digits, before re-running there funcs
+            // clear prefix and re-run
+            prefix = nil
+            xyButtonPressed(sender)
+        }
+        
+        userIsEnteringDigits = false
+        updateDisplayString()
+        userIsEnteringExponent = false
     }
     
     @IBAction func leftArrowButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        var okToClearUserEnteringDigits = true
+
+        switch prefix {
+        case .none:
+            // ← key pressed (remove single digit or whole number)
+            if userIsEnteringExponent {
+                return
+            } else {
+                if !userIsEnteringDigits {
+                    // clear previously entered number (display 0.0)
+                    brain.xRegister = 0.0
+                    liftStack = false
+                } else if displayString.count > 1 {
+                    // remove one digit
+                    displayString = String(displayString.dropLast())
+                    okToClearUserEnteringDigits = false  // ie. user is still entering digits
+                } else {
+                    // push 0.0 onto stack
+                    brain.pushOperand(0.0)
+                    liftStack = false  // not sure if this is needed
+                    brain.printMemory()
+                }
+            }
+        case .f:
+            // CLEAR PREFIX key pressed
+            // display mantissa (all numeric digits with no punctuation), until 1.2 sec after button is released
+            prefix = nil
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            displayView.showCommas = false
+            displayString = brain.displayMantissa
+            sender.addTarget(self, action: #selector(clearPrefixButtonReleased), for: .touchUpInside)
+            return
+        case .g:
+            // CLx key pressed
+            displayString = String(format: displayFormat.string, 0.0)  // display 0.0
+            if userIsEnteringDigits {
+                brain.pushOperand(0)
+            } else {
+                brain.xRegister = 0
+            }
+            liftStack = false
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            prefix = nil
+            saveDefaults()
+            brain.printMemory()
+            return  // return, or prior number will be displayed
+        default:
+            prefix = nil
+            leftArrowButtonPressed(sender)
+        }
+        
+        if okToClearUserEnteringDigits {
+            userIsEnteringDigits = false
+            updateDisplayString()
+        }
+        userIsEnteringExponent = false
     }
     
     @IBAction func enterButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        
+        if isProgramMode {
+            sendToProgram("E\nN\nT\nE\nR")  // ENTER (vertical)
+            return
+        }
+
+        switch prefix {
+        case .none:
+            // Enter pressed
+            if liftStack {
+                //------------------------------------
+                brain.pushOperand(displayStringNumber)
+                brain.pushOperand(displayStringNumber)
+                //------------------------------------
+            } else {
+                endDisplayEntry()
+                brain.pushXRegister()
+            }
+        case .f:
+            // RND# pressed
+            prefix = nil
+            srand48(seed)  // re-seed each time, so a manually stored seed will generate the same sequence each time
+            let number = drand48()
+            seed = Int(number * Double(Int32.max))  // regenerate my own seed to use next time (Note: Int.max gives same numbers for different seeds)
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            displayString = String(number)
+            brain.pushOperand(number)
+            lastRandomNumberGenerated = number
+        case .g:
+            // LSTx pressed
+            prefix = nil
+            brain.pushOperand(brain.lastXRegister)
+        case .STO:
+            // STO RAN# pressed (store new seed)
+            prefix = nil
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            if var number = brain.xRegister {
+                number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
+                seed = Int(number * Double(Int32.max))
+            } else {
+                return
+            }
+        case .RCL:
+            // RCL RAN# pressed (recall last random number)
+            prefix = nil
+            brain.pushOperand(lastRandomNumberGenerated)
+        default:
+            return
+        }
+        updateDisplayString()
+        brain.printMemory()
+        userIsEnteringDigits = false
+        userIsEnteringExponent = false
+        liftStack = false
     }
     
     @IBAction func oneButtonPressed(_ sender: UIButton) {
@@ -1956,7 +2350,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .f:
             switch keyName {
             case "GSB":
-                brain.clearAll()
+                brain.clearAll()  // pws: can't get here, GSB is a program key (also doesn't clear all)
             case "R↓":
                 // CLEAR PRGM pressed (goto line 0 without delete program)
                 program.currentLineNumber = 0
@@ -2210,7 +2604,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 }  // else (no action in run mode)
             case "GSB":
                 // Σ pressed
-                print("Σ pressed")  // pws: not sure what this is, yet
+                brain.clearAll()  // pws: this clears too much
             default:
                 break
             }
