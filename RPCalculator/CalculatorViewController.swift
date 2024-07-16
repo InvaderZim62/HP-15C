@@ -638,10 +638,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             handleDigitEntry(keyName: keyName)
         case .f:
-            prefix = .FIX
+            fAction()
         case .g:
-            prefix = nil
-            trigMode = .DEG
+            gAction()
         case .GTO:
             prefix = nil
             if !program.gotoLabel(keyName) {  // would only be here in non-program mode
@@ -795,7 +794,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     // MARK: - Button actions
     
-    @IBAction func sqrtXButtonPressed(_ sender: UIButton) {  // pws: potentially have these 5 buttons point to a single IBAction
+    // pws: potentially have next 5 buttons point to a single IBAction
+    @IBAction func sqrtXButtonPressed(_ sender: UIButton) {
         handleAThruEButton(sender)
     }
     
@@ -886,6 +886,24 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func divideButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .f:
+            prefix = .SOLVE
+        case .g:
+            prefix = nil
+            print("add x<=y to program?")
+        case .STO:
+            prefix = .STO_DIV
+        case .RCL:
+            prefix = .RCL_DIV
+        default:
+            // perform operation without prefix
+            prefix = nil
+            performOperationFor(keyName)
+        }
     }
     
     @IBAction func sstButtonPressed(_ sender: UIButton) {
@@ -910,15 +928,59 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func fourButtonPressed(_ sender: UIButton) {
+        let fAction = {
+            self.prefix = nil
+            print("TBD: x<>")  // see oneButtonPressed()
+        }
+        let gAction = {
+            self.prefix = .SF
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
     }
     
     @IBAction func fiveButtonPressed(_ sender: UIButton) {
+        let fAction = {
+            self.prefix = nil
+            print("TBD: DSE")
+        }
+        let gAction = {
+            self.prefix = .CF
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
     }
     
     @IBAction func sixButtonPressed(_ sender: UIButton) {
+        let fAction = {
+            self.prefix = nil
+            print("TBD: ISG")
+        }
+        let gAction = {
+            self.prefix = nil
+            print("TBD: add F? to program")
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
     }
     
     @IBAction func multiplyButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .f:
+            prefix = nil
+            print("TBD: integral from x to y")
+        case .g:
+            prefix = nil
+            print("TBD: add x=0 to program")
+        case .STO:
+            prefix = .STO_MUL
+        case .RCL:
+            prefix = .RCL_MUL
+        default:
+            // perform operation without prefix
+            prefix = nil
+            performOperationFor(keyName)
+        }
     }
     
     @IBAction func rsButtonPressed(_ sender: UIButton) {
@@ -940,15 +1002,69 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func oneButtonPressed(_ sender: UIButton) {
+        let keyName = keyNameFrom(button: sender)
+        let fAction = {
+            // 1: →R pressed (convert to rectangular coordinates)
+            self.performOperationFor(keyName)
+        }
+        let gAction = {
+            // 1: →P pressed (convert to polar coordinates)
+            self.performOperationFor(keyName)
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
     }
     
     @IBAction func twoButtonPressed(_ sender: UIButton) {
+        let keyName = keyNameFrom(button: sender)
+        let fAction = {
+            // 2: →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
+            self.performOperationFor(keyName)
+        }
+        let gAction = {
+            // 2: →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
+            self.performOperationFor(keyName)
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
     }
     
     @IBAction func threeButtonPressed(_ sender: UIButton) {
+        let keyName = keyNameFrom(button: sender)
+        let fAction = {
+            // 3: →RAD pressed
+            self.performOperationFor(keyName)
+        }
+        let gAction = {
+            // 3: →DEG pressed
+            self.performOperationFor(keyName)
+        }
+        handleNumberedButton(sender, fAction: fAction, gAction: gAction)
     }
     
     @IBAction func subtractButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .f:
+            // "Re≷Im" pressed (swap real and imaginary parts of complex number)
+            prefix = nil
+            isComplexMode = true
+            prepStackForOperation()
+            //------------------
+            brain.swapRealImag()
+            //------------------
+            updateDisplayString()
+        case .g:
+            print("TBD: add TEST to program")
+        case .STO:
+            prefix = .STO_SUB
+        case .RCL:
+            prefix = .RCL_SUB
+        default:
+            // perform operation without prefix
+            prefix = nil
+            performOperationFor(keyName)
+        }
     }
     
     @IBAction func onButtonPressed(_ sender: UIButton) {
@@ -975,10 +1091,34 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         // by setting prefix = nil and re-sending EEX
     }
     
-    @IBAction func sumationPlusButtonPressed(_ sender: UIButton) {
+    @IBAction func summationPlusButtonPressed(_ sender: UIButton) {
     }
     
     @IBAction func addButtonPressed(_ sender: UIButton) {
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .f:
+            // "Re≷Im" pressed (swap real and imaginary parts of complex number)
+            prefix = nil
+            isComplexMode = true
+            prepStackForOperation()
+            //------------------
+            brain.swapRealImag()
+            //------------------
+            updateDisplayString()
+        case .g:
+            print("TBD: Py,x")
+        case .STO:
+            prefix = .STO_ADD
+        case .RCL:
+            prefix = .RCL_ADD
+        default:
+            // perform operation without prefix
+            prefix = nil
+            performOperationFor(keyName)
+        }
     }
 
     
