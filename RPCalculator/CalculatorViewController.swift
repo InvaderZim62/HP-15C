@@ -661,28 +661,40 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             handleGotoLineNumberDigit(digit: Int(keyName)!)
         case .STO:
             storeDisplayToRegister(keyName)
+            liftStack = true
         case .STO_DOT:
             storeDisplayToRegister("DOT" + keyName)
+            liftStack = true
         case .RCL:
             recallRegister(keyName)
+            liftStack = true
         case .RCL_DOT:
             recallRegister("DOT" + keyName)
+            liftStack = true
         case .STO_ADD:
             applyDisplayToRegister(keyName, using: { $0 + $1 })
+            liftStack = true
         case .STO_SUB:
             applyDisplayToRegister(keyName, using: { $0 - $1 })
+            liftStack = true
         case .STO_MUL:
             applyDisplayToRegister(keyName, using: { $0 * $1 })
+            liftStack = true
         case .STO_DIV:
             applyDisplayToRegister(keyName, using: { $0 / $1 })
+            liftStack = true
         case .RCL_ADD:
             applyRegisterToDisplay(keyName, using: { $0 + $1 })
+            liftStack = true
         case .RCL_SUB:
             applyRegisterToDisplay(keyName, using: { $0 - $1 })
+            liftStack = true
         case .RCL_MUL:
             applyRegisterToDisplay(keyName, using: { $0 * $1 })
+            liftStack = true
         case .RCL_DIV:
             applyRegisterToDisplay(keyName, using: { $0 / $1 })
+            liftStack = true
         default:
             break
         }
@@ -843,12 +855,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // GTO-CHS - build-up to goto line number
             prefix = .GTO_CHS
             gotoLineNumberDigits = []
-        case .GSB:
+        case .STO, .RCL:
+            // ignore
+            prefix = nil
+        default:
             // GSB-CHS - perform operation (CHS) without prefix
             prefix = nil
             performOperationFor(keyName)
-        default:
-            break
         }
     }
     
@@ -947,8 +960,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     @IBAction func gtoButtonPressed(_ sender: UIButton) {
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
+        simulatePressingButton(sender)
+
         switch prefix {
         case .none:
             prefix = .GTO  // build-up to GTO n (go to label n) or GTO CHS nnn (go to line nnn)
@@ -1221,8 +1234,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     @IBAction func rDownArrowButtonPressed(_ sender: UIButton) {
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
+        simulatePressingButton(sender)
+
         switch prefix {
         case .none:
             // R↓ key pressed (roll stack down)
@@ -1248,8 +1261,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     @IBAction func xyButtonPressed(_ sender: UIButton) {
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
+        simulatePressingButton(sender)
+
         switch prefix {
         case .none:
             // x≷y key pressed (swap x-y registers)
@@ -1276,7 +1289,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     @IBAction func leftArrowButtonPressed(_ sender: UIButton) {
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        simulatePressingButton(sender)
         var okToClearUserEnteringDigits = true
 
         switch prefix {
@@ -1337,9 +1350,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func enterButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
         if restoreFromError() { return }
-        
+        simulatePressingButton(sender)
+
         if isProgramMode {
             sendToProgram("E\nN\nT\nE\nR")  // ENTER (vertical)
             return
@@ -1396,7 +1409,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func oneButtonPressed(_ sender: UIButton) {
-        let keyName = keyNameFrom(button: sender)
+        var keyName = sender.currentTitle!  // don't use keyNameFrom(), since handleNumberedButton already clicks
         let fAction = {
             // 1: →R pressed (convert to rectangular coordinates)
             self.performOperationFor(keyName)
@@ -1409,7 +1422,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func twoButtonPressed(_ sender: UIButton) {
-        let keyName = keyNameFrom(button: sender)
+        var keyName = sender.currentTitle!
         let fAction = {
             // 2: →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
             self.performOperationFor(keyName)
@@ -1422,7 +1435,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func threeButtonPressed(_ sender: UIButton) {
-        let keyName = keyNameFrom(button: sender)
+        var keyName = sender.currentTitle!
         let fAction = {
             // 3: →RAD pressed
             self.performOperationFor(keyName)
@@ -1462,6 +1475,19 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func onButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error
+        calculatorIsOn = !calculatorIsOn
+        displayView.turnOnIf(calculatorIsOn)
+        if calculatorIsOn {
+            prepStackForOperation()  // HP-15C completes number entry, if power is cycled
+            restoreDisplayLabels()
+            prefix = nil  // prefix is lost after re-start
+            isProgramMode = false  // don't re-start in program mode
+        } else {
+            hideDisplayLabels()
+        }
+        buttons.forEach { $0.isUserInteractionEnabled = calculatorIsOn }
     }
     
     @IBAction func fButtonPressed(_ sender: UIButton) {
