@@ -849,40 +849,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     // MARK: - Button actions
     
-    // pws: potentially have next 5 buttons point to a single IBAction
-    @IBAction func sqrtXButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        handleAToEButton(keyName)
-    }
-    
-    @IBAction func eXButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        handleAToEButton(keyName)
-    }
-    
-    @IBAction func tenXButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        handleAToEButton(keyName)
-    }
-    
-    @IBAction func yXButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        handleAToEButton(keyName)
-    }
-    
-    @IBAction func inverseButtonPressed(_ sender: UIButton) {
+    @IBAction func aToEButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
