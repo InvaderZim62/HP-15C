@@ -627,6 +627,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         prefix = nil
     }
     
+    private func setDisplayFormatTo(_ format: DisplayFormat) {
+        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+        displayFormat = format
+        updateDisplayString()
+    }
+    
     private func handleNumberedButton(_ keyName: String, fAction: () -> Void, gAction: () -> Void) {
         switch prefix {
         case .none:
@@ -635,6 +641,25 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             fAction()
         case .g:
             gAction()
+        case .FIX:
+            prefix = nil
+            setDisplayFormatTo(.fixed(Int(keyName)!))
+        case .SCI:
+            prefix = nil
+            setDisplayFormatTo(.scientific(min(Int(keyName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+        case .ENG:
+            prefix = nil
+            setDisplayFormatTo(.engineering(min(Int(keyName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+        case .SF:
+            prefix = nil
+            if keyName == "8" {  // flag 8 is complex mode
+                isComplexMode = true
+            }
+        case .CF:
+            prefix = nil
+            if keyName == "8" {  // flag 8 is complex mode
+                isComplexMode = false
+            }
         case .GTO:
             prefix = nil
             if !program.gotoLabel(keyName) {  // would only be here in non-program mode
@@ -645,48 +670,60 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if !program.gotoLabel("." + keyName) {  // would only be here in non-program mode
                 setError(4)
             }
+        case .GTO_CHS:
+            handleGotoLineNumberDigit(digit: Int(keyName)!)
         case .GSB:
             prefix = nil
             runProgramFrom(label: keyName)
         case .GSB_DOT:
             prefix = nil
             runProgramFrom(label: "." + keyName)
-        case .GTO_CHS:
-            handleGotoLineNumberDigit(digit: Int(keyName)!)
         case .STO:
+            prefix = nil
             storeDisplayToRegister(keyName)
             liftStack = true
         case .STO_DOT:
+            prefix = nil
             storeDisplayToRegister("DOT" + keyName)
             liftStack = true
         case .RCL:
+            prefix = nil
             recallRegister(keyName)
             liftStack = true
         case .RCL_DOT:
+            prefix = nil
             recallRegister("DOT" + keyName)
             liftStack = true
         case .STO_ADD:
+            prefix = nil
             applyDisplayToRegister(keyName, using: { $0 + $1 })
             liftStack = true
         case .STO_SUB:
+            prefix = nil
             applyDisplayToRegister(keyName, using: { $0 - $1 })
             liftStack = true
         case .STO_MUL:
+            prefix = nil
             applyDisplayToRegister(keyName, using: { $0 * $1 })
             liftStack = true
         case .STO_DIV:
+            prefix = nil
             applyDisplayToRegister(keyName, using: { $0 / $1 })
             liftStack = true
         case .RCL_ADD:
+            prefix = nil
             applyRegisterToDisplay(keyName, using: { $0 + $1 })
             liftStack = true
         case .RCL_SUB:
+            prefix = nil
             applyRegisterToDisplay(keyName, using: { $0 - $1 })
             liftStack = true
         case .RCL_MUL:
+            prefix = nil
             applyRegisterToDisplay(keyName, using: { $0 * $1 })
             liftStack = true
         case .RCL_DIV:
+            prefix = nil
             applyRegisterToDisplay(keyName, using: { $0 / $1 })
             liftStack = true
         default:
@@ -1019,10 +1056,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         let keyName = keyNameFrom(button: sender)
 
         switch prefix {
-        case .none:
+        case .none, .g:
             performOperationFor(keyName)
         case .f:
             // "DIM" pressed
+            prefix = nil
             print("TBD: DIM")
         default:
             // clear prefix and re-run
@@ -1037,7 +1075,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         let keyName = keyNameFrom(button: sender)
 
         switch prefix {
-        case .none:
+        case .none, .g:
             performOperationFor(keyName)
         case .f:
             // "(i)" pressed (show imaginary part of number if complex, else Error 3)
@@ -1055,9 +1093,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
         case .STO:
             // STO to register number stored in I (integer portion of absolute value of number stored in I)
+            prefix = nil
             print("TBD: STO (i)")
         case .RCL:
             // RCL from register number stored in I (integer portion of absolute value of number stored in I)
+            prefix = nil
             print("TBD: RCL (i)")
         default:
             // clear prefix and re-run
@@ -1072,7 +1112,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         let keyName = keyNameFrom(button: sender)
 
         switch prefix {
-        case .none:
+        case .none, .g:
             performOperationFor(keyName)
         case .f:
             // "I" pressed (imaginary number entered)
@@ -1086,9 +1126,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             updateDisplayString()
         case .STO:
             // STO to register I
+            prefix = nil
             print("TBD: STO I")
         case .RCL:
             // RCL from register I
+            prefix = nil
             print("TBD: RCL I")
         default:
             // clear prefix and re-run
@@ -1117,18 +1159,22 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             updateDisplayString()
         case .g:
             // pi pressed
+            prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
             displayString = String(Double.pi)  // 3.141592653589793
             brain.pushOperand(Double.pi)
             updateDisplayString()
         case .STO:
+            prefix = nil
             prepStackForOperation()
             setError(11)
         case .STO_DOT, .RCL_DOT:
             // give up on STO/RCL . and re-enter EEX
+            prefix = nil
             prepStackForOperation()
             eexButtonPressed(sender)
         case .RCL:
+            prefix = nil
             prepStackForOperation()
             setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
         default:
@@ -1520,6 +1566,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             //------------------
             updateDisplayString()
         case .g:
+            prefix = nil
             print("TBD: add TEST to program")
         case .STO:
             prefix = .STO_SUB
@@ -1550,27 +1597,119 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func fButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        prefix = .f
     }
     
     @IBAction func gButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        prefix = .g
     }
     
     @IBAction func stoButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+
+        switch prefix {
+        case .f:
+            // "FRAC" pressed
+            performOperationFor(keyName)
+        case .g:
+            // "INT" pressed
+            performOperationFor(keyName)
+        default:
+            prefix = .STO
+        }
     }
     
     @IBAction func rclButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+
+        switch prefix {
+        case .f:
+            // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
+            prefix = nil
+            isUserMode.toggle()
+        case .g:
+            // "MEM" pressed
+            prefix = nil
+            print("TBD: MEM")
+        default:
+            prefix = .RCL
+        }
     }
     
     @IBAction func zeroButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+
+        let fAction = {
+            self.prefix = nil
+            print("TBD: x!")
+        }
+        let gAction = {
+            self.prefix = nil
+            print("TBD: xbar")
+        }
+        handleNumberedButton(keyName, fAction: fAction, gAction: gAction)
     }
     
     @IBAction func decimalPointButtonPressed(_ sender: UIButton) {
-        
-        // handle case .STO_ADD, .STO_SUB,... .RCL_MUL, .RCL_DIV
-        // by setting prefix = nil and re-sending EEX
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+
+        switch prefix {
+        case .none:
+            handleDigitEntry(keyName: keyName)
+        case .f:
+            prefix = nil
+            print("TBD: yhat,r")
+        case .g:
+            prefix = nil
+            print("TBD: S")
+        case .STO:
+            prefix = .STO_DOT
+        case .RCL:
+            prefix = .RCL_DOT
+        case .GSB:
+            prefix = .GSB_DOT
+        case .GTO:
+            prefix = .GTO_DOT
+        default:
+            // clear prefix and re-run
+            prefix = nil
+            decimalPointButtonPressed(sender)
+        }
     }
     
     @IBAction func summationPlusButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+        
+        switch prefix {
+        case .none:
+            print("TBD: Σ+")
+        case .f:
+            prefix = nil
+            print("TBD: L.R.")
+        case .g:
+            prefix = nil
+            print("TBD: Σ-")
+        default:
+            break  // TBD
+        }
     }
     
     @IBAction func addButtonPressed(_ sender: UIButton) {
@@ -1589,6 +1728,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             //------------------
             updateDisplayString()
         case .g:
+            prefix = nil
             print("TBD: Py,x")
         case .STO:
             prefix = .STO_ADD
@@ -1601,7 +1741,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
 
-    //=================== original IBActions ========================
+    // MARK: - Original IBActions
     
     // Note: It's somewhat arbitrary which action each button is assigned to (digitKeyPressed, operationKeyPressed,
     // stackManipulationKeyPressed).  Obvious ones are enterKeyPressed, prefixKeyPressed, and onKeyPressed.  In some
