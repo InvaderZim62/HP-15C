@@ -600,7 +600,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
-    private func handleAThruEButton(_ keyName: String) {
+    private func handleAToEButton(_ keyName: String) {
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
+
         handleUserMode()
         
         switch prefix {
@@ -634,6 +640,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     private func handleNumberedButton(_ keyName: String, fAction: () -> Void, gAction: () -> Void) {
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
+
         switch prefix {
         case .none:
             handleDigitEntry(keyName: keyName)
@@ -843,7 +855,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
         
-        handleAThruEButton(keyName)
+        handleAToEButton(keyName)
     }
     
     @IBAction func eXButtonPressed(_ sender: UIButton) {
@@ -851,7 +863,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
         
-        handleAThruEButton(keyName)
+        handleAToEButton(keyName)
     }
     
     @IBAction func tenXButtonPressed(_ sender: UIButton) {
@@ -859,7 +871,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
         
-        handleAThruEButton(keyName)
+        handleAToEButton(keyName)
     }
     
     @IBAction func yXButtonPressed(_ sender: UIButton) {
@@ -867,7 +879,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
         
-        handleAThruEButton(keyName)
+        handleAToEButton(keyName)
     }
     
     @IBAction func inverseButtonPressed(_ sender: UIButton) {
@@ -875,7 +887,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
         
-        handleAThruEButton(keyName)
+        handleAToEButton(keyName)
     }
     
     @IBAction func chsButtonPressed(_ sender: UIButton) {
@@ -883,6 +895,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
         
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
+
         switch prefix {
         case .none:
             if userIsEnteringExponent {
@@ -966,6 +984,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .f:
@@ -1005,7 +1029,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
         case .f:
             // "LBL" pressed
-            prefix = nil  // LBL key ignored in run mode (pws: sent to program, above)
+            prefix = nil
+            if isProgramMode {
+                // add to program
+                sendToProgram(keyName)
+            } // LBL key ignored in run mode (pws: sent to program, above)
         case .g:
             // BST pressed (back step program)
             prefix = nil
@@ -1054,6 +1082,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .none, .g:
@@ -1073,6 +1107,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .none, .g:
@@ -1110,6 +1150,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .none, .g:
@@ -1143,6 +1189,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .none:
@@ -1234,6 +1286,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .f:
@@ -1275,12 +1333,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
         case .f:
             // PSE pressed (pause program)
+            prefix = nil
             if isProgramMode {
                 // add to program
                 sendToProgram(keyName)
             }  // else (no action in run mode)
         case .g:
             // P/R pressed
+            prefix = nil
             isProgramMode.toggle()
         default:
             // clear prefix and re-run
@@ -1308,9 +1368,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // Σ pressed
             // from Handbook p.20: "Clears statistics storage registers, display, and
             // the memory stack (described in section 3)."
-            brain.clearAll()  // pws: this clears too much
+            prefix = nil
+            if isProgramMode {
+                // add to program
+                sendToProgram(keyName)
+            } else {
+                brain.clearAll()  // pws: this clears too much
+            }
         case .g:
             // RTN pressed
+            prefix = nil
             if isProgramMode {
                 // add to program
                 sendToProgram(keyName)
@@ -1329,6 +1396,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func rDownArrowButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .none:
@@ -1337,9 +1411,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             brain.rollStack(directionDown: true)
         case .f:
             // CLEAR PRGM pressed (goto line 0 without delete program)
+            prefix = nil
             program.currentLineNumber = 0
         case .g:
             // R↑ key pressed (roll stack up)
+            prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
             brain.rollStack(directionDown: false)
         default:  // pws: verify all the default sections push display onto stack if user entering digits, before re-running there funcs
@@ -1356,6 +1432,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func xyButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
+
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .none:
@@ -1384,8 +1467,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func leftArrowButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        var okToClearUserEnteringDigits = true
+        let keyName = keyNameFrom(button: sender)
 
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
+
+        var okToClearUserEnteringDigits = true
+        
         switch prefix {
         case .none:
             // ← key pressed (remove single digit or whole number)
@@ -1418,6 +1509,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             return
         case .g:
             // CLx key pressed
+            prefix = nil
             displayString = String(format: displayFormat.string, 0.0)  // display 0.0
             if userIsEnteringDigits {
                 brain.pushOperand(0)
@@ -1427,7 +1519,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             liftStack = false
             userIsEnteringDigits = false
             userIsEnteringExponent = false
-            prefix = nil
             saveDefaults()
             brain.printMemory()
             return  // return, or prior number will be displayed
@@ -1554,6 +1645,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .f:
@@ -1600,7 +1697,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
-        
+
+        if isProgramMode {
+            sendToProgram(keyName)
+            // continue processing prefix for use with program keys, ex. f-R/S (PSE)
+        }
+
         prefix = .f
     }
     
@@ -1608,7 +1710,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
-        
+
+        if isProgramMode {
+            sendToProgram(keyName)
+            // continue processing prefix for use with program keys, ex. g-SST (BST)
+        }
+
         prefix = .g
     }
     
@@ -1616,6 +1723,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .f:
@@ -1633,6 +1746,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .f:
@@ -1668,6 +1787,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .none:
@@ -1698,6 +1823,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
         
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
+
         switch prefix {
         case .none:
             print("TBD: Σ+")
@@ -1716,6 +1847,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         if restoreFromError() { return }
         let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
 
         switch prefix {
         case .f:
