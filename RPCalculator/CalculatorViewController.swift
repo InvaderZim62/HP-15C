@@ -552,55 +552,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             saveProgram()
         }
     }
-
-    // MARK: - Button action utilities
     
-    private func keyNameFrom(button: UIButton) -> String {
-        var keyName = button.currentTitle!
-        if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
+    // MARK: - Button actions
+    
+    @IBAction func aToEButtonPressed(_ sender: UIButton) {
+        simulatePressingButton(sender)
+        if restoreFromError() { return }
+        let keyName = keyNameFrom(button: sender)
         
-//        if isProgramMode {
-//            sendToProgram(keyName)
-//            prefix = nil
-//            return
-//        }
-        
-        return keyName
-    }
-    
-    private func handleUserMode() {  // only call for keys A-E
-        if isUserMode {
-            // swap the primary functions and f-shifted functions of keys A-E
-            if prefix == nil {
-                prefix = .f
-            } else if prefix == .f {
-                prefix = nil
-            }
-        }
-    }
-    
-    private func performOperationFor(_ keyName: String) {
-        prepStackForOperation()
-        brain.lastXRegister = brain.xRegister!  // save xRegister before pushing operation onto stack
-        
-        let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
-        prefix = nil  // must come after previous line
-        //-------------------------------------------------
-        brain.performOperation(oneLetterPrefix + keyName)
-        //-------------------------------------------------
-        updateDisplayString()
-    }
-    
-    private func runProgramFrom(label: String) {
-        isRunMode = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-            program.runFrom(label: label) {
-                self.isRunMode = false
-            }
-        }
-    }
-    
-    private func handleAToEButton(_ keyName: String) {
         if isProgramMode {
             sendToProgram(keyName)
             prefix = nil
@@ -631,230 +590,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             break
         }
         prefix = nil
-    }
-    
-    private func setDisplayFormatTo(_ format: DisplayFormat) {
-        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-        displayFormat = format
-        updateDisplayString()
-    }
-    
-    private func handleNumberedButton(_ keyName: String, fAction: () -> Void, gAction: () -> Void) {
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
-
-        switch prefix {
-        case .none:
-            handleDigitEntry(keyName: keyName)
-        case .f:
-            fAction()
-        case .g:
-            gAction()
-        case .FIX:
-            prefix = nil
-            setDisplayFormatTo(.fixed(Int(keyName)!))
-        case .SCI:
-            prefix = nil
-            setDisplayFormatTo(.scientific(min(Int(keyName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
-        case .ENG:
-            prefix = nil
-            setDisplayFormatTo(.engineering(min(Int(keyName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
-        case .SF:
-            prefix = nil
-            if keyName == "8" {  // flag 8 is complex mode
-                isComplexMode = true
-            }
-        case .CF:
-            prefix = nil
-            if keyName == "8" {  // flag 8 is complex mode
-                isComplexMode = false
-            }
-        case .GTO:
-            prefix = nil
-            if !program.gotoLabel(keyName) {  // would only be here in non-program mode
-                setError(4)
-            }
-        case .GTO_DOT:
-            prefix = nil
-            if !program.gotoLabel("." + keyName) {  // would only be here in non-program mode
-                setError(4)
-            }
-        case .GTO_CHS:
-            handleGotoLineNumberDigit(digit: Int(keyName)!)
-        case .GSB:
-            prefix = nil
-            runProgramFrom(label: keyName)
-        case .GSB_DOT:
-            prefix = nil
-            runProgramFrom(label: "." + keyName)
-        case .STO:
-            prefix = nil
-            storeDisplayToRegister(keyName)
-            liftStack = true
-        case .STO_DOT:
-            prefix = nil
-            storeDisplayToRegister("DOT" + keyName)
-            liftStack = true
-        case .RCL:
-            prefix = nil
-            recallRegister(keyName)
-            liftStack = true
-        case .RCL_DOT:
-            prefix = nil
-            recallRegister("DOT" + keyName)
-            liftStack = true
-        case .STO_ADD:
-            prefix = nil
-            applyDisplayToRegister(keyName, using: { $0 + $1 })
-            liftStack = true
-        case .STO_SUB:
-            prefix = nil
-            applyDisplayToRegister(keyName, using: { $0 - $1 })
-            liftStack = true
-        case .STO_MUL:
-            prefix = nil
-            applyDisplayToRegister(keyName, using: { $0 * $1 })
-            liftStack = true
-        case .STO_DIV:
-            prefix = nil
-            applyDisplayToRegister(keyName, using: { $0 / $1 })
-            liftStack = true
-        case .RCL_ADD:
-            prefix = nil
-            applyRegisterToDisplay(keyName, using: { $0 + $1 })
-            liftStack = true
-        case .RCL_SUB:
-            prefix = nil
-            applyRegisterToDisplay(keyName, using: { $0 - $1 })
-            liftStack = true
-        case .RCL_MUL:
-            prefix = nil
-            applyRegisterToDisplay(keyName, using: { $0 * $1 })
-            liftStack = true
-        case .RCL_DIV:
-            prefix = nil
-            applyRegisterToDisplay(keyName, using: { $0 / $1 })
-            liftStack = true
-        default:
-            break
-        }
-    }
-    
-    // use for buttons 0-9, ., EEX (without prefix)
-    private func handleDigitEntry(keyName: String) {
-        if keyName == "EEX" {
-            if !userIsEnteringExponent {
-                userIsEnteringExponent = true
-                if !userIsEnteringDigits {
-                    // EEX pressed by itself, set mantissa to 1 (exponent will be 00)
-                    userIsEnteringDigits = true
-                    displayString = "1"
-                }
-                var paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
-                if displayString.prefix(1) == "-" { paddingLength += 1 }  // negative sign pushes numbers to right
-                displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
-            }
-        } else if userIsEnteringDigits {
-            // add digit to display (only one decimal per number, and none in exponent)
-            if !(keyName == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {
-                if userIsEnteringExponent {
-                    // slide second digit of exponent left and put new digit in its place
-                    let exponent2 = String(displayString.removeLast())
-                    displayString.removeLast(1)
-                    displayString += exponent2 + keyName
-                } else {
-                    //--------------------------------------------------------
-                    displayString += keyName  // append entered digit to display
-                    //--------------------------------------------------------
-                }
-            }
-        } else {
-            // start clean display with digit
-            if keyName == "." {
-                displayString = "0."  // precede leading decimal point with a zero
-            } else {
-                displayString = keyName
-            }
-            userIsEnteringDigits = true
-        }
-        saveDefaults()
-    }
-    
-    private func handleGotoLineNumberDigit(digit: Int) {
-        gotoLineNumberDigits.append(digit)
-        if gotoLineNumberDigits.count == 3 {
-            prefix = nil
-            let gotoLineNumber = 100 * gotoLineNumberDigits[0] + 10 * gotoLineNumberDigits[1] + gotoLineNumberDigits[2]
-            if gotoLineNumber >= program.instructions.count {
-                // line number past end of program
-                prepStackForOperation()
-                setError(4)
-            } else {
-                program.currentLineNumber = gotoLineNumber
-            }
-        }
-    }
-    
-    // call with register name "0" - "9", ".0" - ".9"
-    private func storeDisplayToRegister(_ registerName: String) {
-        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-        brain.storeResultInRegister(registerName, result: brain.xRegister!)
-        updateDisplayString()
-        brain.printMemory()
-    }
-    
-    // call with register name "0" - "9", ".0" - ".9"
-    private func recallRegister(_ registerName: String) {
-        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-        displayString = String(brain.recallNumberFromStorageRegister(registerName))
-        brain.pushOperand(displayStringNumber)
-        updateDisplayString()
-        brain.printMemory()
-    }
-    
-    private func applyDisplayToRegister(_ registerName: String, using operation: ((Double, Double) -> Double)) {
-        if userIsEnteringDigits {
-            brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
-            userIsEnteringDigits = false
-            userIsEnteringExponent = false
-        }
-        let result = operation(brain.recallNumberFromStorageRegister(registerName), brain.xRegister!)
-        if result.isNaN || result.isInfinite {
-            displayString = "nan"  // triggers displayView to show "  Error  0"
-        } else {
-            brain.storeResultInRegister(registerName, result: result)
-            updateDisplayString()
-        }
-        brain.printMemory()
-    }
-    
-    private func applyRegisterToDisplay(_ register: String, using operation: ((Double, Double) -> Double)) {
-        if userIsEnteringDigits {
-            brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
-            userIsEnteringDigits = false
-            userIsEnteringExponent = false
-        }
-        let result = operation(brain.xRegister!, brain.recallNumberFromStorageRegister(register))
-        if result.isNaN || result.isInfinite {
-            displayString = "nan"  // triggers displayView to show "  Error  0"
-        } else {
-            brain.xRegister = result
-            updateDisplayString()
-        }
-        brain.printMemory()
-    }
-    
-    // MARK: - Button actions
-    
-    @IBAction func aToEButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        handleAToEButton(keyName)
     }
     
     @IBAction func chsButtonPressed(_ sender: UIButton) {
@@ -963,7 +698,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = .SOLVE
         case .g:
             prefix = nil
-            print("add x<=y to program?")
+            print("TBD: x<=y")
         case .STO:
             prefix = .STO_DIV
         case .RCL:
@@ -1000,7 +735,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if isProgramMode {
                 // add to program
                 sendToProgram(keyName)
-            } // LBL key ignored in run mode (pws: sent to program, above)
+            } // LBL key ignored in run mode
         case .g:
             // BST pressed (back step program)
             prefix = nil
@@ -1244,7 +979,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
         let gAction = {
             self.prefix = nil
-            print("TBD: add F? to program")
+            print("TBD: F?")
         }
         handleNumberedButton(keyName, fAction: fAction, gAction: gAction)
     }
@@ -1263,10 +998,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         switch prefix {
         case .f:
             prefix = nil
-            print("TBD: integral from x to y")
+            print("TBD: integral")
         case .g:
             prefix = nil
-            print("TBD: add x=0 to program")
+            print("TBD: x=0")
         case .STO:
             prefix = .STO_MUL
         case .RCL:
@@ -1385,7 +1120,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
             brain.rollStack(directionDown: false)
-        default:  // pws: verify all the default sections push display onto stack if user entering digits, before re-running there funcs
+        default:  // pws: verify all the default sections push display onto stack if user entering digits, before re-running these funcs
             // clear prefix and re-run
             prefix = nil
             rDownArrowButtonPressed(sender)
@@ -1631,7 +1366,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             updateDisplayString()
         case .g:
             prefix = nil
-            print("TBD: add TEST to program")
+            print("TBD: TEST")
         case .STO:
             prefix = .STO_SUB
         case .RCL:
@@ -1844,7 +1579,261 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             performOperationFor(keyName)
         }
     }
+
+    // MARK: - Button action utilities
     
+    private func keyNameFrom(button: UIButton) -> String {
+        var keyName = button.currentTitle!
+        if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
+        return keyName
+    }
+    
+    private func handleUserMode() {  // only call for keys A-E
+        if isUserMode {
+            // swap the primary functions and f-shifted functions of keys A-E
+            if prefix == nil {
+                prefix = .f
+            } else if prefix == .f {
+                prefix = nil
+            }
+        }
+    }
+    
+    private func performOperationFor(_ keyName: String) {
+        prepStackForOperation()
+        brain.lastXRegister = brain.xRegister!  // save xRegister before pushing operation onto stack
+        
+        let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
+        prefix = nil  // must come after previous line
+        //-------------------------------------------------
+        brain.performOperation(oneLetterPrefix + keyName)
+        //-------------------------------------------------
+        updateDisplayString()
+    }
+    
+    private func runProgramFrom(label: String) {
+        isRunMode = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+            program.runFrom(label: label) {
+                self.isRunMode = false
+            }
+        }
+    }
+    
+    private func setDisplayFormatTo(_ format: DisplayFormat) {
+        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+        displayFormat = format
+        updateDisplayString()
+    }
+    
+    private func handleNumberedButton(_ keyName: String, fAction: () -> Void, gAction: () -> Void) {
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return
+        }
+
+        switch prefix {
+        case .none:
+            handleDigitEntry(keyName: keyName)
+        case .f:
+            fAction()
+        case .g:
+            gAction()
+        case .FIX:
+            prefix = nil
+            setDisplayFormatTo(.fixed(Int(keyName)!))
+        case .SCI:
+            prefix = nil
+            setDisplayFormatTo(.scientific(min(Int(keyName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+        case .ENG:
+            prefix = nil
+            setDisplayFormatTo(.engineering(min(Int(keyName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+        case .SF:
+            prefix = nil
+            if keyName == "8" {  // flag 8 is complex mode
+                isComplexMode = true
+            }
+        case .CF:
+            prefix = nil
+            if keyName == "8" {  // flag 8 is complex mode
+                isComplexMode = false
+            }
+        case .GTO:
+            prefix = nil
+            if !program.gotoLabel(keyName) {  // would only be here in non-program mode
+                setError(4)
+            }
+        case .GTO_DOT:
+            prefix = nil
+            if !program.gotoLabel("." + keyName) {  // would only be here in non-program mode
+                setError(4)
+            }
+        case .GTO_CHS:
+            handleGotoLineNumberDigit(digit: Int(keyName)!)
+        case .GSB:
+            prefix = nil
+            runProgramFrom(label: keyName)
+        case .GSB_DOT:
+            prefix = nil
+            runProgramFrom(label: "." + keyName)
+        case .STO:
+            prefix = nil
+            storeDisplayToRegister(keyName)
+            liftStack = true
+        case .STO_DOT:
+            prefix = nil
+            storeDisplayToRegister("DOT" + keyName)
+            liftStack = true
+        case .RCL:
+            prefix = nil
+            recallRegister(keyName)
+            liftStack = true
+        case .RCL_DOT:
+            prefix = nil
+            recallRegister("DOT" + keyName)
+            liftStack = true
+        case .STO_ADD:
+            prefix = nil
+            applyDisplayToRegister(keyName, using: { $0 + $1 })
+            liftStack = true
+        case .STO_SUB:
+            prefix = nil
+            applyDisplayToRegister(keyName, using: { $0 - $1 })
+            liftStack = true
+        case .STO_MUL:
+            prefix = nil
+            applyDisplayToRegister(keyName, using: { $0 * $1 })
+            liftStack = true
+        case .STO_DIV:
+            prefix = nil
+            applyDisplayToRegister(keyName, using: { $0 / $1 })
+            liftStack = true
+        case .RCL_ADD:
+            prefix = nil
+            applyRegisterToDisplay(keyName, using: { $0 + $1 })
+            liftStack = true
+        case .RCL_SUB:
+            prefix = nil
+            applyRegisterToDisplay(keyName, using: { $0 - $1 })
+            liftStack = true
+        case .RCL_MUL:
+            prefix = nil
+            applyRegisterToDisplay(keyName, using: { $0 * $1 })
+            liftStack = true
+        case .RCL_DIV:
+            prefix = nil
+            applyRegisterToDisplay(keyName, using: { $0 / $1 })
+            liftStack = true
+        default:
+            break
+        }
+    }
+    
+    // use for buttons 0-9, ., EEX (without prefix)
+    private func handleDigitEntry(keyName: String) {
+        if keyName == "EEX" {
+            if !userIsEnteringExponent {
+                userIsEnteringExponent = true
+                if !userIsEnteringDigits {
+                    // EEX pressed by itself, set mantissa to 1 (exponent will be 00)
+                    userIsEnteringDigits = true
+                    displayString = "1"
+                }
+                var paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                if displayString.prefix(1) == "-" { paddingLength += 1 }  // negative sign pushes numbers to right
+                displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
+            }
+        } else if userIsEnteringDigits {
+            // add digit to display (only one decimal per number, and none in exponent)
+            if !(keyName == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {
+                if userIsEnteringExponent {
+                    // slide second digit of exponent left and put new digit in its place
+                    let exponent2 = String(displayString.removeLast())
+                    displayString.removeLast(1)
+                    displayString += exponent2 + keyName
+                } else {
+                    //--------------------------------------------------------
+                    displayString += keyName  // append entered digit to display
+                    //--------------------------------------------------------
+                }
+            }
+        } else {
+            // start clean display with digit
+            if keyName == "." {
+                displayString = "0."  // precede leading decimal point with a zero
+            } else {
+                displayString = keyName
+            }
+            userIsEnteringDigits = true
+        }
+        saveDefaults()
+    }
+    
+    private func handleGotoLineNumberDigit(digit: Int) {
+        gotoLineNumberDigits.append(digit)
+        if gotoLineNumberDigits.count == 3 {
+            prefix = nil
+            let gotoLineNumber = 100 * gotoLineNumberDigits[0] + 10 * gotoLineNumberDigits[1] + gotoLineNumberDigits[2]
+            if gotoLineNumber >= program.instructions.count {
+                // line number past end of program
+                prepStackForOperation()
+                setError(4)
+            } else {
+                program.currentLineNumber = gotoLineNumber
+            }
+        }
+    }
+    
+    // call with register name "0" - "9", ".0" - ".9"
+    private func storeDisplayToRegister(_ registerName: String) {
+        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+        brain.storeResultInRegister(registerName, result: brain.xRegister!)
+        updateDisplayString()
+        brain.printMemory()
+    }
+    
+    // call with register name "0" - "9", ".0" - ".9"
+    private func recallRegister(_ registerName: String) {
+        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+        displayString = String(brain.recallNumberFromStorageRegister(registerName))
+        brain.pushOperand(displayStringNumber)
+        updateDisplayString()
+        brain.printMemory()
+    }
+    
+    private func applyDisplayToRegister(_ registerName: String, using operation: ((Double, Double) -> Double)) {
+        if userIsEnteringDigits {
+            brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+        }
+        let result = operation(brain.recallNumberFromStorageRegister(registerName), brain.xRegister!)
+        if result.isNaN || result.isInfinite {
+            displayString = "nan"  // triggers displayView to show "  Error  0"
+        } else {
+            brain.storeResultInRegister(registerName, result: result)
+            updateDisplayString()
+        }
+        brain.printMemory()
+    }
+    
+    private func applyRegisterToDisplay(_ register: String, using operation: ((Double, Double) -> Double)) {
+        if userIsEnteringDigits {
+            brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+        }
+        let result = operation(brain.xRegister!, brain.recallNumberFromStorageRegister(register))
+        if result.isNaN || result.isInfinite {
+            displayString = "nan"  // triggers displayView to show "  Error  0"
+        } else {
+            brain.xRegister = result
+            updateDisplayString()
+        }
+        brain.printMemory()
+    }
+
     // MARK: - Simulated button
     
     // All button actions trigger on Touch Down (see header notes).  SimulatePressingButton plays
