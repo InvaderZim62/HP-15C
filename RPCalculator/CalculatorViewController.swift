@@ -556,15 +556,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     // MARK: - Button actions
     
     @IBAction func aToEButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         handleUserMode()
         
@@ -593,15 +585,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func chsButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .none:
@@ -638,9 +622,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func sevenButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             self.prefix = .FIX
@@ -653,9 +635,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func eightButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             self.prefix = .SCI
@@ -668,9 +648,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func nineButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             self.prefix = .ENG
@@ -683,15 +661,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func divideButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .f:
@@ -781,15 +751,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func sinButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .none, .g:
@@ -806,15 +768,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func cosButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .none, .g:
@@ -849,15 +803,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func tanButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .none, .g:
@@ -888,15 +834,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func eexButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .none:
@@ -939,9 +877,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func fourButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             self.prefix = nil
@@ -954,9 +890,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func fiveButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             self.prefix = nil
@@ -969,9 +903,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func sixButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             self.prefix = nil
@@ -985,15 +917,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func multiplyButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .f:
@@ -1096,15 +1020,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func rDownArrowButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard handleButton(sender) != nil else { return }
 
         switch prefix {
         case .none:
@@ -1132,15 +1048,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func xyButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard handleButton(sender) != nil else { return }
 
         switch prefix {
         case .none:
@@ -1167,15 +1075,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func leftArrowButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard handleButton(sender) != nil else { return }
 
         var okToClearUserEnteringDigits = true
         
@@ -1295,9 +1195,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func oneButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             // 1: →R pressed (convert to rectangular coordinates)
@@ -1311,9 +1209,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func twoButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             // 2: →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
@@ -1327,9 +1223,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func threeButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             // 3: →RAD pressed
@@ -1343,15 +1237,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func subtractButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .f:
@@ -1421,15 +1307,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func stoButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .f:
@@ -1444,15 +1322,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func rclButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard handleButton(sender) != nil else { return }
 
         switch prefix {
         case .f:
@@ -1469,9 +1339,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func zeroButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        guard let keyName = handleButton(sender) else { return }
 
         let fAction = {
             self.prefix = nil
@@ -1485,15 +1353,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func decimalPointButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .none:
@@ -1520,15 +1380,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func summationPlusButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard handleButton(sender) != nil else { return }
 
         switch prefix {
         case .none:
@@ -1545,15 +1397,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func addButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
-        
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
+        guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
         case .f:
@@ -1587,6 +1431,19 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         return keyName
     }
     
+    private func handleButton(_ sender: UIButton) -> String? {
+        simulatePressingButton(sender)
+        if restoreFromError() { return nil }
+        let keyName = keyNameFrom(button: sender)
+        
+        if isProgramMode {
+            sendToProgram(keyName)
+            prefix = nil
+            return nil
+        }
+        return keyName
+    }
+
     private func handleUserMode() {  // only call for keys A-E
         if isUserMode {
             // swap the primary functions and f-shifted functions of keys A-E
@@ -1626,12 +1483,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     private func handleNumberedButton(_ keyName: String, fAction: () -> Void, gAction: () -> Void) {
-        if isProgramMode {
-            sendToProgram(keyName)
-            prefix = nil
-            return
-        }
-
         switch prefix {
         case .none:
             handleDigitEntry(keyName: keyName)
