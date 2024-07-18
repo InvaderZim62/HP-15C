@@ -313,8 +313,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
             defaults.set(isComplexMode, forKey: "isComplexMode")
             defaults.set(isUserMode, forKey: "isUserMode")
-            defaults.set(userIsEnteringDigits, forKey: "userIsEnteringDigits")
-            defaults.set(userIsEnteringExponent, forKey: "userIsEnteringExponent")
             defaults.set(liftStack, forKey: "liftStack")
             saveProgram()
         }
