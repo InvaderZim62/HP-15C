@@ -1109,7 +1109,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         switch prefix {
         case .none:
             // R↓ key pressed (roll stack down)
-            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }  // push display onto stack
             brain.rollStack(directionDown: true)
         case .f:
             // CLEAR PRGM pressed (goto line 0 without delete program)
@@ -1118,9 +1118,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .g:
             // R↑ key pressed (roll stack up)
             prefix = nil
-            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }  // push display onto stack
             brain.rollStack(directionDown: false)
-        default:  // pws: verify all the default sections push display onto stack if user entering digits, before re-running these funcs
+        default:
             // clear prefix and re-run
             prefix = nil
             rDownArrowButtonPressed(sender)
@@ -1145,17 +1145,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         switch prefix {
         case .none:
             // x≷y key pressed (swap x-y registers)
-            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }  // push display onto stack
             brain.swapXyRegisters()
         case .f:
             // CLEAR REG key pressed (clear storage registers, not stack)
             prefix = nil
-            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }  // push display onto stack
             brain.clearStorageRegisters()
         case .g:
             prefix = nil
             print("TBD: RND")
-        default:  // pws: verify all the default sections push display onto stack if user entering digits, before re-running there funcs
+        default:
             // clear prefix and re-run
             prefix = nil
             xyButtonPressed(sender)
@@ -1204,11 +1204,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // CLEAR PREFIX key pressed
             // display mantissa (all numeric digits with no punctuation), until 1.2 sec after button is released
             prefix = nil
-            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }  // push display onto stack
             displayView.showCommas = false
             displayString = brain.displayMantissa
             sender.addTarget(self, action: #selector(clearPrefixButtonReleased), for: .touchUpInside)
-            return
         case .g:
             // CLx key pressed
             prefix = nil
@@ -1867,6 +1866,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             button.removeTarget(nil, action: nil, for: .touchUpInside)
             self.displayView.showCommas = true
             self.updateDisplayString()
+            self.brain.printMemory()
         }
     }
     
