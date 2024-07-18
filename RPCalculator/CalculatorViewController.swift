@@ -40,33 +40,6 @@
 //    - in run mode, holding down g-BST displays previous instruction; releasing does not execute instruction
 //    - in program mode, SST and g-BST increments or decrements the current line number (without executing)
 //
-//  Example of similar keys pressed in program mode vs run mode, and how they're handled...
-//
-//    Program mode - add label A to program (f-SST-√x)
-//
-//      User           CalculatorViewController                     Program                                             Codes
-//      -------------  -------------------------------------------  -------------------------------------------------  --------
-//      press "f"      prefixKeyPressed.sendToProgram("f")          instructionCodes = [Program.keycodes["f"]!]          "42"
-//                     prefix = .f                                  prefix = "f"
-//                                                                  return nil
-//      press "SST"    programKeyPressed.prefixKeyPressed("SST")
-//                     prefixKeyPressed.sendToProgram("SST")        instructionCodes.append(Program.keycodes["SST"]!)   "42 21"
-//                     prefix = nil                                 prefix += "SST" (= "fSST")
-//                                                                  return nil
-//      press "√x"     operationKeyPressed.programKeyPressed("√x")
-//                     programKeyPressed.sendToProgram("√x")        instructionCodes.append(Program.keycodes["√x"]!)   "42 21 11"
-//                     prefix = nil                                 prefix = ""
-//                     displayString = "001-42,21,11"               return insertedInstruction; instructions.insert("001-42,21,11")
-//
-//    Run mode - run from label A (f-√x)
-//
-//      User           CalculatorViewController                     Program
-//      -------------  -------------------------------------------  -----------------------------------------------------------------
-//      press "f"      prefix = .f
-//
-//      press "√x"     operationKeyPressed.programKeyPressed("√x")
-//                     programKeyPres.program.runFrom(label: "√x")  gotoLabel("42,21,11"); runFromCurrentLine; loop through all lines
-//
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
 //  - some numbers don't allow entering exponent EEX (ex. 12345678 EEX doesn't, 1234567 EEX does, 1.2345678 EEX does)
@@ -79,6 +52,7 @@
 //  - p90 implement program branching and control
 //  - if the user enters f-A in program mode, the HP-15C enters the instruction for GSB-A
 //  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
+//  - can't back-arrow away digits while entering exponent (EEX)
 //
 
 import UIKit
@@ -754,7 +728,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
-        case .none, .g:
+        case .none, .g, .HYP, .HYP1:
             performOperationFor(keyName)
         case .f:
             // "DIM" pressed
@@ -771,7 +745,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
-        case .none, .g:
+        case .none, .g, .HYP, .HYP1:
             performOperationFor(keyName)
         case .f:
             // "(i)" pressed (show imaginary part of number if complex, else Error 3)
@@ -806,7 +780,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard let keyName = handleButton(sender) else { return }
 
         switch prefix {
-        case .none, .g:
+        case .none, .g, .HYP, .HYP1:
             performOperationFor(keyName)
         case .f:
             // "I" pressed (imaginary number entered)
