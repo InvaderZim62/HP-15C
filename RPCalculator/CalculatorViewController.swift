@@ -683,7 +683,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func sstButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        let keyName = keyNameFromButton(sender)
 
         switch prefix {
         case .none:
@@ -940,7 +940,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func rsButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        let keyName = keyNameFromButton(sender)
 
         switch prefix {
         case .none:
@@ -978,7 +978,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func gsbButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        let keyName = keyNameFromButton(sender)
 
         switch prefix {
         case .none:
@@ -1283,7 +1283,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func fButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        let keyName = keyNameFromButton(sender)
 
         if isProgramMode {
             sendToProgram(keyName)
@@ -1296,7 +1296,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func gButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        let keyName = keyNameFrom(button: sender)
+        let keyName = keyNameFromButton(sender)
 
         if isProgramMode {
             sendToProgram(keyName)
@@ -1425,16 +1425,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
 
     // MARK: - Button action utilities
     
-    private func keyNameFrom(button: UIButton) -> String {
+    private func keyNameFromButton(_ button: UIButton) -> String {
         var keyName = button.currentTitle!
         if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
         return keyName
     }
     
-    private func handleButton(_ sender: UIButton) -> String? {
-        simulatePressingButton(sender)
+    private func handleButton(_ button: UIButton) -> String? {
+        simulatePressingButton(button)
         if restoreFromError() { return nil }
-        let keyName = keyNameFrom(button: sender)
+        let keyName = keyNameFromButton(button)
         
         if isProgramMode {
             sendToProgram(keyName)
