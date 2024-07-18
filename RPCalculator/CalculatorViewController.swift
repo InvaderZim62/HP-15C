@@ -39,6 +39,10 @@
 //      and increments line number; if instruction is RTN, program cycles back to line 1
 //    - in run mode, holding down g-BST displays previous instruction; releasing does not execute instruction
 //    - in program mode, SST and g-BST increments or decrements the current line number (without executing)
+//  - complex mode
+//    - to enter a complex number, enter <real part>-ENTER, <imaginary part>-f-I ("C" annunciator will show)
+//    - to see the imaginary part of a complex number, press and hold f-(i)
+//    - to exit complex mode, select g-CF-8
 //
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
@@ -46,9 +50,9 @@
 //  - p59 rounding displayed scientific numbers not implemented
 //  - p61 swapping "." and "," in displaying number is not implemented
 //  - make display blink when +/-overflow (9.999999 99) ex. 1 EEX 99 Enter 10 x
-//  - on real HP-15C, following overflow, entering <- key causes blinking to stop, but leaves 9.999999 99 in display (xRegister)
+//  - following overflow on real HP-15C, entering "<-" key causes blinking to stop, but leaves 9.999999 99 in display (xRegister)
 //  - p61 implement underflow (displays 0.0)
-//  - stop program if any key pressed
+//  - stop running program if any key pressed
 //  - p90 implement program branching and control
 //  - if the user enters f-A in program mode, the HP-15C enters the instruction for GSB-A
 //  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
