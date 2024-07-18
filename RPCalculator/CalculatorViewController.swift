@@ -52,7 +52,6 @@
 //  - p90 implement program branching and control
 //  - if the user enters f-A in program mode, the HP-15C enters the instruction for GSB-A
 //  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
-//  - can't back-arrow away digits while entering exponent (EEX)
 //
 
 import UIKit
@@ -133,6 +132,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             return Double(tempDisplayString.replacingOccurrences(of: " ", with: "") + "e" + sign + exponent1 + exponent2)!
         } else {
             return Double(displayString)!
+        }
+    }
+    
+    var displayStringExponent: String {
+        if userIsEnteringExponent {
+            return String(displayString.suffix(2))
+        } else {
+            return "00"
         }
     }
 
@@ -1052,23 +1059,35 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard handleButton(sender) != nil else { return }
 
         var okToClearUserEnteringDigits = true
-        
+        var okToClearUserEnteringExponent = true
+
         switch prefix {
         case .none:
             // ← key pressed (remove single digit or whole number)
             if userIsEnteringExponent {
-                return
+                if displayStringExponent == "00" {
+                    // exponent = "00" - remove it
+                    displayString = displayString.components(separatedBy: " ")[0]
+                    userIsEnteringExponent = false
+                    okToClearUserEnteringDigits = false  // ie. user is still entering digits
+                } else {
+                    // exponent != "00" - slide first digit of exponent right and back-fill with 0
+                    displayString.removeLast()
+                    let firstExponentDigit = String(displayString.removeLast())
+                    displayString += "0" + firstExponentDigit
+                    okToClearUserEnteringExponent = false  // ie. user is still removing digits
+                }
             } else {
                 if !userIsEnteringDigits {
-                    // clear previously entered number (display 0.0)
+                    // display contains complete number - replace with 0.0
                     brain.xRegister = 0.0
                     liftStack = false
                 } else if displayString.count > 1 {
-                    // remove one digit
+                    // display contains partially entered number - remove last digit
                     displayString = String(displayString.dropLast())
                     okToClearUserEnteringDigits = false  // ie. user is still entering digits
                 } else {
-                    // push 0.0 onto stack
+                    // display has one digit left - push 0.0 onto stack
                     brain.pushOperand(0.0)
                     liftStack = false  // not sure if this is needed
                     brain.printMemory()
@@ -1102,11 +1121,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             leftArrowButtonPressed(sender)
         }
         
-        if okToClearUserEnteringDigits {
+        if okToClearUserEnteringExponent {
+            userIsEnteringExponent = false
+        }
+        if okToClearUserEnteringDigits && okToClearUserEnteringExponent {
             userIsEnteringDigits = false
             updateDisplayString()
         }
-        userIsEnteringExponent = false
     }
     
     @IBAction func enterButtonPressed(_ sender: UIButton) {
@@ -1573,9 +1594,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if !(keyName == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {
                 if userIsEnteringExponent {
                     // slide second digit of exponent left and put new digit in its place
-                    let exponent2 = String(displayString.removeLast())
-                    displayString.removeLast(1)
-                    displayString += exponent2 + keyName
+                    let secondExponentDigit = String(displayString.removeLast())
+                    displayString.removeLast()
+                    displayString += secondExponentDigit + keyName
                 } else {
                     //--------------------------------------------------------
                     displayString += keyName  // append entered digit to display
