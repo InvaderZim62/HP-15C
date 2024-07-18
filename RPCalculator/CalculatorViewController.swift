@@ -347,8 +347,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
         isUserMode = defaults.bool(forKey: "isUserMode")
-        userIsEnteringDigits = defaults.bool(forKey: "userIsEnteringDigits")
-        userIsEnteringExponent = defaults.bool(forKey: "userIsEnteringExponent")
         liftStack = defaults.bool(forKey: "liftStack")
         if let data = defaults.data(forKey: "program") {
             program = try! JSONDecoder().decode(Program.self, from: data)
@@ -1262,12 +1260,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         simulatePressingButton(sender)
         _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error
         
-        calculatorIsOn = !calculatorIsOn
+        calculatorIsOn.toggle()
         displayView.turnOnIf(calculatorIsOn)
         if calculatorIsOn {
             prepStackForOperation()  // HP-15C completes number entry, if power is cycled
             restoreDisplayLabels()
             prefix = nil  // prefix is lost after re-start
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
             isProgramMode = false  // don't re-start in program mode
         } else {
             hideDisplayLabels()
