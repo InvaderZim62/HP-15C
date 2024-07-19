@@ -55,6 +55,9 @@
 //  - p90 implement program branching and control
 //  - if the user enters f-A in program mode, the HP-15C enters the instruction for GSB-A
 //  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
+//  - in program mode, entering GTO-f-A should create instruction "nnn-  22  11", rather than "nnn-22,42,11" (ie. leave out the "f")
+//    same for GSB-f-A
+//  - run program on background queue, so button presses can still be monitored (to stop the program)
 //
 
 import UIKit
@@ -546,9 +549,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .f, .GSB:
             runProgramFrom(label: buttonName)
         case .LBL:
-            if isProgramMode {
-                sendToProgram(buttonName)
-            }  // else ignore
+            // LBL A-E - ignore in run mode
+            break
         case .SOLVE:
             isRunMode = true
             DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
@@ -661,42 +663,26 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func sstButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let buttonName = buttonNameFromButton(sender)
+        guard handleButton(sender) != nil else { return }
 
         switch prefix {
         case .none:
             // single-step
-            if isProgramMode {
-                // show next instruction; don't run
-                sendToProgram(buttonName)
-            } else {
-                // while holding down SST button, display current line of code;
-                // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
-                if program.currentLineNumber == 0 { _ = program.forwardStep() }
-                saveDisplayString = displayString
-                displayString = program.currentInstruction
-                sender.addTarget(self, action: #selector(sstButtonReleased), for: .touchUpInside)
-            }
+            // while holding down SST button, display current line of code;
+            // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
+            if program.currentLineNumber == 0 { _ = program.forwardStep() }
+            saveDisplayString = displayString
+            displayString = program.currentInstruction
+            sender.addTarget(self, action: #selector(sstButtonReleased), for: .touchUpInside)
         case .f:
             // "LBL" pressed
-            prefix = nil
-            if isProgramMode {
-                // add to program
-                sendToProgram(buttonName)
-            } // LBL key ignored in run mode
+            prefix = nil  // LBL key ignored in run mode
         case .g:
             // BST pressed (back step program)
             prefix = nil
-            if isProgramMode {
-                // show previous instruction; don't run
-                sendToProgram(buttonName)
-            } else {
-                // show previous line until button released (don't execute), then return to normal display
-                displayString = program.backStep()
-                sender.addTarget(self, action: #selector(bstButtonReleased), for: .touchUpInside)
-            }
+            // show previous line until button released (don't execute), then return to normal display
+            displayString = program.backStep()
+            sender.addTarget(self, action: #selector(bstButtonReleased), for: .touchUpInside)
         default:
             // clear prefix and re-run
             prefix = nil
@@ -705,26 +691,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func gtoButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
+        guard handleButton(sender) != nil else { return }
 
         switch prefix {
         case .none:
             prefix = .GTO  // build-up to GTO n (go to label n) or GTO CHS nnn (go to line nnn)
         case .f:
             // "HYP" pressed
-            if isProgramMode {
-                prefix = nil  // program keeps its own prefix
-            } else {
-                prefix = .HYP
-            }
+            prefix = .HYP
         case .g:
             // "HYP1" pressed
-            if isProgramMode {
-                prefix = nil
-            } else {
-                prefix = .HYP1
-            }
+            prefix = .HYP1
         default:
             break
         }
@@ -918,19 +895,22 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func rsButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let buttonName = buttonNameFromButton(sender)
+        if prefix == .g {
+            // P/R pressed - toggle program mode (don't send to program)
+            simulatePressingButton(sender)
+            prefix = nil
+            isProgramMode.toggle()
+            return
+        }
+        guard handleButton(sender) != nil else { return }
 
         switch prefix {
         case .none:
             // run/stop [program]
-            if isProgramMode {
-                // add to program
-                sendToProgram(buttonName)
-            } else if !isRunMode {
+            if !isRunMode {
                 // run program from current line, to end (vs. running from a label, to end)
                 isRunMode = true
+                program.isButtonPressed = false
                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                     if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
                     program.runFromCurrentLine()
@@ -939,15 +919,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
         case .f:
             // PSE pressed (pause program)
-            prefix = nil
-            if isProgramMode {
-                // add to program
-                sendToProgram(buttonName)
-            }  // else (no action in run mode)
+            prefix = nil  // ignore in run mode
         case .g:
-            // P/R pressed
-            prefix = nil
-            isProgramMode.toggle()
+            break  // handled above
         default:
             // clear prefix and re-run
             prefix = nil
@@ -956,42 +930,25 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func gsbButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let buttonName = buttonNameFromButton(sender)
+        guard handleButton(sender) != nil else { return }
 
         switch prefix {
         case .none:
             // GSB pressed
-            if isProgramMode {
-                // add to program
-                sendToProgram(buttonName)
-            } else {
                 // build-up to GSB n (run from label n)
-                prefix = .GSB
-            }
+            prefix = .GSB
         case .f:
             // Σ pressed
             // from Handbook p.20: "Clears statistics storage registers, display, and
             // the memory stack (described in section 3)."
             prefix = nil
-            if isProgramMode {
-                // add to program
-                sendToProgram(buttonName)
-            } else {
-                brain.clearAll()  // pws: this clears too much
-            }
+            brain.clearAll()  // pws: this clears too much
         case .g:
             // RTN pressed
             prefix = nil
-            if isProgramMode {
-                // add to program
-                sendToProgram(buttonName)
-            } else {
-                // set program to line 0
-                prepStackForOperation()
-                program.currentLineNumber = 0
-            }
+            // set program to line 0
+            prepStackForOperation()
+            program.currentLineNumber = 0
         default:
             // clear prefix and re-run
             prefix = nil
@@ -1277,27 +1234,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func fButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let buttonName = buttonNameFromButton(sender)
-
-        if isProgramMode {
-            sendToProgram(buttonName)
-            // continue processing prefix for use with program keys, ex. f-R/S (PSE)
-        }
+        guard handleButton(sender) != nil else { return }
 
         prefix = .f
     }
     
     @IBAction func gButtonPressed(_ sender: UIButton) {
-        simulatePressingButton(sender)
-        if restoreFromError() { return }
-        let buttonName = buttonNameFromButton(sender)
-
-        if isProgramMode {
-            sendToProgram(buttonName)
-            // continue processing prefix for use with program keys, ex. g-SST (BST)
-        }
+        guard handleButton(sender) != nil else { return }
 
         prefix = .g
     }
