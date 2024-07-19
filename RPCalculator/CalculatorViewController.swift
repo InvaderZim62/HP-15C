@@ -52,7 +52,6 @@
 //  - make display blink when +/-overflow (9.999999 99) ex. 1 EEX 99 Enter 10 x
 //  - following overflow on real HP-15C, pressing "←" key causes blinking to stop, but leaves 9.999999 99 in display (xRegister)
 //  - p61 implement underflow (displays 0.0)
-//  - stop running program if any key pressed
 //  - p90 implement program branching and control
 //  - if the user enters f-A in program mode, the HP-15C enters the instruction for GSB-A
 //  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
@@ -1466,6 +1465,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     private func runProgramFrom(label: String) {
         isRunMode = true
+        program.isButtonPressed = false
         DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
             program.runFrom(label: label) {
                 self.isRunMode = false
@@ -1689,6 +1689,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     private func simulatePressingButton(_ button: UIButton) {
         guard useSimButton else { return }
         clickSoundPlayer?.play()
+        program.isButtonPressed = true  // used to stop running program (if any)
         buttonCoverViews[button]?.whiteLabel.textColor = .darkGray
         button.addTarget(self, action: #selector(simulateReleasingButton), for: .touchUpInside)
     }

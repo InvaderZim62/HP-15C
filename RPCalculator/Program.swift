@@ -63,6 +63,7 @@ class Program: Codable {
     var gotoLineNumberDigits = [Int]()
     var returnToLineNumbers = [Int]()
     let codeStart = "nnn-".index("nnn-".startIndex, offsetBy: 4)
+    var isButtonPressed = false  // use to interrupt running of program
 
     // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
     //       minus sign is an "EN DASH" (U+2013)
@@ -426,7 +427,7 @@ class Program: Codable {
         // - RTN instruction found (return line 0 or line after last GSB)
         // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
         // - ignore any labels, and continue
-        while currentLineNumber > 0 {
+        while currentLineNumber > 0  && !isButtonPressed {
             if isCurrentInstructionARunStop {
                 // stop running - increment line number
                 _ = forwardStep()

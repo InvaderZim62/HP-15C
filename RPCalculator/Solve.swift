@@ -40,6 +40,7 @@ class Solve {
     
     func findRootOfEquationAt(label: String) {
         // assume user entered beta estimate and typed alpha estimate into display, before pressing SOLVE
+        program.isButtonPressed = false
         if program.gotoLabel(label) {
             print(String(format: "\nSolving error (plot resolution: %.2f, plot limits: +/-%.1f)", 1 / errorScale, abs(Double(plotMax) / errorScale)))
             brain.isSolving = true  // suppress printMemory
