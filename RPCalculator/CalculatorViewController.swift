@@ -1240,9 +1240,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func gButtonPressed(_ sender: UIButton) {
-        guard handleButton(sender) != nil else { return }
+        let _ = handleButton(sender)
 
-        prefix = .g
+        prefix = .g  // set here, even if program mode, for use in g-R/S (P/R)
     }
     
     @IBAction func stoButtonPressed(_ sender: UIButton) {
