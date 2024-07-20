@@ -445,9 +445,9 @@ class Program: Codable {
                 return
             } else if isCurrentInstructionAPause {
                 // pause and continue, recursively
-                DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                     delegate?.isRunMode = true  // show "running" when continuing after pause
-                    DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
+                    DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                         _ = forwardStep()
                         runFromCurrentLine()
                     }
@@ -474,7 +474,9 @@ class Program: Codable {
     func runCurrentInstruction() {
         if isCurrentInstructionALabel {
             // non-executable instruction - if user was entering digits, send display to stack
-            delegate?.prepStackForOperation()
+            DispatchQueue.main.async {
+                self.delegate?.prepStackForOperation()  // main queue, since it updates displayString
+            }
         } else if let label = labelIfCurrentInstructionIsGoto {
             // goto label
             if gotoLabel(label) {
@@ -500,12 +502,14 @@ class Program: Codable {
             // executable instruction - run it
             let titles = currentInstructionTitles  // ex. ["f", "GTO", "SIN"]
             for title in titles {
-                let button = delegate?.buttons.first(where: { $0.currentTitle == title })
-                delegate?.useSimButton = false  // don't play click sound
-                //----------------------------------
-                button?.sendActions(for: .touchDown)
-                //----------------------------------
-                delegate?.useSimButton = true
+                DispatchQueue.main.async {
+                    let button = self.delegate?.buttons.first(where: { $0.currentTitle == title })
+                    self.delegate?.useSimButton = false  // don't play click sound
+                    //----------------------------------
+                    button?.sendActions(for: .touchDown)
+                    //----------------------------------
+                    self.delegate?.useSimButton = true
+                }
             }
         }
     }
