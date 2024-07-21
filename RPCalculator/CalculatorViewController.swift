@@ -55,8 +55,6 @@
 //  - p90 implement program branching and control
 //  - if the user enters f-A in program mode, the HP-15C enters the instruction for GSB-A
 //  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
-//  - in program mode, entering GTO-f-A should create instruction "nnn-  22  11", rather than "nnn-22,42,11" (ie. leave out the "f")
-//    same for GSB-f-A
 //
 
 import UIKit

@@ -231,8 +231,15 @@ class Program: Codable {
 
     func buildInstructionWith(_ buttonLabel: String) -> String? {
         switch buttonLabel {
-        case "f", "g":
-            // any time "f" or "g" is entered, the program instruction starts over
+        case "f":
+            // any time "f" is entered (except following GTO or GSB), the program instruction starts over;
+            // ie. GTO-f-A should be GTO-A and GSB-f-B should be GSB-B
+            if prefix != "GTO" && prefix != "GSB" {
+                prefix = buttonLabel
+                instructionCodes = [Program.keycodes[buttonLabel]!]
+            }
+        case "g":
+            // any time "g" is entered, the program instruction starts over
             prefix = buttonLabel
             instructionCodes = [Program.keycodes[buttonLabel]!]
         case "GTO", "GSB", "STO", "RCL":  // pws: what about STO .1 or RCL .1 ?
