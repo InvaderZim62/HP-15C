@@ -123,7 +123,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var seed = 0  // HP-15C initial random number seed is zero
     var lastRandomNumberGenerated = 0.0
     var isGettingDefaults = false
-    var useSimButton = true  // true: call simulatePressingButton to play click sound, use false while running program instructions
+    var useSimButton = true  // true: call simulatePressingButton to play click sound; set false in program before issuing button action
     var gotoLineNumberDigits = [Int]()
 
     var displayStringNumber: Double {
@@ -158,7 +158,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     var prefix: Prefix? {
         didSet {
-            if !isRunMode {  // run mode is on background queue (can't update alpha)
+            if !isProgramRunning {  // program runs on background queue (can't update alpha)
                 fLabel.alpha = 0  // use alpha, instead of isHidden, to maintain stackView layout
                 gLabel.alpha = 0
             }
@@ -214,9 +214,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
-    var isRunMode = false {
+    var isProgramRunning = false {
         didSet {
-            if isRunMode { displayView.displayString = " Running" }  // send directly to displayView, else displayStringNumber fails
+            if isProgramRunning { displayView.displayString = " Running" }  // send directly to displayView, else displayStringNumber fails
         }
     }
 
@@ -307,7 +307,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
 
     private func saveDefaults() {  // pws: should I save seed and lastRandomNumberGenerated?
-        if !isGettingDefaults && !isRunMode {  // several variables save defaults in their didSet handlers; don't save everything else, while getting defaults
+        if !isGettingDefaults && !isProgramRunning {  // several variables save defaults in their didSet handlers; don't save everything else, while getting defaults
             let defaults = UserDefaults.standard
             if let data = try? JSONEncoder().encode(displayFormat) {
                 defaults.set(data, forKey: "displayFormat")
@@ -548,12 +548,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none, .g:
             performOperationFor(buttonName)
         case .f, .GSB:
+            prefix = nil  // clear f-annunciator before running program
             runProgramFrom(label: buttonName)
         case .LBL:
             // LBL A-E - ignore in run mode
             break
         case .SOLVE:
-            isRunMode = true
+            isProgramRunning = true
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                 solve.findRootOfEquationAt(label: buttonName)
             }
@@ -908,14 +909,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         switch prefix {
         case .none:
             // run/stop [program]
-            if !isRunMode {
+            if !isProgramRunning {
                 // run program from current line, to end (vs. running from a label, to end)
-                isRunMode = true
+                isProgramRunning = true
                 program.isButtonPressed = false
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                     if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
                     program.runFromCurrentLine()
-                    isRunMode = false
+                    isProgramRunning = false
                 }
             }
         case .f:
@@ -1089,6 +1090,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func enterButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
+        if isProgramRunning && sender.tag != 1 {
+            // user pressed button while program running
+            program.isButtonPressed = true  // causes program to stop
+            return
+        }
 
         if isProgramMode {
             sendToProgram("E\nN\nT\nE\nR")  // ENTER (vertical)
@@ -1217,7 +1223,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func onButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error
-        
+        if isProgramRunning && sender.tag != 1 {
+            // user pressed button while program running
+            program.isButtonPressed = true  // causes program to stop
+        }
+
         calculatorIsOn.toggle()
         displayView.turnOnIf(calculatorIsOn)
         if calculatorIsOn {
@@ -1373,6 +1383,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     private func handleButton(_ button: UIButton) -> String? {
         simulatePressingButton(button)
         if restoreFromError() { return nil }
+        if isProgramRunning && button.tag != 1 {
+            // user pressed button while program running
+            program.isButtonPressed = true  // causes program to stop
+            return nil
+        }
         let buttonName = buttonNameFromButton(button)
         
         if isProgramMode {
@@ -1407,12 +1422,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     private func runProgramFrom(label: String) {
-        isRunMode = true
+        isProgramRunning = true
         program.isButtonPressed = false
         // run in background, so any button press is detected
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
             program.runFrom(label: label) {
-                self.isRunMode = false
+                self.isProgramRunning = false
             }
         }
     }
@@ -1631,9 +1646,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     // a click sound and darkens the button text, then creates a temporary target for Touch Up
     // Inside, which gets called when the button is released (calling simulateReleasingButton).
     private func simulatePressingButton(_ button: UIButton) {
-        guard useSimButton else { return }
+        guard useSimButton else { return }  // return, if program "pressed" button
         clickSoundPlayer?.play()
-        program.isButtonPressed = true  // used to stop running program (if any)
         buttonCoverViews[button]?.whiteLabel.textColor = .darkGray
         button.addTarget(self, action: #selector(simulateReleasingButton), for: .touchUpInside)
     }

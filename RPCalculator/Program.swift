@@ -46,7 +46,7 @@ protocol ProgramDelegate: AnyObject {
     func prepStackForOperation()
     func setError(_ number: Int)
     var buttons: [UIButton]! { get }
-    var isRunMode: Bool { get set }
+    var isProgramRunning: Bool { get set }
     var useSimButton: Bool { get set }
 }
 
@@ -56,6 +56,7 @@ class Program: Codable {
     
     var brain: CalculatorBrain!
     
+    let semaphore = DispatchSemaphore(value: 1)
     var instructions = [String]()
     var currentLineNumber = 0
     var prefix = ""
@@ -132,8 +133,8 @@ class Program: Codable {
         return currentInstruction
     }
     
-    // search forward through program from current line (loop at end), until label found; return false, if not found;
-    // leave program at line with label, or original location, if label not found
+    // search forward through program from current line (wrap around end), until label found; return
+    // false, if not found; leave program at line with label, or original location, if label not found
     func gotoLabel(_ label: String) -> Bool {  // label is button title (ex. "√x" for label A, or ".1" for label .1)
         var labelFound = false
         var labelCodeString = ""
@@ -407,6 +408,7 @@ class Program: Codable {
     
     // MARK: - Run Program
     
+    // note: don't call runFrom recursively, or is may spawn too many tasks
     func runFrom(label: String, completion: @escaping () -> Void) {
         if gotoLabel(label) {
             // label found
@@ -427,26 +429,31 @@ class Program: Codable {
         // - RTN instruction found (return line 0 or line after last GSB)
         // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
         // - ignore any labels, and continue
-        while currentLineNumber > 0  && !isButtonPressed {
+        while currentLineNumber > 0  && !isButtonPressed {  // pws: should continue running until encountering a GTO, RTN, GSB, PSE, R/S,...?
             if isCurrentInstructionARunStop {
                 // stop running - increment line number
                 _ = forwardStep()
                 return
             } else if let label = labelIfCurrentInstructionIsGoto {  // note: if adding a section here, also add to runCurrentInstruction
-                // goto subroutine label and continue running
-                runFrom(label: label) { }
+                // goto label (if found) and continue running
+                if !gotoLabel(label) {
+                    delegate?.setError(4)  // label not found
+                    return
+                }
             } else if let label = labelIfCurrentInstructionIsGoSub {
                 // goto subroutine label and continue running, until return found, then return to instruction after go-sub
                 returnToLineNumbers.append((currentLineNumber + 1) % instructions.count)
-                runFrom(label: label) { }
+                if !gotoLabel(label) {
+                    delegate?.setError(4)  // label not found
+                    return
+                }
             } else if isCurrentInstructionAReturn {
-                // go to previous subroutine call or start or program
+                // go to previous subroutine call and continue running, or to start of program and stop
                 currentLineNumber = returnToLineNumbers.popLast() ?? 0
-                return
             } else if isCurrentInstructionAPause {
                 // pause and continue, recursively
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
-                    delegate?.isRunMode = true  // show "running" when continuing after pause
+                    delegate?.isProgramRunning = true  // show "running" when continuing after pause
                     DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                         _ = forwardStep()
                         runFromCurrentLine()
@@ -455,14 +462,16 @@ class Program: Codable {
                 return  // stop and wait for pause to restart program
             } else {
                 // run instruction
+                semaphore.wait()  // throttle calls, or foreground may get blocked
                 //---------------------
                 runCurrentInstruction()
                 //---------------------
                 if brain.error == .none {
                     _ = forwardStep()  // increment currentLineNumber
                 } else {
-                    delegate?.isRunMode = false
-                    return  // stop for errors
+                    // error - stop running
+                    delegate?.isProgramRunning = false
+                    return
                 }
             }
         }
@@ -476,6 +485,7 @@ class Program: Codable {
             // non-executable instruction - if user was entering digits, send display to stack
             DispatchQueue.main.async {
                 self.delegate?.prepStackForOperation()  // main queue, since it updates displayString
+                self.semaphore.signal()
             }
         } else if let label = labelIfCurrentInstructionIsGoto {
             // goto label
@@ -485,6 +495,7 @@ class Program: Codable {
             } else {
                 delegate?.setError(4)  // label not found
             }
+            semaphore.signal()
         } else if let label = labelIfCurrentInstructionIsGoSub {
             // goto subroutine label
             returnToLineNumbers.append(currentLineNumber)
@@ -494,21 +505,26 @@ class Program: Codable {
             } else {
                 delegate?.setError(4)  // label not found
             }
+            semaphore.signal()
         } else if isCurrentInstructionAReturn {
-            // go to previous subroutine call or start or program
+            // go to previous subroutine call or start of program
             currentLineNumber = returnToLineNumbers.popLast() ?? 0
-            return
+            semaphore.signal()
         } else {
             // executable instruction - run it
             let titles = currentInstructionTitles  // ex. ["f", "GTO", "SIN"]
             for title in titles {
+                // run on main queue for button.currentTitle, button.tag, button.sendAction, and digitView.setNeedsDisplay
                 DispatchQueue.main.async {
                     let button = self.delegate?.buttons.first(where: { $0.currentTitle == title })
                     self.delegate?.useSimButton = false  // don't play click sound
+                    button?.tag = 1  // 1 indicates button "pressed" by program
                     //----------------------------------
                     button?.sendActions(for: .touchDown)
                     //----------------------------------
                     self.delegate?.useSimButton = true
+                    button?.tag = 0
+                    self.semaphore.signal()
                 }
             }
         }
