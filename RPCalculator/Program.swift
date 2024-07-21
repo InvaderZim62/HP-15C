@@ -64,7 +64,7 @@ class Program: Codable {
     var gotoLineNumberDigits = [Int]()
     var returnToLineNumbers = [Int]()
     let codeStart = "nnn-".index("nnn-".startIndex, offsetBy: 4)
-    var isButtonPressed = false  // use to interrupt running of program
+    var isAnyButtonPressed = false  // use to interrupt running of program
 
     // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
     //       minus sign is an "EN DASH" (U+2013)
@@ -419,29 +419,36 @@ class Program: Codable {
         }
     }
     
-    // may not be at a label (ex. if called after pause)
+    // run instructions from current line, until one of the following is found:
+    // - last instruction (go to line 0 and stop)
+    // - R/S instruction found (go to next line and stop)
+    // - GTO instruction found (go to GTO label and continue)
+    // - GSB instruction found (go to GSB label and continue)
+    // - RTN instruction found (return to line 0 or line after last GSB)
+    // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
+    // - ignore any labels, and continue
+    // notes:
+    // - runFromCurrentLine may not be at a label when called (ex. if called after pause)
+    // - if adding a new "else if" section, also add to runCurrentInstruction,
+    //   since runFromCurrentLine isn't used for single-step mode (SST)
     func runFromCurrentLine() {
-        // run instructions from current line, until one of the following is found:
-        // - last instruction (go to line 0 and stop)
-        // - R/S instruction found (go to next line and stop)
-        // - GTO instruction found (go to GTO label and continue)
-        // - GSB instruction found (go to GSB label and continue)
-        // - RTN instruction found (return line 0 or line after last GSB)
-        // - PSE pause for 1.2 sec and continue (1.2 sec for each, if multiple PSE in-a-row)
-        // - ignore any labels, and continue
-        while currentLineNumber > 0  && !isButtonPressed {  // pws: should continue running until encountering a GTO, RTN, GSB, PSE, R/S,...?
+        var isStopRunning = false
+        while currentLineNumber > 0  && !isStopRunning {
             if isCurrentInstructionARunStop {
                 // stop running - increment line number
+                isStopRunning = isAnyButtonPressed
                 _ = forwardStep()
                 return
-            } else if let label = labelIfCurrentInstructionIsGoto {  // note: if adding a section here, also add to runCurrentInstruction
+            } else if let label = labelIfCurrentInstructionIsGoto {
                 // goto label (if found) and continue running
+                isStopRunning = isAnyButtonPressed
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
                     return
                 }
             } else if let label = labelIfCurrentInstructionIsGoSub {
                 // goto subroutine label and continue running, until return found, then return to instruction after go-sub
+                isStopRunning = isAnyButtonPressed
                 returnToLineNumbers.append((currentLineNumber + 1) % instructions.count)
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
@@ -449,9 +456,11 @@ class Program: Codable {
                 }
             } else if isCurrentInstructionAReturn {
                 // go to previous subroutine call and continue running, or to start of program and stop
+                isStopRunning = isAnyButtonPressed
                 currentLineNumber = returnToLineNumbers.popLast() ?? 0
             } else if isCurrentInstructionAPause {
                 // pause and continue, recursively
+                isStopRunning = isAnyButtonPressed
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                     delegate?.isProgramRunning = true  // show "running" when continuing after pause
                     DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in

@@ -912,7 +912,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if !isProgramRunning {
                 // run program from current line, to end (vs. running from a label, to end)
                 isProgramRunning = true
-                program.isButtonPressed = false
+                program.isAnyButtonPressed = false
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                     if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
                     program.runFromCurrentLine()
@@ -1092,7 +1092,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return }
         if isProgramRunning && sender.tag != 1 {
             // user pressed button while program running
-            program.isButtonPressed = true  // causes program to stop
+            program.isAnyButtonPressed = true  // causes program to stop
             return
         }
 
@@ -1225,7 +1225,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error
         if isProgramRunning && sender.tag != 1 {
             // user pressed button while program running
-            program.isButtonPressed = true  // causes program to stop
+            program.isAnyButtonPressed = true  // causes program to stop
         }
 
         calculatorIsOn.toggle()
@@ -1385,7 +1385,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if restoreFromError() { return nil }
         if isProgramRunning && button.tag != 1 {
             // user pressed button while program running
-            program.isButtonPressed = true  // causes program to stop
+            program.isAnyButtonPressed = true  // causes program to stop
             return nil
         }
         let buttonName = buttonNameFromButton(button)
@@ -1423,7 +1423,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     private func runProgramFrom(label: String) {
         isProgramRunning = true
-        program.isButtonPressed = false
+        program.isAnyButtonPressed = false
         // run in background, so any button press is detected
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
             program.runFrom(label: label) {
