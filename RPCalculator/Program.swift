@@ -488,7 +488,6 @@ class Program: Codable {
                     _ = forwardStep()  // increment currentLineNumber
                 } else {
                     // error - stop running
-                    delegate?.isProgramRunning = false
                     return
                 }
             }

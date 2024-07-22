@@ -138,7 +138,8 @@ class Solve {
     }
 
     private func printSolveError() {
-        let error = min(max(Int(falpha * errorScale), -plotMax), plotMax)
+        let scaledValue = min(max(falpha * errorScale, 0.99 * Double(Int.min)), 0.99 * Double(Int.max))  // keep scaledValue inside range of Int
+        let error = min(max(Int(scaledValue), -plotMax), plotMax)
         if error < 0 {
             print(String(repeating: " ", count: plotMax + error) + "." + String(repeating: " ", count: -error - 1) + "|")
         } else if error == 0 {
