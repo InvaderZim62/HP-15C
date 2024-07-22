@@ -123,9 +123,21 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var isGettingDefaults = false
     var useSimButton = true  // true: call simulatePressingButton to play click sound; set false in program before issuing button action
     var gotoLineNumberDigits = [Int]()
+    
+    // displayString is scientific, if 11 digits and ends in "-nn" or " nn"
+    var isDisplayStringScientific: Bool {
+        let digits = displayString.map { $0 }
+        let length = (digits[0] == "-" || digits[0] == " ") ? 12 : 11
+        if displayString.count == length {
+            let thirdToLastDigit = digits[length - 3]
+            return (thirdToLastDigit == " " || thirdToLastDigit == "-") && digits[length - 2] != " "
+        } else {
+            return false
+        }
+    }
 
     var displayStringNumber: Double {
-        if userIsEnteringExponent {
+        if isDisplayStringScientific {
             // convert "1.2345    01" to "1.2345e+01", before trying to convert to number
             var tempDisplayString = displayString
             let exponent2 = String(tempDisplayString.removeLast())
@@ -139,10 +151,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     var displayStringExponent: String {
-        if userIsEnteringExponent {
-            return String(displayString.suffix(2))
+        if isDisplayStringScientific {
+            return String(displayString.suffix(3))
         } else {
-            return "00"
+            return " 00"
         }
     }
 
@@ -1025,29 +1037,33 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             // ← key pressed (remove single digit or whole number)
             if userIsEnteringExponent {
-                if displayStringExponent == "00" {
-                    // exponent = "00" - remove it
+                if displayStringExponent == "-00" {
+                    // exponent = "-00" - remove minus sign
+                    displayString = displayString.replacingOccurrences(of: "-00", with: " 00")
+                    okToClearUserEnteringExponent = false  // ie. user is still removing exponent digits
+                } else if displayStringExponent == " 00" {
+                    // exponent = " 00" - remove it
                     displayString = displayString.components(separatedBy: " ")[0]
                     userIsEnteringExponent = false
                     okToClearUserEnteringDigits = false  // ie. user is still entering digits
                 } else {
-                    // exponent != "00" - slide first digit of exponent right and back-fill with 0
+                    // exponent has non-zero digits - slide first digit of exponent right and back-fill with 0
                     displayString.removeLast()
                     let firstExponentDigit = String(displayString.removeLast())
                     displayString += "0" + firstExponentDigit
-                    okToClearUserEnteringExponent = false  // ie. user is still removing digits
+                    okToClearUserEnteringExponent = false  // ie. user is still removing exponent digits
                 }
             } else {
                 if !userIsEnteringDigits {
                     // display contains complete number - replace with 0.0
                     brain.xRegister = 0.0
                     liftStack = false
-                } else if displayString.count > 1 {
+                } else if displayString.count > (displayString.first! == "-" ? 2 : 1) {
                     // display contains partially entered number - remove last digit
                     displayString = String(displayString.dropLast())
                     okToClearUserEnteringDigits = false  // ie. user is still entering digits
                 } else {
-                    // display has one digit left - push 0.0 onto stack
+                    // display has one digit left - push 0.0 onto stack (note: -n is considered 1 digit)
                     brain.pushOperand(0.0)
                     liftStack = false  // not sure if this is needed
                     brain.printMemory()
