@@ -9,7 +9,6 @@ import Foundation
 
 protocol SolveDelegate: AnyObject {
     func setError(_ number: Int)
-    func updateDisplayString()
     var displayStringNumber: Double { get }
 }
 
@@ -38,7 +37,7 @@ class Solve {
         abs(falpha) < 1E-9
     }
     
-    func findRootOfEquationAt(label: String) {
+    func findRootOfEquationAt(label: String, completion: @escaping () -> Void) {
         // assume user entered beta estimate and typed alpha estimate into display, before pressing SOLVE
         program.isAnyButtonPressed = false
         if program.gotoLabel(label) {
@@ -49,19 +48,19 @@ class Solve {
             beta = brain.xRegister!
             // fill all registers with alpha, run program, store results f(alpha)
             brain.fillRegistersWith(alpha)
-            program.runFrom(label: label) { [unowned self] in  // results left in display
+            program.runFrom(label: label) { [unowned self] in  // run first time to get initial falpha; results left in display
                 falpha = delegate!.displayStringNumber
                 initializeBrackets()
                 solveLoopCount = 0
                 // run solve loop recursively, until root found
                 runSolveLoop(label: label) { [unowned self] in
-                    // store A, B, and G in X, Y, and Z registers and stop
+                    // solve is done - store A, B, and G in X, Y, and Z registers and stop
                     brain.pushOperand(falpha)
                     brain.pushOperand(beta)
                     brain.pushOperand(alpha)
-                    delegate?.updateDisplayString()
                     brain.isSolving = false
                     brain.printMemory()
+                    completion()
                 }
             }
         } else {

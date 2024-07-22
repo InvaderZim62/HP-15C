@@ -67,7 +67,7 @@ struct Pause {
 enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)
-    case LBL  // ex. f LBL A (label in program), or LBL A (run program from label A)
+    case LBL  // ex. f LBL A (add label to program), or LBL A (run program from label A)
     case LBL_DOT  // ex. f LBL . 2 (0 - 9, .0 - .9 are valid labels)
     case GSB  // ex. GSB B (goto label B and run until RTN)
     case GSB_DOT  // ex. GSB . 0 (0 - 9, .0 - .9 are valid labels)
@@ -554,7 +554,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .SOLVE:
             isProgramRunning = true
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                solve.findRootOfEquationAt(label: buttonName)
+                solve.findRootOfEquationAt(label: buttonName) {
+                    DispatchQueue.main.async {
+                        self.isProgramRunning = false
+                        self.updateDisplayString()
+                    }
+                }
             }
         case .GTO:
             if !program.gotoLabel(buttonName) {
@@ -1425,7 +1430,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         // run in background, so any button press is detected
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
             program.runFrom(label: label) {
-                self.isProgramRunning = false
+                DispatchQueue.main.async {
+                    self.isProgramRunning = false
+                    self.updateDisplayString()
+                }
             }
         }
     }

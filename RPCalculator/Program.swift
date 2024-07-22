@@ -482,6 +482,8 @@ class Program: Codable {
                 //---------------------
                 runCurrentInstruction()
                 //---------------------
+                // pws: issue - program continues to execute (increment line number, looping, or exiting)
+                // before instruction is implemented (button pressed)
                 if brain.error == .none {
                     _ = forwardStep()  // increment currentLineNumber
                 } else {
@@ -499,7 +501,7 @@ class Program: Codable {
     func runCurrentInstruction() {
         if isCurrentInstructionALabel {
             // non-executable instruction - if user was entering digits, send display to stack
-            DispatchQueue.main.async {
+            DispatchQueue.main.sync {
                 self.delegate?.prepStackForOperation()  // main queue, since it updates displayString
                 self.semaphore.signal()
             }
@@ -531,7 +533,7 @@ class Program: Codable {
             let titles = currentInstructionTitles  // ex. ["f", "GTO", "SIN"]
             for title in titles {
                 // run on main queue for button.currentTitle, button.tag, button.sendAction, and digitView.setNeedsDisplay
-                DispatchQueue.main.async {
+                DispatchQueue.main.sync {  // sync (wait for completion), so runFromCurrentLine doesn't get ahead of button presses
                     let button = self.delegate?.buttons.first(where: { $0.currentTitle == title })
                     self.delegate?.useSimButton = false  // don't play click sound
                     button?.tag = 1  // 1 indicates button "pressed" by program
