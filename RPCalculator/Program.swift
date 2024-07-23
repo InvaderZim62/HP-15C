@@ -280,6 +280,10 @@ class Program: Codable {
                 return forwardStep()  // non-programmable
             }
         case "√x", "ex", "10x", "yx", "1/x":
+            if prefix == "f" {
+                // f-label entered - use GSB-label, instead (per HP-15C)
+                instructionCodes = [Program.keycodes["GSB"]!]
+            }
             // instruction complete
             instructionCodes.append(Program.keycodes[buttonLabel]!)
             return insertedInstruction
