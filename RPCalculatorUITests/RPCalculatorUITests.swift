@@ -8,14 +8,18 @@
 //  https://masilotti.com/ui-testing-cheat-sheet/
 //
 //  Re-set each time app is opened in Xcode:
-//  - to prevent unit test from hanging in the simulator (showing testing...):
+//  - to prevent unit test from hanging in the simulator (stuck on "showing testing..."):
 //    select: Test navigator (command 6) | PRCalculator (Autocreated) | Tests | PRCalculatorUITests | Options...
 //    uncheck: Execute in parallel (if possible) | Don't Save
 //
-//  Test cases don't have access to application variables (just labels, buttons, table entries,... that appear on screen).
-//  You can access variables in a stand-alone class/struct/enum, by declaring it inside the test case file (see Project39Tests).
-//  Verifying results below required adding a clear-colored label to mirror displayString (hidden label doesn't work).
-//  https://stackoverflow.com/a/34622903/2526464
+//  Notes:
+//    - test cases run in alphabetic order
+//    - test cases don't have access to application variables (just labels, buttons, table
+//      entries,... that appear on screen)
+//    - you can access variables in a stand-alone class/struct/enum, by declaring an instance
+//      inside the test func (see Project39Tests); this may only work for unit tests (not UI tests)
+//    - verifying results below required adding a clear-colored label to the app, that is kept in
+//      sync with displayString (hidden label doesn't work)
 //
 
 import XCTest
@@ -24,46 +28,45 @@ final class RPCalculatorUITests: XCTestCase {
 
     let app = XCUIApplication()
 
+    // this method is called before the invocation of each test method in the class
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-//        app.launch()
-        app.activate()
+//        app.launch()  // re-launch app between test cases
+        app.activate()  // keep app running between test cases (pick up where previous left off)
 
-        // always set display format to fixed with 4 digits (do it manually, for now)
+        // use this to set display format to 4 digit fixed width before each test
 //        app.buttons["f"].tapElement()
 //        app.buttons["7"].tapElement()
 //        app.buttons["4"].tapElement()
 
-        // In UI tests it is usually best to stop immediately when a failure occurs.
-        continueAfterFailure = false  // stop existing test case from continuing
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        continueAfterFailure = false  // stop existing test case from continuing after failure
     }
 
+    // this method is called after the invocation of each test method in the class
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
     
-    // test if "5" button appears on-screen
-    func testButtonExists() {
+    // test ability to find elements on screen
+    // verify "5" button appears on screen
+    func test01ButtonExists() {
         let window = app.windows.element(boundBy: 0)
         let element = app.buttons["5"]
         XCTAssert(window.frame.contains(element.frame))
     }
 
+    // test basic arithmetic buttons
     // verify 5 ENTER 2 x = 10
-    func testArithmetic() {
+    func test02Arithmetic() {
         app.buttons["5"].tapElement()
         app.buttons["E N T E R"].tapElement()
         app.buttons["2"].tapElement()
         app.buttons["×"].tapElement()
-        let label = app.staticTexts["10.0000"]  // see if the expected result appears in any on-screen label (s/b clear label)
+        let label = app.staticTexts["10.0000"]  // see if the expected result appears in any on-screen label (clear label)
         XCTAssert(label.exists, "Display should show 10.0000")
     }
     
-    // verify 5 RCL STO 1 stores 5 in register 1
-    // ie. only the last prefix "STO" is used
-    func testResettingPrefixes1() {
+    // test last prefix entered is used, if consecutive prefixes entered
+    // verify 5 RCL STO 1 stores 5 in register 1 (RCL and STO are both prefixes)
+    func test03ConsecutivePrefixes() {
         // setup
         app.buttons["8"].tapElement()  // store 8 in register 1 first, to verify it gets overwritten
         app.buttons["STO"].tapElement()
@@ -79,13 +82,13 @@ final class RPCalculatorUITests: XCTestCase {
         // results
         app.buttons["RCL"].tapElement()
         app.buttons["1"].tapElement()  // display register 1
-        let label = app.staticTexts["5.0000"]  // see if the expected result appears in any on-screen label
+        let label = app.staticTexts["5.0000"]
         XCTAssert(label.exists, "Register 1 should contain 5.0000")
     }
     
-    // verify 5 GTO CHS 00 STO .1 stored 5 in register .1
-    // ie. only the last prefix "STO" is used
-    func testResettingPrefixes2() {
+    // test last prefix entered is used, if consecutive prefixes entered
+    // verify 5 GTO CHS 00 STO .1 stored 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
+    func test04ConsecutivePrefixes() {
         // setup
         app.buttons["8"].tapElement()  // store 8 in register .1 first, to verify it gets overwritten
         app.buttons["STO"].tapElement()
@@ -107,82 +110,248 @@ final class RPCalculatorUITests: XCTestCase {
         app.buttons["RCL"].tapElement()
         app.buttons["·"].tapElement()
         app.buttons["1"].tapElement()  // display register .1
-        let label = app.staticTexts["5.0000"]  // see if the expected result appears in any on-screen label
+        let label = app.staticTexts["5.0000"]
         XCTAssert(label.exists, "Register .1 should contain 5.0000")
     }
+
+    // test trig function in degrees and radians
+    // radians
+    //   verify sin(π/2) = 1.0000
+    //   verify cos(π)  = -1.0000
+    //   verify tan(π/4) = 1.0000
+    // degrees
+    //   verify sin(30) = 0.5000
+    //   verify cos(30) = 0.8660
+    //   verify tan(45) = 1.0000
+    func test05RadiansDegreesTrig() {
+        // radians
+        app.buttons["g"].tapElement()
+        app.buttons["8"].tapElement()
+        // sin(π/2)
+        app.buttons["g"].tapElement()
+        app.buttons["EEX"].tapElement()  // π
+        app.buttons["2"].tapElement()
+        app.buttons["÷"].tapElement()
+        app.buttons["SIN"].tapElement()
+        var label = app.staticTexts["1.0000"]
+        XCTAssert(label.exists, "Display should show 1.0000")
+        // cos(π)
+        app.buttons["g"].tapElement()
+        app.buttons["EEX"].tapElement()
+        app.buttons["COS"].tapElement()
+        label = app.staticTexts["-1.0000"]
+        XCTAssert(label.exists, "Display should show -1.0000")
+        // tan(π/4)
+        app.buttons["g"].tapElement()
+        app.buttons["EEX"].tapElement()
+        app.buttons["4"].tapElement()
+        app.buttons["÷"].tapElement()
+        app.buttons["TAN"].tapElement()
+        label = app.staticTexts["1.0000"]
+        XCTAssert(label.exists, "Display should show 1.0000")
+        // degrees
+        app.buttons["g"].tapElement()
+        app.buttons["7"].tapElement()
+        // sin(30)
+        app.buttons["3"].tapElement()
+        app.buttons["0"].tapElement()
+        app.buttons["SIN"].tapElement()
+        label = app.staticTexts["0.5000"]
+        XCTAssert(label.exists, "Display should show 0.5000")
+        // cos(30)
+        app.buttons["3"].tapElement()
+        app.buttons["0"].tapElement()
+        app.buttons["COS"].tapElement()
+        label = app.staticTexts["0.8660"]
+        XCTAssert(label.exists, "Display should show 0.8660")
+        // tan(45)
+        app.buttons["4"].tapElement()
+        app.buttons["5"].tapElement()
+        app.buttons["TAN"].tapElement()
+        label = app.staticTexts["1.0000"]
+        XCTAssert(label.exists, "Display should show 1.0000")
+    }
     
+    // test hyperbolic and inverse hyperbolic trig functions
+    // verify sinh(1) = 1.1752 and sinh-1() = 1.0
+    // verify cosh(1) = 1.5431 and cosh-1() = 1.0
+    // verify tanh(1) = 0.7616 and tanh-1() = 1.0
+    func test06HyperbolicTrig() {
+        // sinh(1)
+        app.buttons["1"].tapElement()
+        app.buttons["f"].tapElement()
+        app.buttons["GTO"].tapElement()  // HYP
+        app.buttons["SIN"].tapElement()
+        var label = app.staticTexts["1.1752"]
+        XCTAssert(label.exists, "Display should show 1.1752")
+        // sinh-1()
+        app.buttons["g"].tapElement()
+        app.buttons["GTO"].tapElement()  // HYP-1
+        app.buttons["SIN"].tapElement()
+        label = app.staticTexts["1.0000"]
+        XCTAssert(label.exists, "Display should show 1.0000")
+        // cosh(1)
+        app.buttons["f"].tapElement()
+        app.buttons["GTO"].tapElement()
+        app.buttons["COS"].tapElement()
+        label = app.staticTexts["1.5431"]
+        XCTAssert(label.exists, "Display should show 1.5431")
+        // cosh-1()
+        app.buttons["g"].tapElement()
+        app.buttons["GTO"].tapElement()
+        app.buttons["COS"].tapElement()
+        label = app.staticTexts["1.0000"]
+        XCTAssert(label.exists, "Display should show 1.0000")
+        // tanh(1)
+        app.buttons["f"].tapElement()
+        app.buttons["GTO"].tapElement()
+        app.buttons["TAN"].tapElement()
+        label = app.staticTexts["0.7616"]
+        XCTAssert(label.exists, "Display should show 0.7616")
+        // tanh-1()
+        app.buttons["g"].tapElement()
+        app.buttons["GTO"].tapElement()
+        app.buttons["TAN"].tapElement()
+        label = app.staticTexts["1.0000"]
+        XCTAssert(label.exists, "Display should show 1.0000")
+    }
+    
+    // test complex number arithmetic
+    // verify
+    //   (1 + 2i) + (3 + 4i) =  4 + 6i
+    //   (1 + 2i) - (3 + 4i) = -2 - 2i
+    //   (1 + 2i) x (4 + 4i) = -5 + 10i
+    //   (1 + 2i) / (3 + 4i) =  0.44 + 0.08i
+    func test07ComplexNumbers() {
+        // enter 1 + 2i
+        app.buttons["1"].tapElement()
+        app.buttons["E N T E R"].tapElement()
+        app.buttons["2"].tapElement()
+        app.buttons["f"].tapElement()
+        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
+        var label = app.staticTexts["1.0000"]
+        XCTAssert(label.exists, "Display should show real part of complex number: 1.0000")
+        // show imaginary part
+        app.buttons["f"].tapElement()
+        app.buttons["COS"].tapElement()  // (i) show imaginary part for 1.2 sec
+        label = app.staticTexts["2.0000"]
+        XCTAssert(label.exists, "Display should show imaginary part of complex number: 2.0000")
+        // enter 3 + 4i
+        app.buttons["3"].tapElement()
+        app.buttons["E N T E R"].tapElement()
+        app.buttons["4"].tapElement()
+        app.buttons["f"].tapElement()
+        app.buttons["TAN"].tapElement()  // "I" store imaginary part
+        // add
+        app.buttons["+"].tapElement()
+        label = app.staticTexts["4.0000"]
+        XCTAssert(label.exists, "Display should show real part of complex number: 4.0000")
+        // show imaginary part
+        app.buttons["f"].tapElement()
+        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
+        label = app.staticTexts["6.0000"]
+        XCTAssert(label.exists, "Display should show imaginary part of complex number: 6.0000")
+        // exit complex mode
+        app.buttons["g"].tapElement()
+        app.buttons["5"].tapElement()  // CF clear flag
+        app.buttons["8"].tapElement()  // flag 8 is for complex mode
+        
+        // TBD...
+    }
+    
+    // test other operations on complex number
+    // verify
+    //      sqrt(1 + 2i) =  1.2720 + 0.7862i
+    //        (1 + 2i)^2 = -3.0000 + 4.0000i
+    //        e^(1 + 2i) = -1.1312 + 2.4717i
+    //        ln(1 + 2i) =  0.8047 + 1.1071i
+    //       10^(1 + 2i) = -1.0701 - 9.9426i
+    //       log(1 + 2i) =  0.3495 + 0.4808i
+    // (1 + 2i)^(3 + 4i) =  0.1290 + 0.0339i
+    //      1 / (1 + 2i) =  0.2000 - 0.4000i
+    func test08ComplexNumbers() {
+        // TBD
+    }
+
+    // test programming
     // enter program:
     //   LBL A
     //   10 x
     //   GSB 0
     //   10 ÷
-    //   RTN
+    //   RTN (returns to line 0)
     //
     //   LBL 0
     //   2 +
-    //   RTN
+    //   RTN (returns to line after GSB 0)
     //
     // verify 5 LBL A = 5.2
-    func testGSBInProgram() {
-        // setup
+    func test09Programming() {
+        // enter program mode
         app.buttons["g"].tapElement()
-        app.buttons["R/S"].tapElement()  // enter program mode
+        app.buttons["R/S"].tapElement()
+        // CLEAR PRGM - clear existing program, if any
         app.buttons["f"].tapElement()
-        app.buttons["R↓"].tapElement()  // CLEAR PRGM (delete prior program, if any)
+        app.buttons["R↓"].tapElement()
         var label = app.staticTexts["000-"]
         XCTAssert(label.exists, "Instruction for new program should be '000-'")
-        
-        // program
+        // LBL A
         app.buttons["f"].tapElement()
         app.buttons["SST"].tapElement()
-        app.buttons["√x"].tapElement()  // LBL A
+        app.buttons["√x"].tapElement()
         label = app.staticTexts["001-42,21,11"]
         XCTAssert(label.exists, "Instruction for for LBL A should be '000-42,21,11'")
-
+        // 10 x
         app.buttons["1"].tapElement()
         app.buttons["0"].tapElement()
         app.buttons["×"].tapElement()
-        
+        // GSB 0
         app.buttons["GSB"].tapElement()
-        app.buttons["0"].tapElement()  // GSB 0
+        app.buttons["0"].tapElement()
         label = app.staticTexts["005-  32 0"]
         XCTAssert(label.exists, "Instruction for for GSB 0 should be '005-  32 0'")
-        
+        // 10 ÷
         app.buttons["1"].tapElement()
         app.buttons["0"].tapElement()
         app.buttons["÷"].tapElement()
-        
+        // RTN
         app.buttons["g"].tapElement()
-        app.buttons["GSB"].tapElement()  // RTN
+        app.buttons["GSB"].tapElement()
         label = app.staticTexts["009- 43 32"]
         XCTAssert(label.exists, "Instruction for for RTN should be '009- 43 32'")
-
+        // LBL 0
         app.buttons["f"].tapElement()
         app.buttons["SST"].tapElement()
-        app.buttons["0"].tapElement()  // LBL 0
+        app.buttons["0"].tapElement()
         label = app.staticTexts["010-42,21, 0"]
         XCTAssert(label.exists, "Instruction for for LBL 0 should be '010-42,21, 0'")
-
+        // 2 +
         app.buttons["2"].tapElement()
         app.buttons["+"].tapElement()
-        
+        // RTN
         app.buttons["g"].tapElement()
-        app.buttons["GSB"].tapElement()  // RTN
+        app.buttons["GSB"].tapElement()
         label = app.staticTexts["013- 43 32"]
         XCTAssert(label.exists, "Instruction for for RTN should be '013- 43 32'")
-
+        // exit program mode
         app.buttons["g"].tapElement()
-        app.buttons["R/S"].tapElement()  // exit program mode
-        
-        // test
-        app.buttons["5"].tapElement()  // enter 5
+        app.buttons["R/S"].tapElement()
+        // enter 5 and run LBL A
+        app.buttons["5"].tapElement()
         app.buttons["f"].tapElement()
-        app.buttons["√x"].tapElement()  // run LBL A
-        // results
-        label = app.staticTexts["5.2000"]  // see if the expected result appears in any on-screen label
-        XCTAssert(label.waitForExistence(timeout: 5), "Results of program should be 5.2000")  // allow time for running program
-        
-        // potentially, test single-step mode SST, while program is entered
+        app.buttons["√x"].tapElement()
+        // verify result is 5.2
+        label = app.staticTexts["5.2000"]
+        XCTAssert(label.waitForExistence(timeout: 5), "Results of program should be 5.2000")  // allow time for program to run
+        // enter program mode
+        app.buttons["g"].tapElement()
+        app.buttons["R/S"].tapElement()
+        // verify program sitting at line 0
+        label = app.staticTexts["000-"]
+        XCTAssert(label.exists, "Instruction for final RTN should be '000-'")
+        // exit program mode
+        app.buttons["g"].tapElement()
+        app.buttons["R/S"].tapElement()
     }
 
 //    func testLaunchPerformance() throws {
