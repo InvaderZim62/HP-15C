@@ -656,11 +656,19 @@ R</string>
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                             </view>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="UI test label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Qli-0p-Ewn">
+                                                <rect key="frame" x="483" y="71.5" width="90" height="20.5"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
                                         </subviews>
                                         <color key="backgroundColor" red="0.83741801979999997" green="0.83743780850000005" blue="0.83742713930000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <constraints>
                                             <constraint firstItem="qJ5-ym-TJw" firstAttribute="centerY" secondItem="qMl-bI-Ow8" secondAttribute="centerY" id="9CK-9i-gG8"/>
                                             <constraint firstItem="obK-CZ-IpM" firstAttribute="top" secondItem="qJ5-ym-TJw" secondAttribute="top" id="Lnh-CA-dGa"/>
+                                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Qli-0p-Ewn" secondAttribute="trailing" constant="8" id="fcA-1X-PXD"/>
+                                            <constraint firstItem="Qli-0p-Ewn" firstAttribute="leading" secondItem="qJ5-ym-TJw" secondAttribute="trailing" constant="23.5" id="jG4-kr-2bi"/>
                                             <constraint firstAttribute="height" constant="100" id="smK-vp-1r1"/>
                                         </constraints>
                                     </view>
@@ -675,6 +683,7 @@ R</string>
                                 <constraints>
                                     <constraint firstItem="qMl-bI-Ow8" firstAttribute="leading" secondItem="0rb-hT-Hnj" secondAttribute="leading" id="0oL-Ks-m9r"/>
                                     <constraint firstItem="cjc-39-6GV" firstAttribute="top" secondItem="BdM-wH-neP" secondAttribute="bottom" constant="1" id="Amv-l7-Hqe"/>
+                                    <constraint firstAttribute="bottom" secondItem="Qli-0p-Ewn" secondAttribute="bottom" constant="283" id="D5n-8m-J3D"/>
                                     <constraint firstAttribute="trailing" secondItem="qMl-bI-Ow8" secondAttribute="trailing" id="Egu-br-nNC"/>
                                     <constraint firstItem="DsF-Y8-fDc" firstAttribute="centerX" secondItem="0rb-hT-Hnj" secondAttribute="centerX" id="HkM-jR-fWh"/>
                                     <constraint firstItem="obK-CZ-IpM" firstAttribute="leading" secondItem="ssy-4E-iZw" secondAttribute="leading" id="P6B-Mw-ceq"/>
@@ -699,6 +708,7 @@ R</string>
                         <outlet property="cLabel" destination="Plz-XI-dPr" id="Z4w-Fj-to3"/>
                         <outlet property="calculatorView" destination="0rb-hT-Hnj" id="BTs-3r-34P"/>
                         <outlet property="clearLabel" destination="cjc-39-6GV" id="Qg4-54-h8O"/>
+                        <outlet property="displayLabel" destination="Qli-0p-Ewn" id="Efv-Os-Pqx"/>
                         <outlet property="displayView" destination="rnD-ga-Zt7" id="tkM-On-xMm"/>
                         <outlet property="dmyLabel" destination="C1d-Ys-nnQ" id="1ch-me-DVD"/>
                         <outlet property="fLabel" destination="ayy-ES-Kg8" id="uwX-OC-Yfe"/>
