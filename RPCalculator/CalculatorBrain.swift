@@ -30,10 +30,10 @@ enum Error: Equatable, Codable {
 
 class CalculatorBrain: Codable {
     
-    var trigMode = TrigMode.DEG
+    var trigUnits = TrigUnits.DEG
     var lastXRegister = 0.0
     var error = Error.none
-    var isConvertingPolar = false
+    var isConvertingPolar = false  // all complex trig functions are in radians, except conversions between rectangular and polar coordinates
     var isSolving = false  // use to disable printMemory while solving for root
 
     var xRegister: Double? {
@@ -57,9 +57,9 @@ class CalculatorBrain: Codable {
     
     var angleConversion: Double {
         if isComplexMode && !isConvertingPolar {
-            return 1.0  // HP-15C does all trig function in radians, except conversions between rectangular and polar coordinates
+            return 1.0  // HP-15C does all complex trig functions in radians, except conversions between rectangular and polar coordinates
         } else {
-            switch trigMode {
+            switch trigUnits {
             case .DEG:
                 return Constants.D2R
             case .RAD:
@@ -110,13 +110,13 @@ class CalculatorBrain: Codable {
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case trigMode, lastXRegister, error, isComplexMode, xRegister, realStack, imagStack, storageRegisters }
+    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, error, isComplexMode, xRegister, realStack, imagStack, storageRegisters }
     
     init() { }
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.trigMode = try container.decode(TrigMode.self, forKey: .trigMode)
+        self.trigUnits = try container.decode(TrigUnits.self, forKey: .trigUnits)
         self.lastXRegister = try container.decode(Double.self, forKey: .lastXRegister)
         self.error = try container.decode(Error.self, forKey: .error)
         self.isComplexMode = try container.decode(Bool.self, forKey: .isComplexMode)
@@ -128,7 +128,7 @@ class CalculatorBrain: Codable {
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.trigMode, forKey: .trigMode)
+        try container.encode(self.trigUnits, forKey: .trigUnits)
         try container.encode(self.lastXRegister, forKey: .lastXRegister)
         try container.encode(self.error, forKey: .error)
         try container.encode(self.isComplexMode, forKey: .isComplexMode)

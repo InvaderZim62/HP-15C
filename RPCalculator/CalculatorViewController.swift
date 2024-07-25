@@ -95,7 +95,7 @@ enum Prefix: String {
     case RCL_DIV
 }
 
-enum TrigMode: String, Codable {
+enum TrigUnits: String, Codable {
     case DEG = "D"  // default
     case RAD = "R"
     case GRAD = "G"  // 100 gradians = 90 degrees
@@ -187,10 +187,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
-    var trigMode = TrigMode.DEG {
+    var trigUnits = TrigUnits.DEG {
         didSet {
-            brain.trigMode = trigMode
-            switch trigMode {
+            brain.trigUnits = trigUnits
+            switch trigUnits {
             case .DEG:
                 gradLabel.alpha = 0  // no display label for DEG
             case .RAD:
@@ -634,7 +634,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
         let gAction = {
             self.prefix = nil
-            self.trigMode = .DEG
+            self.trigUnits = .DEG
         }
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
     }
@@ -647,7 +647,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
         let gAction = {
             self.prefix = nil
-            self.trigMode = .RAD
+            self.trigUnits = .RAD
         }
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
     }
@@ -660,7 +660,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
         let gAction = {
             self.prefix = nil
-            self.trigMode = .GRAD
+            self.trigUnits = .GRAD
         }
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
     }
