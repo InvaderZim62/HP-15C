@@ -294,7 +294,7 @@ class CalculatorBrain: Codable {
                 let number = popOperand()
                 result.real = number.real - Double(Int(number.real))
                 result.imag = number.imag
-            case "1":  // sent from digitPressed
+            case "1":
                 // →R - convert polar coordinates to rectangular
                 isConvertingPolar = true
                 if isComplexMode {
@@ -307,9 +307,9 @@ class CalculatorBrain: Codable {
                     let radius = popOperand().real
                     let angle = popOperand().real
                     result.real = radius * cos(angle * angleConversion)  // x
-                    secondResult?.real = radius * sin(angle * angleConversion)  // y
+                    secondResult = Complex(real: radius * sin(angle * angleConversion), imag: 0)  // y
                 }
-            case "2":  // sent from digitPressed
+            case "2":
                 // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
                 let term = popOperand()
                 let decimalHours = term.real
@@ -318,7 +318,7 @@ class CalculatorBrain: Codable {
                 let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
                 result.real = Double(hours) + Double(minutes) / 100 + seconds / 10000
                 result.imag = term.imag
-            case "3":  // sent from digitPressed
+            case "3":
                 // →RAD - convert to radians
                 let term = popOperand()
                 result = Complex(real: term.real * Constants.D2R, imag: term.imag)  // only applies to the real portion
@@ -380,7 +380,7 @@ class CalculatorBrain: Codable {
             case "CHS":
                 // ABS (absolute value)
                 result = Complex(real: popOperand().mag, imag: 0)
-            case "1":  // sent from digitPressed
+            case "1":
                 // →P - convert rectangular coordinates to polar
                 isConvertingPolar = true
                 if isComplexMode {
@@ -393,9 +393,9 @@ class CalculatorBrain: Codable {
                     let x = popOperand().real
                     let y = popOperand().real
                     result.real = sqrt(x * x + y * y)  // radius
-                    secondResult?.real = atan2(y, x) / angleConversion  // angle
+                    secondResult = Complex(real: atan2(y, x) / angleConversion, imag: 0)  // angle
                 }
-            case "2":  // sent from digitPressed
+            case "2":
                 // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
                 let term = popOperand()
                 let hoursMinuteSeconds = term.real  // ex. hoursMinutesSeconds = 1.1404200
@@ -405,7 +405,7 @@ class CalculatorBrain: Codable {
                 let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
                 result.real = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
                 result.imag = term.imag
-            case "3":  // sent from digitPressed
+            case "3":
                 // →DEG - convert to degrees
                 let term = popOperand()
                 result = Complex(real: term.real / Constants.D2R, imag: term.imag)  // only applies to the real portion
