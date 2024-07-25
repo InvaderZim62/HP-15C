@@ -7,19 +7,15 @@
 //  Good tips:
 //  https://masilotti.com/ui-testing-cheat-sheet/
 //
-//  Re-set each time app is opened in Xcode:
-//  - to prevent unit test from hanging in the simulator (stuck on "showing testing..."):
-//    select: Test navigator (command 6) | PRCalculator (Autocreated) | Tests | PRCalculatorUITests | Options...
-//    uncheck: Execute in parallel (if possible) | Don't Save
-//
 //  Notes:
-//    - test cases run in alphabetic order
-//    - test cases don't have access to application variables (just labels, buttons, table
-//      entries,... that appear on screen)
-//    - you can access variables in a stand-alone class/struct/enum, by declaring an instance
-//      inside the test func (see Project39Tests); this may only work for unit tests (not UI tests)
-//    - verifying results below required adding a clear-colored label to the app, that is kept in
-//      sync with displayString (hidden label doesn't work)
+//  - to prevent unit test from hanging in the simulator (stuck on showing "testing..."):
+//    select: Test navigator (command 6) | PRCalculator (Autocreated) | Tests | PRCalculatorUITests | Options...
+//    uncheck: Execute in parallel (if possible) | Save
+//  - test cases are run in alphabetic order
+//  - UI test cases don't have access to application variables (just labels, buttons, table
+//    entries,... that appear on screen)
+//  - verifying results below required adding a clear-colored label to the app, that is kept in
+//    sync with displayString (hidden label doesn't work)
 //
 
 import XCTest
@@ -88,7 +84,7 @@ final class RPCalculatorUITests: XCTestCase {
     }
     
     // test last prefix entered is used, if consecutive prefixes entered
-    // verify 5 GTO CHS 00 STO .1 stored 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
+    // verify: 5 GTO CHS 00 STO .1 stored 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
     func test04ConsecutivePrefixes() {
         // setup
         app.buttons["8"].tapElement()  // store 8 in register .1 first, to verify it gets overwritten
@@ -116,14 +112,14 @@ final class RPCalculatorUITests: XCTestCase {
     }
 
     // test trig function in degrees and radians
-    // radians
-    //   verify sin(π/2) = 1.0000
-    //   verify cos(π)  = -1.0000
-    //   verify tan(π/4) = 1.0000
-    // degrees
-    //   verify sin(30) = 0.5000
-    //   verify cos(30) = 0.8660
-    //   verify tan(45) = 1.0000
+    // verify (radians):
+    //   sin(π/2) =  1.0000
+    //   cos(π)   = -1.0000
+    //   tan(π/4) =  1.0000
+    // verify (degrees):
+    //   sin(30)  =  0.5000
+    //   cos(30)  =  0.8660
+    //   tan(45)  =  1.0000
     func test05RadiansDegreesTrig() {
         // radians
         app.buttons["g"].tapElement()
@@ -174,9 +170,10 @@ final class RPCalculatorUITests: XCTestCase {
     }
     
     // test hyperbolic and inverse hyperbolic trig functions
-    // verify sinh(1) = 1.1752 and sinh-1() = 1.0
-    // verify cosh(1) = 1.5431 and cosh-1() = 1.0
-    // verify tanh(1) = 0.7616 and tanh-1() = 1.0
+    // verify:
+    //   sinh(1) = 1.1752 and sinh-1() = 1.0
+    //   cosh(1) = 1.5431 and cosh-1() = 1.0
+    //   tanh(1) = 0.7616 and tanh-1() = 1.0
     func test06HyperbolicTrig() {
         // sinh(1)
         app.buttons["1"].tapElement()
@@ -217,14 +214,14 @@ final class RPCalculatorUITests: XCTestCase {
         XCTAssert(label.exists, "Display should show 1.0000")
     }
     
-    // test complex number arithmetic
-    // verify
-    //   (1 + 2i) + (3 + 4i) =  4 + 6i
-    //   (1 + 2i) - (3 + 4i) = -2 - 2i
-    //   (1 + 2i) x (4 + 4i) = -5 + 10i
-    //   (1 + 2i) / (3 + 4i) =  0.44 + 0.08i
+    // test manipulation of complex numbers
+    // verify:
+    //   f-I is used to enter imaginary part of complex number
+    //   f-(i) shows imaginary part of complex number
+    //   f-Re≷Im swaps real and imaginary parts of complex number in display
+    //   (1 + 2i) + (3 + 4i) = 4 + 6i
+    // other complex operations included in unit tests
     func test07ComplexArithmetic() {
-        // addition
         // enter 1 + 2i
         app.buttons["1"].tapElement()
         app.buttons["E N T E R"].tapElement()
@@ -253,220 +250,6 @@ final class RPCalculatorUITests: XCTestCase {
         app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
         label = app.staticTexts["6.0000"]
         XCTAssert(label.exists, "Display should show imaginary part of complex number: 6.0000")
-        // subtraction
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        // enter 3 + 4i
-        app.buttons["3"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["4"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part
-        // subtract
-        app.buttons["–"].tapElement()
-        label = app.staticTexts["-2.0000"]
-        XCTAssert(label.exists, "Display should show real part of complex number: -2.0000")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["-2.0000"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: -2.0000")
-        // multiplication
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        // enter 3 + 4i
-        app.buttons["3"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["4"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part
-        // multiply
-        app.buttons["×"].tapElement()
-        label = app.staticTexts["-5.0000"]
-        XCTAssert(label.exists, "Display should show real part of complex number: -5.0000")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["10.0000"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: 10.0000")
-        // division
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        // enter 3 + 4i
-        app.buttons["3"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["4"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part
-        // divide
-        app.buttons["÷"].tapElement()
-        label = app.staticTexts["0.4400"]
-        XCTAssert(label.exists, "Display should show real part of complex number: 0.4400")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["0.0800"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: 0.0800")
-
-        // exit complex mode
-        app.buttons["g"].tapElement()
-        app.buttons["5"].tapElement()  // CF clear flag
-        app.buttons["8"].tapElement()  // flag 8 is for complex mode
-    }
-    
-    // test other operations on complex number
-    // verify
-    //      sqrt(1 + 2i) =  1.2720 + 0.7862i
-    //        (1 + 2i)^2 = -3.0000 + 4.0000i
-    //        e^(1 + 2i) = -1.1312 + 2.4717i
-    //        ln(1 + 2i) =  0.8047 + 1.1071i
-    //       10^(1 + 2i) = -1.0701 - 9.9426i
-    //       log(1 + 2i) =  0.3495 + 0.4808i
-    // (1 + 2i)^(3 + 4i) =  0.1290 + 0.0339i
-    //      1 / (1 + 2i) =  0.2000 - 0.4000i
-    func test08ComplexOperations() {
-        // square root
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        app.buttons["√x"].tapElement()  // sqrt
-        label = app.staticTexts["1.2720"]
-        XCTAssert(label.exists, "Display should show real part of complex number: 1.2720")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["0.7862"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: 0.7862")
-        // squared
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        app.buttons["g"].tapElement()
-        app.buttons["√x"].tapElement()  // x^2
-        label = app.staticTexts["-3.0000"]
-        XCTAssert(label.exists, "Display should show real part of complex number: -3.0000")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["4.0000"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: 4.0000")
-        // exponential
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        app.buttons["ex"].tapElement()  // e^x
-        label = app.staticTexts["-1.1312"]
-        XCTAssert(label.exists, "Display should show real part of complex number: -1.1312")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["2.4717"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: 2.4717")
-        // natural log
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        app.buttons["g"].tapElement()
-        app.buttons["ex"].tapElement()  // LN
-        label = app.staticTexts["0.8047"]
-        XCTAssert(label.exists, "Display should show real part of complex number: 0.8047")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["1.1071"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: 1.1071")
-        // 10^x
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        app.buttons["10x"].tapElement()  // 10^x
-        label = app.staticTexts["-1.0701"]
-        XCTAssert(label.exists, "Display should show real part of complex number: -1.0701")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["-9.9426"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: -9.9426")
-        // log
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        app.buttons["g"].tapElement()
-        app.buttons["10x"].tapElement()  // LOG
-        label = app.staticTexts["0.3495"]
-        XCTAssert(label.exists, "Display should show real part of complex number: 0.3495")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["0.4808"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: 0.4808")
-        // y^x
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        // enter 3 + 4i
-        app.buttons["3"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["4"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        app.buttons["yx"].tapElement()  // y^x
-        label = app.staticTexts["0.1290"]
-        XCTAssert(label.exists, "Display should show real part of complex number: 0.1290")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["0.0339"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: 0.0339")
-        // inverse
-        // enter 1 + 2i
-        app.buttons["1"].tapElement()
-        app.buttons["E N T E R"].tapElement()
-        app.buttons["2"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["TAN"].tapElement()  // "I" store imaginary part (also enters complex mode)
-        app.buttons["1/x"].tapElement()  // 1/x
-        label = app.staticTexts["0.2000"]
-        XCTAssert(label.exists, "Display should show real part of complex number: 0.2000")
-        // show imaginary part
-        app.buttons["f"].tapElement()
-        app.buttons["–"].tapElement()  // Re≷Im swap real and imaginary part in display
-        label = app.staticTexts["-0.4000"]
-        XCTAssert(label.exists, "Display should show imaginary part of complex number: -0.4000")
-
         // exit complex mode
         app.buttons["g"].tapElement()
         app.buttons["5"].tapElement()  // CF clear flag
@@ -485,8 +268,8 @@ final class RPCalculatorUITests: XCTestCase {
     //   2 +
     //   RTN (returns to line after GSB 0)
     //
-    // verify 5 LBL A = 5.2
-    func test09Programming() {
+    // verify: 5 LBL A = 5.2
+    func test08Programming() {
         // enter program mode
         app.buttons["g"].tapElement()
         app.buttons["R/S"].tapElement()

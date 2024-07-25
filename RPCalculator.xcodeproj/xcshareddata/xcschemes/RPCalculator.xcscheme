@@ -27,8 +27,13 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      shouldAutocreateTestPlan = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <TestPlans>
+         <TestPlanReference
+            reference = "container:RPCalculator.xctestplan"
+            default = "YES">
+         </TestPlanReference>
+      </TestPlans>
       <Testables>
          <TestableReference
             skipped = "NO">
@@ -37,6 +42,16 @@
                BlueprintIdentifier = "4ADE1D7B2C504D7F00D47C9D"
                BuildableName = "RPCalculatorUITests.xctest"
                BlueprintName = "RPCalculatorUITests"
+               ReferencedContainer = "container:RPCalculator.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "4ADE1D982C51CBD500D47C9D"
+               BuildableName = "RPCalculatorTests.xctest"
+               BlueprintName = "RPCalculatorTests"
                ReferencedContainer = "container:RPCalculator.xcodeproj">
             </BuildableReference>
          </TestableReference>

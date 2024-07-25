@@ -1,0 +1,41 @@
+{
+  "configurations" : [
+    {
+      "id" : "BA12DBFA-BC9A-49BF-9464-4A3691F4896C",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "IDEPreferLogStreaming",
+        "value" : "YES"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:RPCalculator.xcodeproj",
+      "identifier" : "4AA20A5925CD0E2A00012341",
+      "name" : "RPCalculator"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:RPCalculator.xcodeproj",
+        "identifier" : "4ADE1D7B2C504D7F00D47C9D",
+        "name" : "RPCalculatorUITests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:RPCalculator.xcodeproj",
+        "identifier" : "4ADE1D982C51CBD500D47C9D",
+        "name" : "RPCalculatorTests"
+      }
+    }
+  ],
+  "version" : 1
+}
