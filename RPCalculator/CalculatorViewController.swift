@@ -1180,11 +1180,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard let buttonName = handleButton(sender) else { return }
 
         let fAction = {
-            // 1: →R pressed (convert to rectangular coordinates)
+            // f-1: →R pressed (convert to rectangular coordinates)
             self.performOperationFor(buttonName)
         }
         let gAction = {
-            // 1: →P pressed (convert to polar coordinates)
+            // g-1: →P pressed (convert to polar coordinates)
             self.performOperationFor(buttonName)
         }
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
@@ -1194,11 +1194,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard let buttonName = handleButton(sender) else { return }
 
         let fAction = {
-            // 2: →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
+            // f-2: →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
             self.performOperationFor(buttonName)
         }
         let gAction = {
-            // 2: →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
+            // g-2: →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
             self.performOperationFor(buttonName)
         }
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
@@ -1208,11 +1208,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard let buttonName = handleButton(sender) else { return }
 
         let fAction = {
-            // 3: →RAD pressed
+            // f-3: →RAD pressed
             self.performOperationFor(buttonName)
         }
         let gAction = {
-            // 3: →DEG pressed
+            // g-3: →DEG pressed
             self.performOperationFor(buttonName)
         }
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
