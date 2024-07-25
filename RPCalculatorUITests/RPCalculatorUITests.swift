@@ -7,6 +7,11 @@
 //  Good tips:
 //  https://masilotti.com/ui-testing-cheat-sheet/
 //
+//  To add unit test capability:
+//  - Select: File | New | Target... | Test | UI Testing Bundle
+//  - other test files can be added to the unit test project, if they import XCTest
+//    and subclass XCTestCase
+//
 //  Notes:
 //  - to prevent unit test from hanging in the simulator (stuck on showing "testing..."):
 //    select: Test navigator (command 6) | PRCalculator (Autocreated) | Tests | PRCalculatorUITests | Options...

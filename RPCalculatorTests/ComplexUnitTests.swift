@@ -1,11 +1,13 @@
 //
-//  RPCalculatorTests.swift
-//  RPCalculatorTests
+//  ComplexUnitTests.swift
+//  ComplexUnitTests
 //
 //  Created by Phil Stern on 7/24/24.
 //
 //  To add unit test capability:
-//  - Select: File | New | Target... | Test | Unit Test Bundle
+//  - select: File | New | Target... | Test | Unit Testing Bundle
+//  - other test files can be added to the unit test project, if they import XCTest
+//    and subclass XCTestCase
 //
 //  Notes:
 //  - to prevent unit test from hanging in the simulator (stuck on showing "testing..."):
@@ -43,13 +45,69 @@ final class ComplexUnitTests: XCTestCase {
     //   (1 + 2i) - (3 + 4i) = -2 - 2i
     //   (1 + 2i) x (4 + 4i) = -5 + 10i
     //   (1 + 2i) / (3 + 4i) =  0.44 + 0.08i
-    func test01ComplexArithmatic() {
+    func test01ComplexArithmetic() {
         XCTAssertEqual(complexA + complexB, Complex(real: 4, imag: 6), "Addition of complex numbers is not correct")
         XCTAssertEqual(complexA - complexB, Complex(real: -2, imag: -2), "Subtraction of complex numbers is not correct")
         XCTAssertEqual(complexA * complexB, Complex(real: -5, imag: 10), "Multiplication of complex numbers is not correct")
         XCTAssertEqual(complexA / complexB, Complex(real: 0.44, imag: 0.08), "Division of complex numbers is not correct")
     }
     
+    // test trig operations on complex numbers
+    // verify:
+    //   sin(1 + 2i) = 3.1658 + 1.9596i and asin() = 1 + 2i
+    //   cos(1 + 2i) = 2.0327 - 3.0519i and acos() = 1 + 2i (or -1 - 2i)
+    //   tan(1 + 2i) = 0.0338 + 1.0148i and atan() = 1 + 2i
+    func test02ComplexTrig() {
+        // verify: f(A) - expected result < test threshold
+        // sin
+        difference = complexA.sine - Complex(real: 3.1658, imag: 1.9596)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Sine of complex numbers is not correct")
+        // asin
+        difference = complexA.sine.arcsin - Complex(real: 1.0000, imag: 2.0000)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Arcsine of complex numbers is not correct")
+        // cos
+        difference = complexA.cosine - Complex(real: 2.0327, imag: -3.0519)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Cosine of complex numbers is not correct")
+        // acos
+        let difference1 = complexA.cosine.arccos - Complex(real: 1.0000, imag: 2.0000)
+        let difference2 = complexA.cosine.arccos - Complex(real: -1.0000, imag: -2.0000)
+        XCTAssert(difference1.mag < Test.threshold || difference2.mag < Test.threshold, "Arccosine of complex numbers is not correct")
+        // tan
+        difference = complexA.tangent - Complex(real: 0.0338, imag: 1.0148)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Tangent of complex numbers is not correct")
+        // atan
+        difference = complexA.tangent.arctan - Complex(real: 1.0000, imag: 2.0000)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Arctangent of complex numbers is not correct")
+    }
+    
+    // test hyperbolic trig operations on complex numbers
+    // verify:
+    //   sinh(1 + 2i) = -0.4891 + 1.4031i and asin() = -1 + 1.1416i <- not sure why HP-15C returns this, rather then 1 + 2i
+    //   cosh(1 + 2i) = -0.6421 + 1.0686i and acos() =  1 + 2i      (or -1 - 2i)
+    //   tanh(1 + 2i) =  1.1667 - 0.2435i and atan() =  1 - 1.1416i
+    func test03ComplexHyperbolicTrig() {
+        // verify: f(A) - expected result < test threshold
+        // sinh
+        difference = complexA.sinhyp - Complex(real: -0.4891, imag: 1.4031)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Hyperbolic sine of complex numbers is not correct")
+        // asinh
+        difference = complexA.sinhyp.arcsinh - Complex(real: -1.0000, imag: 1.1416)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Arc-hyperbolic sine of complex numbers is not correct")
+        // cosh
+        difference = complexA.coshyp - Complex(real: -0.6421, imag: 1.0686)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Hyperbolic cosine of complex numbers is not correct")
+        // acosh
+        let difference1 = complexA.coshyp.arccosh - Complex(real: 1.0000, imag: 2.0000)
+        let difference2 = complexA.coshyp.arccosh - Complex(real: -1.0000, imag: -2.0000)
+        XCTAssert(difference1.mag < Test.threshold || difference2.mag < Test.threshold, "Arc-hyperbolic cosine of complex numbers is not correct")
+        // tanh
+        difference = complexA.tanhyp - Complex(real: 1.1667, imag: -0.2435)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Hyperbolic tangent of complex numbers is not correct")
+        // atanh
+        difference = complexA.tanhyp.arctanh - Complex(real: 1.0000, imag: -1.1416)
+        XCTAssertLessThan(difference.mag, Test.threshold, "Arc-hyperbolic tangent of complex numbers is not correct")
+    }
+
     // test other operations on complex numbers
     // verify:
     //      sqrt(1 + 2i) =  1.2720 + 0.7862i
@@ -60,7 +118,7 @@ final class ComplexUnitTests: XCTestCase {
     //       log(1 + 2i) =  0.3495 + 0.4808i
     // (1 + 2i)^(3 + 4i) =  0.1290 + 0.0339i
     //      1 / (1 + 2i) =  0.2000 - 0.4000i
-    func test02ComplexOperations() {
+    func test04OtherComplexOperations() {
         // verify: f(A) - expected result < test threshold
         // square root
         difference = complexA.squareRoot - Complex(real: 1.2720, imag: 0.7862)
