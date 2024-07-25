@@ -70,10 +70,10 @@ struct Complex: Equatable {
                 imag: cos(real) * sinh(imag))
     }
     
-    // cos(a + bi) = cos(a)cosh(b) + sin(a)sinh(b)i
+    // cos(a + bi) = cos(a)cosh(b) - sin(a)sinh(b)i
     var cosine: Complex {
         Complex(real: cos(real) * cosh(imag),
-                imag: sin(real) * sinh(imag))
+                imag: -sin(real) * sinh(imag))
     }
     
     // tan(a + bi) = [tan(a) - tan(a)tanh²(b)] / [1 + tan²(a)tanh²(b)] + [tanh(b) + tan²(a)tanh(b)] / [1 + tan²(a)tanh²(b)]i

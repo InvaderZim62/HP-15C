@@ -4,6 +4,9 @@
 //
 //  Created by Phil Stern on 7/24/24.
 //
+//  To add unit test capability:
+//  - Select: File | New | Target... | Test | Unit Test Bundle
+//
 //  Notes:
 //  - to prevent unit test from hanging in the simulator (stuck on showing "testing..."):
 //    select: Test navigator (command 6) | PRCalculator (Autocreated) | Tests | PRCalculatorTests | Options...
@@ -18,7 +21,7 @@ struct Test {
     static let threshold = 0.0001
 }
 
-final class RPCalculatorTests: XCTestCase {
+final class ComplexUnitTests: XCTestCase {
 
     let complexA = Complex(real: 1, imag: 2)  // 1 + 2i
     let complexB = Complex(real: 3, imag: 4)  // 3 + 4i
