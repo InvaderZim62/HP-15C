@@ -22,16 +22,16 @@
 //  - verifying results below required adding a clear-colored label to the app, that is kept in
 //    sync with displayString (hidden label doesn't work)
 //
+//  Test cases:
+//  - test01ButtonExists
+//  - test02Arithmetic
+//  - test03ConsecutivePrefixes
+//  - test04ConsecutivePrefixes
+//  - test05ComplexMode
+//  - test06Programming
+//
 
 import XCTest
-
-// test cases
-// - test01ButtonExists
-// - test02Arithmetic
-// - test03ConsecutivePrefixes
-// - test04ConsecutivePrefixes
-// - test05ComplexMode
-// - test06Programming
 
 final class RPCalculatorUITests: XCTestCase {
 
@@ -55,6 +55,8 @@ final class RPCalculatorUITests: XCTestCase {
     override func tearDownWithError() throws {
     }
     
+    // MARK: - Tests
+
     // test ability to find elements on screen
     // verify "5" button appears on screen
     func test01ButtonExists() {

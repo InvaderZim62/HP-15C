@@ -7,6 +7,13 @@
 //  Method for testing UIViewController obtained from:
 //  https://oliverpeate.com/testing-a-uiviewcontroller/
 //
+//  Test cases:
+//  - test01Basic
+//  - test02RectangularToPolar
+//  - test03PolarToRectangular
+//  - test04HourToHourMinSec
+//  - test05HoursMinSecToDecimalHours
+//
 
 import XCTest
 @testable import RPCalculator
@@ -35,9 +42,11 @@ class CalculatorUnitTests: XCTestCase {
         try? super.tearDownWithError()
     }
     
+    // MARK: - Tests
+    
     // test basic arithmetic
     // verify: 5 ENTER 2 x = 10
-    func test01CVC() {
+    func test01Basic() {
         pressButton(title: "5")
         pressButton(title: "ENTER")
         pressButton(title: "2")

@@ -22,6 +22,8 @@ final class BrainUnitTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         try? super.tearDownWithError()
     }
+    
+    // MARK: - Tests
 
     // test trig functions in radians and degrees
     // verify (radians):

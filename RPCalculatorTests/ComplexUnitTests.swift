@@ -38,7 +38,9 @@ final class ComplexUnitTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         try? super.tearDownWithError()
     }
-        
+    
+    // MARK: - Tests
+
     // test complex number arithmetic
     // verify:
     //   (1 + 2i) + (3 + 4i) =  4 + 6i
