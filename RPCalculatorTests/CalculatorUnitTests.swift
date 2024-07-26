@@ -13,14 +13,14 @@ import XCTest
 
 class CalculatorUnitTests: XCTestCase {
 
-    var cvc = CalculatorViewController()
+    var cvc: CalculatorViewController!
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         try? super.setUpWithError()
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        cvc = storyboard.instantiateViewController(withIdentifier: "CVC") as! CalculatorViewController  // added identifier in Storyboard
-        cvc.beginAppearanceTransition(true, animated: false)  // connect outlets
+        cvc = storyboard.instantiateViewController(withIdentifier: "CVC") as? CalculatorViewController  // added identifier in Storyboard
+        cvc.beginAppearanceTransition(true, animated: false)  // run lifecycle, connect outlets
         cvc.endAppearanceTransition()
     }
 
