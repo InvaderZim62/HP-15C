@@ -335,7 +335,7 @@ class CalculatorBrain: Codable {
                 // SIN-1 (arcsin)
                 if isComplexMode {
                     // both methods give same real answer for abs(operands) < 1, but .arcsin does not return
-                    // NaN, if abs(operand) > 1 (it return a valid complex number); must use asin() to get NaN.
+                    // NaN, if abs(operand) > 1 (it returns a valid complex number); must use asin() to get NaN.
                     result = popOperand().arcsin
                 } else {
                     result.real = asin(popOperand().real) / angleConversion
@@ -344,7 +344,7 @@ class CalculatorBrain: Codable {
                 // COS-1 (arccos)
                 if isComplexMode {
                     // both methods give same real answer for abs(operands) < 1, but .arccos does not return
-                    // NaN, if abs(operand) > 1 (it return a valid complex number); must use acos() to get NaN.
+                    // NaN, if abs(operand) > 1 (it returns a valid complex number); must use acos() to get NaN.
                     result = popOperand().arccos
                 } else {
                     result.real = acos(popOperand().real) / angleConversion
@@ -384,12 +384,14 @@ class CalculatorBrain: Codable {
                 // →P - convert rectangular coordinates to polar
                 isConvertingPolar = true
                 if isComplexMode {
+                    // rectangular coordinates (x and y) come from real and imaginary parts of complex number in X registers
                     let rectangular = popOperand()
                     let x = rectangular.real
                     let y = rectangular.imag
                     result.real = rectangular.mag  // radius
                     result.imag = atan2(y, x) / angleConversion  // angle
                 } else {
+                    // rectangular coordinate x comes from X register, y comes from Y register
                     let x = popOperand().real
                     let y = popOperand().real
                     result.real = sqrt(x * x + y * y)  // radius
