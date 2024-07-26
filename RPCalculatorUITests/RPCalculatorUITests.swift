@@ -64,7 +64,7 @@ final class RPCalculatorUITests: XCTestCase {
     }
 
     // test basic arithmetic buttons
-    // verify 5 ENTER 2 x = 10
+    // verify: 5 ENTER 2 x = 10
     func test02Arithmetic() {
         app.buttons["5"].tapElement()
         app.buttons["E N T E R"].tapElement()
@@ -75,7 +75,7 @@ final class RPCalculatorUITests: XCTestCase {
     }
     
     // test last prefix entered is used, if consecutive prefixes entered
-    // verify 5 RCL STO 1 stores 5 in register 1 (RCL and STO are both prefixes)
+    // verify: 5 RCL STO 1 stores 5 in register 1 (RCL and STO are both prefixes)
     func test03ConsecutivePrefixes() {
         // setup
         app.buttons["8"].tapElement()  // store 8 in register 1 first, to verify it gets overwritten
@@ -97,7 +97,7 @@ final class RPCalculatorUITests: XCTestCase {
     }
     
     // test last prefix entered is used, if consecutive prefixes entered
-    // verify: 5 GTO CHS 00 STO .1 stored 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
+    // verify: 5 GTO CHS 00 STO .1 stores 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
     func test04ConsecutivePrefixes() {
         // setup
         app.buttons["8"].tapElement()  // store 8 in register .1 first, to verify it gets overwritten
@@ -130,7 +130,7 @@ final class RPCalculatorUITests: XCTestCase {
     //   f-I is used to enter imaginary part of complex number
     //   f-(i) shows imaginary part of complex number
     //   f-Re≷Im swaps real and imaginary parts of complex number in display
-    // note: complex operations are included in ComplexUnitTests
+    // note: complex number operations are included in ComplexUnitTests
     func test05ComplexMode() {
         // enter 1 + 2i
         app.buttons["1"].tapElement()

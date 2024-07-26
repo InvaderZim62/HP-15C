@@ -294,7 +294,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBOutlet weak var logoCircleView: UIView!  // used to make view round in viewWillAppear
     @IBOutlet weak var calculatorView: CalculatorView!  // used to draw bracket around CLEAR label
     @IBOutlet weak var clearLabel: UILabel!  // used to anchor line drawing in calculatorView
-    @IBOutlet weak var displayLabel: UILabel!  // pws: for RPCalculatorUITests
+    @IBOutlet weak var displayLabel: UILabel!  // for RPCalculatorUITests
     
     // MARK: - Start of code
     
@@ -307,7 +307,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        displayLabel.accessibilityIdentifier = "displayLabel"
         displayView.numberOfDigits = 11  // one digit for sign
         getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
         program.delegate = self  // must be called after getting defaults (overwrites program)
