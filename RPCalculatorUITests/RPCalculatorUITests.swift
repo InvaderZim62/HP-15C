@@ -25,12 +25,14 @@
 
 import XCTest
 
-// test01ButtonExists
-// test02Arithmetic
-// test03ConsecutivePrefixes
-// test04ConsecutivePrefixes
-// test05RadiansDegreesTrig
-//
+// test cases
+// - test01ButtonExists
+// - test02Arithmetic
+// - test03ConsecutivePrefixes
+// - test04ConsecutivePrefixes
+// - test05ComplexMode
+// - test06Programming
+
 final class RPCalculatorUITests: XCTestCase {
 
     let app = XCUIApplication()
@@ -122,59 +124,14 @@ final class RPCalculatorUITests: XCTestCase {
         XCTAssert(label.exists, "Register .1 should contain 5.0000")
     }
     
-    // test hyperbolic and inverse hyperbolic trig functions
-    // verify:
-    //   sinh(1) = 1.1752 and sinh-1() = 1.0
-    //   cosh(1) = 1.5431 and cosh-1() = 1.0
-    //   tanh(1) = 0.7616 and tanh-1() = 1.0
-    func test05HyperbolicTrig() {
-        // sinh(1)
-        app.buttons["1"].tapElement()
-        app.buttons["f"].tapElement()
-        app.buttons["GTO"].tapElement()  // HYP
-        app.buttons["SIN"].tapElement()
-        var label = app.staticTexts["1.1752"]
-        XCTAssert(label.exists, "Display should show 1.1752")
-        // sinh-1()
-        app.buttons["g"].tapElement()
-        app.buttons["GTO"].tapElement()  // HYP-1
-        app.buttons["SIN"].tapElement()
-        label = app.staticTexts["1.0000"]
-        XCTAssert(label.exists, "Display should show 1.0000")
-        // cosh(1)
-        app.buttons["f"].tapElement()
-        app.buttons["GTO"].tapElement()
-        app.buttons["COS"].tapElement()
-        label = app.staticTexts["1.5431"]
-        XCTAssert(label.exists, "Display should show 1.5431")
-        // cosh-1()
-        app.buttons["g"].tapElement()
-        app.buttons["GTO"].tapElement()
-        app.buttons["COS"].tapElement()
-        label = app.staticTexts["1.0000"]
-        XCTAssert(label.exists, "Display should show 1.0000")
-        // tanh(1)
-        app.buttons["f"].tapElement()
-        app.buttons["GTO"].tapElement()
-        app.buttons["TAN"].tapElement()
-        label = app.staticTexts["0.7616"]
-        XCTAssert(label.exists, "Display should show 0.7616")
-        // tanh-1()
-        app.buttons["g"].tapElement()
-        app.buttons["GTO"].tapElement()
-        app.buttons["TAN"].tapElement()
-        label = app.staticTexts["1.0000"]
-        XCTAssert(label.exists, "Display should show 1.0000")
-    }
-    
     // test manipulation of complex numbers
     // verify:
+    //   (1 + 2i) + (3 + 4i) = 4 + 6i
     //   f-I is used to enter imaginary part of complex number
     //   f-(i) shows imaginary part of complex number
     //   f-Re≷Im swaps real and imaginary parts of complex number in display
-    //   (1 + 2i) + (3 + 4i) = 4 + 6i
-    // other complex operations included in unit tests
-    func test06ComplexArithmetic() {
+    // note: complex operations are included in ComplexUnitTests
+    func test05ComplexMode() {
         // enter 1 + 2i
         app.buttons["1"].tapElement()
         app.buttons["E N T E R"].tapElement()
@@ -222,7 +179,7 @@ final class RPCalculatorUITests: XCTestCase {
     //   RTN (returns to line after GSB 0)
     //
     // verify: 5 LBL A = 5.2
-    func test07Programming() {
+    func test06Programming() {
         // enter program mode
         app.buttons["g"].tapElement()
         app.buttons["R/S"].tapElement()

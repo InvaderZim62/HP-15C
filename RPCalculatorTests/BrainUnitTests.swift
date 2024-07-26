@@ -23,7 +23,7 @@ final class BrainUnitTests: XCTestCase {
         try? super.tearDownWithError()
     }
 
-    // test trig functions in degrees and radians
+    // test trig functions in radians and degrees
     // verify (radians):
     //   sin(π/2) =  1.0000
     //   cos(π)   = -1.0000
@@ -70,5 +70,67 @@ final class BrainUnitTests: XCTestCase {
         brain.performOperation("nTAN")
         difference = brain.xRegister! - 1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Tangent of number in degrees is not correct")
+    }
+    
+    // test hyperbolic and inverse hyperbolic trig functions in radians and degrees
+    // verify (radians):
+    //   sinh(1) = 1.1752 and sinh-1() = 1.0
+    //   cosh(1) = 1.5431 and cosh-1() = 1.0
+    //   tanh(1) = 0.7616 and tanh-1() = 1.0
+    // verify (degrees):
+    //   (same)
+    // note: Owner's Handbook p.26 says "The trigonometric functions operate in the trigonometric mode you select",
+    //       but this does not appear to be true for the hyperbolic trig functions.  They all operate in radians
+    //       for real and complex numbers.
+    // note: argument for brain.performOperation is "pKEY"  // first letter is prefix (H: HYP, h: HYP-1)
+    func test02HyperbolicTrig() {
+        brain.isComplexMode = false
+        brain.trigUnits = TrigUnits.RAD
+        
+        // sinh(1) = 1.1752
+        brain.xRegister = 1
+        brain.performOperation("HSIN")
+        difference = brain.xRegister! - 1.1752
+        XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic sine of number in radians is not correct")
+        // sinh-1() = 1.0
+        brain.performOperation("hSIN")
+        difference = brain.xRegister! - 1.000
+        XCTAssertLessThan(abs(difference), Test.threshold, "Inverse hyperbolic sine of number in radians is not correct")
+        // cosh(1) = 1.5431
+        brain.xRegister = 1
+        brain.performOperation("HCOS")
+        difference = brain.xRegister! - 1.5431
+        XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic cosine of number in radians is not correct")
+        // cosh-1() = 1.0
+        brain.performOperation("hCOS")
+        difference = brain.xRegister! - 1.0000
+        XCTAssertLessThan(abs(difference), Test.threshold, "Inverse hyperbolic cosine of number in radians is not correct")
+        // tanh(1) = 0.7616
+        brain.xRegister = 1
+        brain.performOperation("HTAN")
+        difference = brain.xRegister! - 0.7616
+        XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic tangent of number in radians is not correct")
+        // tanh-1() = 1.0
+        brain.performOperation("hTAN")
+        difference = brain.xRegister! - 1.0000
+        XCTAssertLessThan(abs(difference), Test.threshold, "Inverse hyperbolic tangent of number in radians is not correct")
+
+        brain.trigUnits = TrigUnits.DEG
+        
+        // sinh(1) = 1.1752
+        brain.xRegister = 1
+        brain.performOperation("HSIN")
+        difference = brain.xRegister! - 1.1752
+        XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic sine of number in degrees is not correct")
+        // cosh(1) = 1.5431
+        brain.xRegister = 1
+        brain.performOperation("HCOS")
+        difference = brain.xRegister! - 1.5431
+        XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic cosine of number in degrees is not correct")
+        // tanh(1) = 0.7616
+        brain.xRegister = 1
+        brain.performOperation("HTAN")
+        difference = brain.xRegister! - 0.7616
+        XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic tangent of number in degrees is not correct")
     }
 }
