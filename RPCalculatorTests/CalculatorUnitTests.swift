@@ -12,7 +12,9 @@
 //  - test02RectangularToPolar
 //  - test03PolarToRectangular
 //  - test04HourToHourMinSec
-//  - test05HoursMinSecToDecimalHours
+//  - test05HoursMinSecToHours
+//  - test06PiWhileEnteringDigits
+//  - test07PiAfterEnter
 //
 
 import XCTest
@@ -121,7 +123,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from hours.minutesSeconds to decimal hours
     // results: H.HHHHH
     // verify 10.30 (10 hr, 30 min) →H = 10.5 hours
-    func test05HoursMinSecToDecimalHours() {
+    func test05HoursMinSecToHours() {
         // 10.30 →H
         pressButton(title: "1")
         pressButton(title: "0")
@@ -134,8 +136,163 @@ class CalculatorUnitTests: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 10.5, "Conversion from hours.minutesSeconds to decimal hours is not correct")
     }
     
+    // test pi while user entering digits
+    // enter: 10 π x
+    // verify:
+    // - π during digit entry, ends digit entry (in x register), and pushes π onto stack
+    // - T register is duplicated when stack drops (after x)
+    func test06PiWhileEnteringDigits() {
+        // set stack to known condition
+        //   T: 1.0000
+        //   Z: 2.0000
+        //   Y: 3.0000
+        //   X: 4.0000
+        // stack lift is enabled
+        setupStack()
+        // 10 π
+        pressButton(title: "1")
+        pressButton(title: "0")  // still entering digits
+        XCTAssertTrue(cvc.liftStack, "Number keys should not change stack lift")
+        pressButton(title: "g")
+        pressButton(title: "EEX")  // g-EXE is π
+        // verify stack
+        //   T: 3.0000
+        //   Z: 4.0000
+        //   Y: 10.0000
+        //   X: 3.1416
+        XCTAssertEqual(cvc.displayStringNumber, 3.1416, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 10.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.1416, "Stack is not correct")
+        // multiply x and y registers, drop stack
+        pressButton(title: "×")
+        // verify stack
+        //   T: 3.0000
+        //   Z: 3.0000
+        //   Y: 4.0000
+        //   X: 31.4159
+        XCTAssertEqual(cvc.displayStringNumber, 31.4159, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 31.4159, "Stack is not correct")
+    }
+
+    // test pi after enter pressed
+    // enter: 10 ENTER π x
+    // verify:
+    // - π after ENTER overwrite x register
+    // - ENTER key disables stack lift
+    func test07PiAfterEnter() {
+        // set stack to known condition
+        //   T: 1.0000
+        //   Z: 2.0000
+        //   Y: 3.0000
+        //   X: 4.0000
+        // stack lift is enabled
+        setupStack()
+        // 10 ENTER
+        pressButton(title: "1")
+        pressButton(title: "0")
+        pressButton(title: "ENTER")
+        XCTAssertTrue(!cvc.liftStack, "Enter key should disable stack lift")
+        // verify stack
+        //   T: 3.0000
+        //   Z: 4.0000
+        //   Y: 10.0000
+        //   X: 10.0000
+        XCTAssertEqual(cvc.displayStringNumber, 10.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertTrue(!cvc.liftStack, "R↓ key should re-enable stack lift")
+        XCTAssertEqual(cvc.displayStringNumber, 10.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 10.0000, "Stack is not correct")
+        // π
+        pressButton(title: "g")
+        pressButton(title: "EEX")  // g-EXE is π
+        // verify stack
+        //   T: 3.0000
+        //   Z: 4.0000
+        //   Y: 10.0000
+        //   X: 3.1416
+        XCTAssertEqual(cvc.displayStringNumber, 3.1416, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 10.000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.1416, "Stack is not correct")
+        // multiply x and y registers, drop stack
+        pressButton(title: "×")
+        // verify stack
+        //   T: 3.0000
+        //   Z: 3.0000
+        //   Y: 4.0000
+        //   X: 31.4159
+        XCTAssertEqual(cvc.displayStringNumber, 31.4159, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 4.000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 31.4159, "Stack is not correct")
+    }
+    
     // MARK: - Utilities
     
+    // set stack to known condition
+    //   T: 1.0000
+    //   Z: 2.0000
+    //   Y: 3.0000
+    //   X: 4.0000
+    // verify: setup leaves stack lift enabled
+    func setupStack() {
+        // store 1 to register 0, to add to x register, without lifting stack
+        pressButton(title: "1")
+        pressButton(title: "STO")
+        pressButton(title: "0")
+        XCTAssertTrue(cvc.liftStack, "STO key should enable stack lift")
+        // setup
+        pressButton(title: "1")
+        pressButton(title: "ENTER")
+        pressButton(title: "2")
+        pressButton(title: "ENTER")
+        pressButton(title: "3")
+        pressButton(title: "ENTER")
+        XCTAssertTrue(!cvc.liftStack, "Enter key should disable stack lift")
+        pressButton(title: "RCL")
+        pressButton(title: "+")
+        pressButton(title: "0")  // add register 0 to display (xRegister)
+        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 2.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 1.0000, "Stack is not correct")
+        pressButton(title: "R↓")
+        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        XCTAssertTrue(cvc.liftStack, "Setup should leave stack lift enabled")
+    }
+
+    // create button with input title, and invoke the button action
     func pressButton(title: String) {
         button.setTitle(title, for: .normal)
         switch title {

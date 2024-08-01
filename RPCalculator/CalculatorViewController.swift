@@ -828,13 +828,20 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             //----------------------
             displayString = String(brain.xRegister!)  // show real part
             updateDisplayString()
+            brain.printMemory()
         case .g:
             // pi pressed
             prefix = nil
-            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            displayString = String(Double.pi)  // 3.141592653589793
-            brain.pushOperand(Double.pi)
+            if userIsEnteringDigits {
+                brain.pushOperand(displayStringNumber)
+                brain.pushOperand(Double.pi)  // 3.141592653589793
+            } else {
+                brain.xRegister = Double.pi
+            }
             updateDisplayString()
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            brain.printMemory()
         case .STO:
             prefix = nil
             prepStackForOperation()
@@ -1134,7 +1141,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.pushOperand(displayStringNumber)
                 //------------------------------------
             } else {
-                endDisplayEntry()
+                endDisplayEntry()  // overwrite xRegister
                 brain.pushXRegister()
             }
         case .f:
