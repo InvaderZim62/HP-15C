@@ -206,6 +206,12 @@ class CalculatorBrain: Codable {
         printMemory()
     }
     
+    func swapXWithRegister(_ name: String) {
+        let temp = storageRegisters[name] ?? 0
+        storageRegisters[name] = xRegister!
+        xRegister = temp
+    }
+    
     func rollStack(directionDown: Bool) {
         if directionDown {
             let xRegisterReal = realStack.removeLast()  // Note: realStack didSet pads beginning back to count = 4 after this

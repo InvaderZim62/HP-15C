@@ -73,6 +73,8 @@ enum Prefix: String {
     case GTO  // ex. GTO 5 (goto label 5)
     case GTO_DOT  // ex. GTO . 5 (goto label .5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
+    case XSWAP  // ex. XSWAP 4 (swap X register with register 4)
+    case XSWAP_DOT  // ex. XSWAP . 4 (swap X register with register .4)
     case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
     case FIX  // ex. f FIX 4 (format numbers in fixed-point with 4 decimal places)
     case SCI
@@ -866,8 +868,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard let buttonName = handleButton(sender) else { return }
 
         let fAction = {
-            self.prefix = nil
-            print("TBD: x<>")  // see oneButtonPressed()
+            self.prefix = .XSWAP
         }
         let gAction = {
             self.prefix = .SF
@@ -1357,6 +1358,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = .GSB_DOT
         case .GTO:
             prefix = .GTO_DOT
+        case .XSWAP:
+            prefix = .XSWAP_DOT
         default:
             // clear prefix and re-run
             prefix = nil
@@ -1522,6 +1525,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .GSB_DOT:
             prefix = nil
             runProgramFrom(label: "." + buttonName)
+        case .XSWAP:
+            prefix = nil
+            swapDisplayWithRegister(buttonName)
+        case .XSWAP_DOT:
+            prefix = nil
+            swapDisplayWithRegister("DOT" + buttonName)
         case .STO:
             prefix = nil
             storeDisplayToRegister(buttonName)
@@ -1676,6 +1685,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             brain.xRegister = result
             updateDisplayString()
         }
+        brain.printMemory()
+    }
+    
+    private func swapDisplayWithRegister(_ registerName: String) {
+        if userIsEnteringDigits {
+            brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+        }
+        brain.swapXWithRegister(registerName)
+        updateDisplayString()
         brain.printMemory()
     }
 
