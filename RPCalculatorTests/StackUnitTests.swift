@@ -6,10 +6,11 @@
 //
 //  Test cases:
 //  - test01XYSwap
-//  - test02RollDownWhileEnteringDigits
-//  - test03RollUpWhileEnteringDigits
-//  - test04PiWhileEnteringDigits
-//  - test05PiAfterEnter
+//  - test02LastX
+//  - test03RollDownWhileEnteringDigits
+//  - test04RollUpWhileEnteringDigits
+//  - test05PiWhileEnteringDigits
+//  - test06PiAfterEnter
 //
 
 import XCTest
@@ -29,7 +30,7 @@ class StackUnitTests: XCTestCase {
         
         // use this to set display format to 4 digit fixed width before each test
 //        pressButton(title: "f")
-//        pressButton(title: "7")  // f-7 is FIX
+//        pressButton(title: "7")  // f-7 = FIX
 //        pressButton(title: "4")
     }
 
@@ -42,10 +43,11 @@ class StackUnitTests: XCTestCase {
     
     //==============================================================//
     // All tests are started with setupStack, setting the stack to: //
-    //   T: 1.0000                                                  //
-    //   Z: 2.0000                                                  //
-    //   Y: 3.0000                                                  //
-    //   X: 4.0000                                                  //
+    //    T: 1.0000                                                 //
+    //    Z: 2.0000                                                 //
+    //    Y: 3.0000                                                 //
+    //    X: 4.0000                                                 //
+    // LSTx: 5.0000                                                 //
     //==============================================================//
 
     // test swapping x and Y registers using the x≷y button
@@ -60,6 +62,58 @@ class StackUnitTests: XCTestCase {
         // x≷y
         pressButton(title: "x≷y")
         verifyStack(x: 3.0000, y: 4.0000, z: 2.0000, t: 1.0000)
+    }
+    
+    // test that operations (ex. +, SQRT, SIN, →DEG) copy X register to Last X register,
+    // but entering numbers or rolling the stack does not; also, pressing LSTx pushes
+    // the Last X register onto the stack
+    //
+    //    T: 1.0000     1.0000     1.0000     7.0000     4.0000     4.0000     4.0000     4.0000     9.0000     9.0000     3.0000
+    //    Z: 2.0000     1.0000     2.0000     4.0000     9.0000     4.0000     4.0000     9.0000     3.0000     3.0000     9.0000
+    //    Y: 3.0000     2.0000     7.0000     9.0000     9.0000     9.0000     9.0000     3.0000     9.0000     9.0000    28.6479
+    //    X: 4.0000     7.0000     4.0000     9.0000     4.0000     9.0000     3.0000     9.0000     0.5000    28.6479     0.5000
+    //   keys:       +         LSTx     9 ENTER      LSTx        R↓         √x        LSTx      30 SIN      →DEG       LSTx
+    // LSTx: 5.0000     4.0000     4.0000     4.0000     4.0000     4.0000     9.0000     9.0000     9.0000     0.5000     0.5000
+    func test02LastX() {
+        setupStack()
+        // +
+        pressButton(title: "+")
+        verifyStack(x: 7.0000, y: 2.0000, z: 1.0000, t: 1.0000)
+        // LSTx
+        pressButton(title: "g")
+        pressButton(title: "ENTER")  // g-ENTER = LSTx
+        verifyStack(x: 4.0000, y: 7.0000, z: 2.0000, t: 1.0000)
+        // 9 ENTER
+        pressButton(title: "9")
+        pressButton(title: "ENTER")
+        verifyStack(x: 9.0000, y: 9.0000, z: 4.0000, t: 7.0000)
+        // LSTx
+        pressButton(title: "g")
+        pressButton(title: "ENTER")  // g-ENTER = LSTx
+        verifyStack(x: 4.0000, y: 9.0000, z: 9.0000, t: 4.0000)
+        // R↓
+        pressButton(title: "R↓")
+        verifyStack(x: 9.0000, y: 9.0000, z: 4.0000, t: 4.0000)
+        // √x
+        pressButton(title: "√x")
+        verifyStack(x: 3.0000, y: 9.0000, z: 4.0000, t: 4.0000)
+        // LSTx
+        pressButton(title: "g")
+        pressButton(title: "ENTER")  // g-ENTER = LSTx
+        verifyStack(x: 9.0000, y: 3.0000, z: 9.0000, t: 4.0000)
+        // 30 SIN
+        pressButton(title: "3")
+        pressButton(title: "0")
+        pressButton(title: "SIN")
+        verifyStack(x: 0.5000, y: 9.0000, z: 3.0000, t: 9.0000)
+        // →DEG
+        pressButton(title: "g")
+        pressButton(title: "3")  // g-3 = →DEG
+        verifyStack(x: 28.6479, y: 9.0000, z: 3.0000, t: 9.0000)
+        // LSTx
+        pressButton(title: "g")
+        pressButton(title: "ENTER")  // g-ENTER = LSTx
+        verifyStack(x: 0.5000, y: 28.6479, z: 9.0000, t: 3.0000)
     }
     
     //==============================================================//
@@ -77,7 +131,7 @@ class StackUnitTests: XCTestCase {
     //   Y: 3.0000        4.0000   3.0000
     //   X: 4.0000       10.0000   4.0000
     //  keys:      10 R↓
-    func test02RollDownWhileEnteringDigits() {
+    func test03RollDownWhileEnteringDigits() {
         setupStack()
         // 10 R↓
         pressButton(title: "1")
@@ -96,13 +150,13 @@ class StackUnitTests: XCTestCase {
     //   Y: 3.0000        4.0000  10.0000
     //   X: 4.0000       10.0000   2.0000
     //  keys:      10 R↑
-    func test03RollUpWhileEnteringDigits() {
+    func test04RollUpWhileEnteringDigits() {
         setupStack()
         // 10 R↑
         pressButton(title: "1")
         pressButton(title: "0")  // still entering digits
         pressButton(title: "g")
-        pressButton(title: "R↓")  // g-R↓ is R↑
+        pressButton(title: "R↓")  // g-R↓ = R↑
         verifyStack(x: 2.0000, y: 10.0000, z: 4.0000, t: 2.0000)
     }
 
@@ -117,14 +171,14 @@ class StackUnitTests: XCTestCase {
     //   Y: 3.0000       4.0000  10.0000     4.0000
     //   X: 4.0000      10.0000   3.1416    31.4159
     //  keys:      10 π                   x
-    func test04PiWhileEnteringDigits() {
+    func test05PiWhileEnteringDigits() {
         setupStack()  // stack lift is enabled
         // 10 π
         pressButton(title: "1")
         pressButton(title: "0")  // still entering digits
         XCTAssertTrue(cvc.liftStack, "Number keys should not change stack lift")
         pressButton(title: "g")
-        pressButton(title: "EEX")  // g-EXE is π
+        pressButton(title: "EEX")  // g-EXE = π
         verifyStack(x: 3.1416, y: 10.0000, z: 4.0000, t: 3.0000)
         // x
         pressButton(title: "×")
@@ -142,7 +196,7 @@ class StackUnitTests: XCTestCase {
     //   Y: 3.0000          10.0000    10.0000     4.0000
     //   X: 4.0000          10.0000     3.1416    31.4159
     //  keys:      10 ENTER          π          x
-    func test05PiAfterEnter() {
+    func test06PiAfterEnter() {
         // stack lift is enabled
         setupStack()  // stack lift is enabled
         // 10 ENTER
@@ -163,7 +217,7 @@ class StackUnitTests: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 10.0000, "Stack is not correct")
         // π
         pressButton(title: "g")
-        pressButton(title: "EEX")  // g-EXE is π
+        pressButton(title: "EEX")  // g-EXE = π
         verifyStack(x: 3.1416, y: 10.0000, z: 4.0000, t: 3.0000)
         // x
         pressButton(title: "×")
@@ -173,12 +227,20 @@ class StackUnitTests: XCTestCase {
     // MARK: - Utilities
     
     // set stack to known condition
-    //   T: 1.0000
-    //   Z: 2.0000
-    //   Y: 3.0000
-    //   X: 4.0000
+    //    T: 1.0000
+    //    Z: 2.0000
+    //    Y: 3.0000
+    //    X: 4.0000
+    // LSTx: 5.0000
     // verify: setup leaves stack lift enabled
     func setupStack() {
+        // store 5 as last x
+        pressButton(title: "5")
+        pressButton(title: "+")
+        // verify last x
+        pressButton(title: "g")
+        pressButton(title: "ENTER")  // g-ENTER = LSTx
+        XCTAssertEqual(cvc.displayStringNumber, 5.0000, "LSTx is not correct")
         // store 1 to register 0, to add to x register, without lifting stack
         pressButton(title: "1")
         pressButton(title: "STO")
@@ -285,7 +347,7 @@ class StackUnitTests: XCTestCase {
         case "ENTER":  // ENTER is written vertically on the button, but title is not used in enterButtonPressed(button)
             cvc.enterButtonPressed(button)
         default:
-            break
+            assert(false, "No button has the title \"\(title)\"")
         }
     }
 

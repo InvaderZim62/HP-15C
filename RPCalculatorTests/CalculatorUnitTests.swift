@@ -32,7 +32,7 @@ class CalculatorUnitTests: XCTestCase {
         
         // use this to set display format to 4 digit fixed width before each test
 //        pressButton(title: "f")
-//        pressButton(title: "7")  // f-7 is FIX
+//        pressButton(title: "7")  // f-7 = FIX
 //        pressButton(title: "4")
     }
 
@@ -59,13 +59,13 @@ class CalculatorUnitTests: XCTestCase {
     func test02RectangularToPolar() {
         // set units to degrees
         pressButton(title: "g")
-        pressButton(title: "7")  // g-7 is DEG
+        pressButton(title: "7")  // g-7 = DEG
         // 3 ENTER 4 →P
         pressButton(title: "3")
         pressButton(title: "ENTER")
         pressButton(title: "4")
         pressButton(title: "g")
-        pressButton(title: "1")  // g-1 is →P
+        pressButton(title: "1")  // g-1 = →P
         // results: 5 x≷y 36.8699
         XCTAssertEqual(cvc.displayStringNumber, 5)
         pressButton(title: "x≷y")
@@ -78,14 +78,14 @@ class CalculatorUnitTests: XCTestCase {
     func test03PolarToRectangular() {
         // set units to degrees
         pressButton(title: "g")
-        pressButton(title: "7")  // g-7 is DEG
+        pressButton(title: "7")  // g-7 = DEG
         // 30 ENTER 1 →R
         pressButton(title: "3")
         pressButton(title: "0")
         pressButton(title: "ENTER")
         pressButton(title: "1")
         pressButton(title: "f")
-        pressButton(title: "1")  // f-1 is →R
+        pressButton(title: "1")  // f-1 = →R
         // results: 0.8660 x≷y 0.5000
         XCTAssertEqual(cvc.displayStringNumber, 0.8660, "Conversion from polar to rectangular coordinates is not correct")
         pressButton(title: "x≷y")
@@ -98,7 +98,7 @@ class CalculatorUnitTests: XCTestCase {
     func test04HourToHourMinSec() {
         // show 5 significant figures
         pressButton(title: "f")
-        pressButton(title: "7")  // f-7 is FIX
+        pressButton(title: "7")  // f-7 = FIX
         pressButton(title: "5")
         // 1.2345 →H.MS
         pressButton(title: "1")
@@ -108,12 +108,12 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "4")
         pressButton(title: "5")
         pressButton(title: "f")
-        pressButton(title: "2")  // f-2 is →H.MS
+        pressButton(title: "2")  // f-2 = →H.MS
         // results: 1.14042
         XCTAssertEqual(cvc.displayStringNumber, 1.14042, "Conversion from decimal hours to hours.minutesSeconds is not correct")
         // return to 4 significant figures
         pressButton(title: "f")
-        pressButton(title: "7")  // f-7 is FIX
+        pressButton(title: "7")  // f-7 = FIX
         pressButton(title: "4")
     }
     
@@ -128,7 +128,7 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "3")
         pressButton(title: "0")
         pressButton(title: "g")
-        pressButton(title: "2")  // g-2 is →H
+        pressButton(title: "2")  // g-2 = →H
         // results: 10.5
         XCTAssertEqual(cvc.displayStringNumber, 10.5, "Conversion from hours.minutesSeconds to decimal hours is not correct")
     }

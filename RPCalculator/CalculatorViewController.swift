@@ -1144,6 +1144,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 endDisplayEntry()  // overwrite xRegister
                 brain.pushXRegister()
             }
+            liftStack = false
         case .f:
             // RND# pressed
             prefix = nil
@@ -1154,13 +1155,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             displayString = String(number)
             brain.pushOperand(number)
             lastRandomNumberGenerated = number
+            liftStack = true
         case .g:
             // LSTx pressed
             prefix = nil
             brain.pushOperand(brain.lastXRegister)
+            liftStack = true
         case .STO:
             // STO RAN# pressed (store new seed)
             prefix = nil
+            liftStack = true
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
             if var number = brain.xRegister {
                 number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
@@ -1172,14 +1176,15 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // RCL RAN# pressed (recall last random number)
             prefix = nil
             brain.pushOperand(lastRandomNumberGenerated)
+            liftStack = true
         default:
+            liftStack = true
             return
         }
         updateDisplayString()
         brain.printMemory()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
-        liftStack = false
     }
     
     @IBAction func oneButtonPressed(_ sender: UIButton) {
