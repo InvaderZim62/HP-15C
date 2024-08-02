@@ -5,10 +5,11 @@
 //  Created by Phil Stern on 8/1/24.
 //
 //  Test cases:
-//  - test01RollDownWhileEnteringDigits
-//  - test02RollUpWhileEnteringDigits
-//  - test03PiWhileEnteringDigits
-//  - test04PiAfterEnter
+//  - test01XYSwap
+//  - test02RollDownWhileEnteringDigits
+//  - test03RollUpWhileEnteringDigits
+//  - test04PiWhileEnteringDigits
+//  - test05PiAfterEnter
 //
 
 import XCTest
@@ -37,110 +38,96 @@ class StackUnitTests: XCTestCase {
         try? super.tearDownWithError()
     }
     
+    // MARK: - Tests
+    
+    //==============================================================//
+    // All tests are started with setupStack, setting the stack to: //
+    //   T: 1.0000                                                  //
+    //   Z: 2.0000                                                  //
+    //   Y: 3.0000                                                  //
+    //   X: 4.0000                                                  //
+    //==============================================================//
+
+    // test swapping x and Y registers using the x≷y button
+    // verify:
+    //   T: 1.0000     1.0000
+    //   Z: 2.0000     2.0000
+    //   Y: 3.0000     4.0000
+    //   X: 4.0000     3.0000
+    //  keys:      x≷y
+    func test01XYSwap() {
+        setupStack()
+        // x≷y
+        pressButton(title: "x≷y")
+        verifyStack(x: 3.0000, y: 4.0000, z: 2.0000, t: 1.0000)
+    }
+    
     //==============================================================//
     //  R↓ moves X register to top of stack (T) and the rest down   //
     //  R↑ moves T register to bottom of stack (X) and the rest up  //
     //==============================================================//
 
     // test pressing R↓ while entering digits
-    // enter: 10 R↓
     // verify:
-    // - digits are pushed to stack, then stack is rolled
+    // - digits are pushed onto stack, before stack is rolled
+    //
     //                    inter.    final
     //   T: 1.0000        2.0000  10.0000
     //   Z: 2.0000        3.0000   2.0000
     //   Y: 3.0000        4.0000   3.0000
     //   X: 4.0000       10.0000   4.0000
     //  keys:      10 R↓
-    func test01RollDownWhileEnteringDigits() {
-        // set stack to known condition
-        //   T: 1.0000
-        //   Z: 2.0000
-        //   Y: 3.0000
-        //   X: 4.0000
+    func test02RollDownWhileEnteringDigits() {
         setupStack()
         // 10 R↓
         pressButton(title: "1")
         pressButton(title: "0")  // still entering digits
         pressButton(title: "R↓")
-        // verify stack
-        //   T: 10.0000
-        //   Z: 2.0000
-        //   Y: 3.0000
-        //   X: 4.0000
-        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
-        pressButton(title: "R↓")
-        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
-        pressButton(title: "R↓")
-        XCTAssertEqual(cvc.displayStringNumber, 2.0000, "Stack is not correct")
-        pressButton(title: "R↓")
-        XCTAssertEqual(cvc.displayStringNumber, 10.0000, "Stack is not correct")
-        pressButton(title: "R↓")
-        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        verifyStack(x: 4.0000, y: 3.0000, z: 2.0000, t: 10.0000)
     }
     
     // test pressing R↑ while entering digits
-    // enter: 10 R↑
     // verify:
-    // - digits are pushed to stack, then stack is rolled
+    // - digits are pushed onto stack, before stack is rolled
+    //
     //                    inter.    final
     //   T: 1.0000        2.0000   3.0000
     //   Z: 2.0000        3.0000   4.0000
     //   Y: 3.0000        4.0000  10.0000
     //   X: 4.0000       10.0000   2.0000
     //  keys:      10 R↑
-    func test02RollUpWhileEnteringDigits() {
-        // set stack to known condition
-        //   T: 1.0000
-        //   Z: 2.0000
-        //   Y: 3.0000
-        //   X: 4.0000
+    func test03RollUpWhileEnteringDigits() {
         setupStack()
         // 10 R↑
         pressButton(title: "1")
         pressButton(title: "0")  // still entering digits
         pressButton(title: "g")
         pressButton(title: "R↓")  // g-R↓ is R↑
-        // verify stack
-        //   T: 3.0000
-        //   Z: 4.0000
-        //   Y: 10.0000
-        //   X: 2.0000
         verifyStack(x: 2.0000, y: 10.0000, z: 4.0000, t: 2.0000)
     }
 
     // test pi while user entering digits
-    // enter: 10 π x
     // verify:
     // - π during digit entry, ends digit entry (in x register), and pushes π onto stack
     // - T register is duplicated when stack drops (after x)
-    func test03PiWhileEnteringDigits() {
-        // set stack to known condition
-        //   T: 1.0000
-        //   Z: 2.0000
-        //   Y: 3.0000
-        //   X: 4.0000
-        // stack lift is enabled
-        setupStack()
+    //
+    //                   inter.    final
+    //   T: 1.0000       2.0000   3.0000     3.0000
+    //   Z: 2.0000       3.0000   4.0000     3.0000
+    //   Y: 3.0000       4.0000  10.0000     4.0000
+    //   X: 4.0000      10.0000   3.1416    31.4159
+    //  keys:      10 π                   x
+    func test04PiWhileEnteringDigits() {
+        setupStack()  // stack lift is enabled
         // 10 π
         pressButton(title: "1")
         pressButton(title: "0")  // still entering digits
         XCTAssertTrue(cvc.liftStack, "Number keys should not change stack lift")
         pressButton(title: "g")
         pressButton(title: "EEX")  // g-EXE is π
-        // verify stack
-        //   T: 3.0000
-        //   Z: 4.0000
-        //   Y: 10.0000
-        //   X: 3.1416
         verifyStack(x: 3.1416, y: 10.0000, z: 4.0000, t: 3.0000)
-        // multiply x and y registers, drop stack
+        // x
         pressButton(title: "×")
-        // verify stack
-        //   T: 3.0000
-        //   Z: 3.0000
-        //   Y: 4.0000
-        //   X: 31.4159
         verifyStack(x: 31.4159, y: 4.0000, z: 3.0000, t: 3.0000)
     }
 
@@ -149,24 +136,21 @@ class StackUnitTests: XCTestCase {
     // verify:
     // - π after ENTER overwrite x register
     // - ENTER key disables stack lift
-    func test04PiAfterEnter() {
-        // set stack to known condition
-        //   T: 1.0000
-        //   Z: 2.0000
-        //   Y: 3.0000
-        //   X: 4.0000
+    //
+    //   T: 1.0000           3.0000     3.0000     3.0000
+    //   Z: 2.0000           4.0000     4.0000     3.0000
+    //   Y: 3.0000          10.0000    10.0000     4.0000
+    //   X: 4.0000          10.0000     3.1416    31.4159
+    //  keys:      10 ENTER          π          x
+    func test05PiAfterEnter() {
         // stack lift is enabled
-        setupStack()
+        setupStack()  // stack lift is enabled
         // 10 ENTER
         pressButton(title: "1")
         pressButton(title: "0")
         pressButton(title: "ENTER")
+        // verify liftStack and stack
         XCTAssertTrue(!cvc.liftStack, "Enter key should disable stack lift")
-        // verify stack
-        //   T: 3.0000
-        //   Z: 4.0000
-        //   Y: 10.0000
-        //   X: 10.0000
         XCTAssertEqual(cvc.displayStringNumber, 10.0000, "Stack is not correct")
         pressButton(title: "R↓")
         XCTAssertTrue(!cvc.liftStack, "R↓ key should re-enable stack lift")
@@ -180,19 +164,9 @@ class StackUnitTests: XCTestCase {
         // π
         pressButton(title: "g")
         pressButton(title: "EEX")  // g-EXE is π
-        // verify stack
-        //   T: 3.0000
-        //   Z: 4.0000
-        //   Y: 10.0000
-        //   X: 3.1416
         verifyStack(x: 3.1416, y: 10.0000, z: 4.0000, t: 3.0000)
-        // multiply x and y registers, drop stack
+        // x
         pressButton(title: "×")
-        // verify stack
-        //   T: 3.0000
-        //   Z: 3.0000
-        //   Y: 4.0000
-        //   X: 31.4159
         verifyStack(x: 31.4159, y: 4.0000, z: 3.0000, t: 3.0000)
     }
 
