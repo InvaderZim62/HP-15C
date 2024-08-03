@@ -1281,15 +1281,20 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func fButtonPressed(_ sender: UIButton) {
-        guard handleButton(sender) != nil else { return }
-
-        prefix = .f
+//        guard handleButton(sender) != nil else { return }
+        _ = handleButton(sender)
+        
+        if !isProgramRunning {
+            prefix = .f  // don't set if program running, in case "f" was pressed to stop the program
+        }
     }
     
     @IBAction func gButtonPressed(_ sender: UIButton) {
-        let _ = handleButton(sender)
+        _ = handleButton(sender)
 
-        prefix = .g  // set here, even if program mode, for use in g-R/S (P/R)
+        if !isProgramRunning {
+            prefix = .g  // set here, even if program mode, for use in g-R/S (P/R)
+        }
     }
     
     @IBAction func stoButtonPressed(_ sender: UIButton) {
@@ -1764,3 +1769,1244 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
 }
+/*
+ 
+ // MARK: - Original IBActions
+ 
+ // Note: It's somewhat arbitrary which action each button is assigned to (digitKeyPressed, operationKeyPressed,
+ // stackManipulationKeyPressed).  Obvious ones are enterKeyPressed, prefixKeyPressed, and onKeyPressed.  In some
+ // cases, the prefix function of the key is not well suited to the same action as the primary function of the key
+ // (ex. f-1, f-2, f-3, g-1, g-2, g-3).  In those cases, it is passed to another action using a temporary button.
+
+ // update display with digit pressed
+ // digit keys: 0-9, ·, EEX  (Note: EEX is considered a digit key for pi)
+ @IBAction func digitKeyPressed(_ sender: UIButton) {
+     simulatePressingButton(sender)
+     if restoreFromError() { return }
+     var keyName = sender.currentTitle!
+     if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
+     
+     if isProgramMode {
+         sendToProgram(keyName)
+         prefix = nil
+         return
+     }
+
+     switch prefix {
+     case .none:
+         // digit pressed (without prefix)
+         if keyName == "EEX" {
+             if !userIsEnteringExponent {
+                 userIsEnteringExponent = true
+                 if !userIsEnteringDigits {
+                     // EEX pressed by itself, set mantissa to 1 (exponent will be 00)
+                     userIsEnteringDigits = true
+                     displayString = "1"
+                 }
+                 var paddingLength = decimalWasAlreadyEntered ? 9 : 8  // decimal doesn't take up space (part of prior digit)
+                 if displayString.prefix(1) == "-" { paddingLength += 1 }  // negative sign pushes numbers to right
+                 displayString = displayString.prefix(paddingLength - 1).padding(toLength: paddingLength, withPad: " ", startingAt: 0) + "00"
+             }
+         } else if userIsEnteringDigits {
+             // add digit to display (only one decimal per number, and none in exponent)
+             if !(keyName == "." && (decimalWasAlreadyEntered || userIsEnteringExponent)) {
+                 if userIsEnteringExponent {
+                     // slide second digit of exponent left and put new digit in its place
+                     let exponent2 = String(displayString.removeLast())
+                     displayString.removeLast(1)
+                     displayString += exponent2 + keyName
+                 } else {
+                     //--------------------------------------------------------
+                     displayString += keyName  // append entered digit to display
+                     //--------------------------------------------------------
+                 }
+             }
+         } else {
+             // start clean display with digit
+             if keyName == "." {
+                 displayString = "0."  // precede leading decimal point with a zero
+             } else {
+                 displayString = keyName
+             }
+             userIsEnteringDigits = true
+         }
+         saveDefaults()
+     case .f:
+         prefix = nil
+         switch keyName {
+         case "1", "2", "3":
+             // 1: →R pressed (convert to rectangular coordinates)
+             // 2: →H.MS pressed (convert from decimal hours H.HHHH to hours-minutes-seconds-decimal seconds H.MMSSsssss)
+             // 3: →RAD pressed
+             prefix = .f
+             operationKeyPressed(sender)  // better handled as operation
+         case "7":
+             // FIX pressed
+             prefix = .FIX  // wait for next digit
+         case "8":
+             // SCI pressed
+             prefix = .SCI  // wait for next digit
+         case "9":
+             // ENG pressed
+             prefix = .ENG  // wait for next digit
+         default:
+             break
+         }
+     case .g:
+         prefix = nil
+         switch keyName {
+         case "1", "2", "3":
+             // 1: →P pressed (convert to polar coordinates)
+             // 2: →H pressed (convert from hours-minutes-seconds-decimal seconds H.MMSSsssss to decimal hours H.HHHH)
+             // 3: →DEG pressed
+             prefix = .g
+             operationKeyPressed(sender)  // better handled as operation
+         case "4":
+             // SF pressed (set flag)
+             prefix = .SF
+         case "5":
+             // CF pressed (clear flag)
+             prefix = .CF
+         case "7":
+             trigMode = .DEG
+         case "8":
+             trigMode = .RAD
+         case "9":
+             trigMode = .GRAD
+         case "EEX":
+             // pi pressed
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             displayString = String(Double.pi)  // 3.141592653589793
+             brain.pushOperand(Double.pi)
+             updateDisplayString()
+         default:
+             break
+         }
+     case .GTO:
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // label 0-9 pressed
+             programKeyPressed(sender)  // better handled as program key
+             return
+         case ".":
+             // GTO . pressed
+             prefixKeyPressed(sender)  // better handled as prefix key
+         case "EEX":
+             // EEX pressed - clear GTO and perform EEX
+             prefix = nil
+             digitKeyPressed(sender)
+         default:  // reminder: this function only covers digit keys
+             prepStackForOperation()
+             setError(4)  // pws: this should only be "Error 4", if there are no program labels for this digit key
+         }
+     case .GTO_DOT:
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // label .0-.9 pressed
+             programKeyPressed(sender)  // better handled as program key
+             return
+         case ".":
+             // cancel GTO_DOT - re-enter "."
+             prefix = nil
+             digitKeyPressed(sender)
+             return
+         default:
+             break
+         }
+     case .GTO_CHS:
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             gotoLineNumberDigits.append(Int(keyName)!)
+             if gotoLineNumberDigits.count == 3 {
+                 prefix = nil
+                 let gotoLineNumber = 100 * gotoLineNumberDigits[0] + 10 * gotoLineNumberDigits[1] + gotoLineNumberDigits[2]
+                 if gotoLineNumber >= program.instructions.count {
+                     // line number past end of program
+                     prepStackForOperation()
+                     setError(4)
+                 } else {
+                     program.currentLineNumber = gotoLineNumber
+                 }
+             }
+         default:
+             // ".", "EXE" - re-send without prefix
+             prefix = nil
+             gotoLineNumberDigits = []
+             digitKeyPressed(sender)
+         }
+     case .GSB:
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // label 0-9 pressed
+             programKeyPressed(sender)  // better handled as program key
+             return
+         case ".":
+             // GSB . pressed
+             prefixKeyPressed(sender)  // better handled as prefix key
+         default:
+             prefix = nil
+             break
+         }
+     case .GSB_DOT:
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // label .0-.9 pressed
+             prefix = .GSB_DOT
+             programKeyPressed(sender)  // better handled as program key
+             return
+         case ".":
+             // cancel GSB_DOT - re-enter "."
+             digitKeyPressed(sender)
+             return
+         default:
+             break
+         }
+    case .FIX:
+         prefix = nil
+         if let decimalPlaces = Int(keyName) {
+             // number after FIX pressed
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             displayFormat = .fixed(decimalPlaces)
+             updateDisplayString()
+         } else {
+             // if not a number, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+     case .SCI:
+         prefix = nil
+         if let decimalPlaces = Int(keyName) {
+             // number after SCI pressed
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             displayFormat = .scientific(min(decimalPlaces, 6))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+             updateDisplayString()
+         } else {
+             // if not a number, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+     case .ENG:
+         prefix = nil
+         if let additionalDigits = Int(keyName) {
+             // number after ENG pressed
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             displayFormat = .engineering(min(additionalDigits, 6))  // 1 sign + 1 significant + 6 additional + 1 exponent sign + 2 exponents = 11 digits
+             updateDisplayString()
+         } else {
+             // if not a number, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+     case .SF:
+         prefix = nil
+         if keyName == "8" {  // flag 8 is complex mode
+             isComplexMode = true
+         }
+     case .CF:
+         prefix = nil
+         if keyName == "8" {  // flag 8 is complex mode
+             isComplexMode = false
+         }
+     case .STO:
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // store displayed number in register
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             brain.storeResultInRegister(keyName, result: brain.xRegister!)
+             updateDisplayString()
+             brain.printMemory()
+         case "EEX":
+             prepStackForOperation()
+             setError(11)
+         case ".":
+             // STO .
+             prefix = .STO
+             prefixKeyPressed(sender)  // better handled as prefix key
+             return
+         default:
+             setError(99)
+         }
+         liftStack = true
+     case .STO_DOT:
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // store displayed number in register
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             brain.storeResultInRegister("DOT" + keyName, result: brain.xRegister!)
+             updateDisplayString()
+             brain.printMemory()
+         case "EEX":
+             // give up on STO . and re-enter EEX
+             prepStackForOperation()
+             digitKeyPressed(sender)
+         case ".":
+             // give up on STO . and re-enter "."
+             digitKeyPressed(sender)
+         default:
+             setError(99)
+         }
+         liftStack = true
+     case .RCL:
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // recall register, show in display
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             displayString = String(brain.recallNumberFromStorageRegister(keyName))
+             brain.pushOperand(displayStringNumber)
+             updateDisplayString()
+             brain.printMemory()
+         case "EEX":
+             prepStackForOperation()
+             setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
+         case ".":
+             // RCL .
+             prefix = .RCL
+             prefixKeyPressed(sender)  // better handled as prefix key
+             return
+         default:
+             setError(99)
+         }
+         liftStack = true
+     case .RCL_DOT:
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // recall register, show in display
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             displayString = String(brain.recallNumberFromStorageRegister("DOT" + keyName))
+             brain.pushOperand(displayStringNumber)
+             updateDisplayString()
+             brain.printMemory()
+         case "EEX":
+             // give up on RCL . and re-enter EEX
+             prepStackForOperation()
+             digitKeyPressed(sender)
+         case ".":
+             // give up on RCL . and re-enter "."
+             digitKeyPressed(sender)
+         default:
+             setError(99)
+         }
+         liftStack = true
+     case .STO_ADD:
+         // STO + register
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // add displayed number to register
+             if userIsEnteringDigits {
+                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                 userIsEnteringDigits = false
+                 userIsEnteringExponent = false
+             }
+             let result = brain.recallNumberFromStorageRegister(keyName) + brain.xRegister!
+             brain.storeResultInRegister(keyName, result: result)
+             updateDisplayString()
+             brain.printMemory()
+         default:
+             // if not a valid register name, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+         liftStack = true
+     case .STO_SUB:
+         // STO - register
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // subtract displayed number from register
+             if userIsEnteringDigits {
+                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                 userIsEnteringDigits = false
+                 userIsEnteringExponent = false
+             }
+             let result = brain.recallNumberFromStorageRegister(keyName) - brain.xRegister!
+             brain.storeResultInRegister(keyName, result: result)
+             updateDisplayString()
+             brain.printMemory()
+         default:
+             // if not a valid register name, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+         liftStack = true
+     case .STO_MUL:
+         // STO × register
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // multiply register by displayed number
+             if userIsEnteringDigits {
+                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                 userIsEnteringDigits = false
+                 userIsEnteringExponent = false
+             }
+             let result = brain.recallNumberFromStorageRegister(keyName) * brain.xRegister!
+             brain.storeResultInRegister(keyName, result: result)
+             updateDisplayString()
+             brain.printMemory()
+         default:
+             // if not a valid register name, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+         liftStack = true
+     case .STO_DIV:
+         // STO ÷ register
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // divided register by displayed number
+             if userIsEnteringDigits {
+                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                 userIsEnteringDigits = false
+                 userIsEnteringExponent = false
+             }
+             let result = brain.recallNumberFromStorageRegister(keyName) / brain.xRegister!
+             if result.isNaN || result.isInfinite {  // pws: also need this check for .ADD, .SUB, .MUL (ex. 1E99 in Reg 1, 10 STO x 1 causes overflow)
+                 displayString = "nan"  // triggers displayView to show "  Error  0"
+             } else {
+                 brain.storeResultInRegister(keyName, result: result)
+                 updateDisplayString()
+             }
+             brain.printMemory()
+         default:
+             // if not a valid register name, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+         liftStack = true
+     case .RCL_ADD:
+         // RCL + register
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // add register to displayed number
+             if userIsEnteringDigits {
+                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                 userIsEnteringDigits = false
+                 userIsEnteringExponent = false
+             }
+             brain.xRegister! += brain.recallNumberFromStorageRegister(keyName)
+             updateDisplayString()
+             brain.printMemory()
+         default:
+             // if not a valid register name, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+         liftStack = true
+     case .RCL_SUB:
+         // RCL - register
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // add register to displayed number
+             if userIsEnteringDigits {
+                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                 userIsEnteringDigits = false
+                 userIsEnteringExponent = false
+             }
+             brain.xRegister! -= brain.recallNumberFromStorageRegister(keyName)
+             updateDisplayString()
+             brain.printMemory()
+         default:
+             // if not a valid register name, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+         liftStack = true
+     case .RCL_MUL:
+         // RCL × register
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // add register to displayed number
+             if userIsEnteringDigits {
+                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                 userIsEnteringDigits = false
+                 userIsEnteringExponent = false
+             }
+             brain.xRegister! *= brain.recallNumberFromStorageRegister(keyName)
+             updateDisplayString()
+             brain.printMemory()
+         default:
+             // if not a valid register name, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+         liftStack = true
+     case .RCL_DIV:
+         // RCL ÷ register
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // add register to displayed number
+             if userIsEnteringDigits {
+                 brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
+                 userIsEnteringDigits = false
+                 userIsEnteringExponent = false
+             }
+             let result = brain.xRegister! / brain.recallNumberFromStorageRegister(keyName)
+             if result.isNaN || result.isInfinite {  // pws: also need this check for .ADD, .SUB, .MUL (ex. 1E99 in Reg 1, 10 REC x 1 causes overflow)
+                 displayString = "nan"  // triggers displayView to show "  Error  0"
+             } else {
+                 brain.xRegister = result
+                 updateDisplayString()
+             }
+             brain.printMemory()
+         default:
+             // if not a valid register name, ignore prefix and resend digit (EEX or .)
+             digitKeyPressed(sender)
+         }
+         liftStack = true
+     default:  // .HYP, .HYP1 (not allowed to precede stack manipulation key)
+         invalidKeySequenceEntered()
+     }
+ }
+ 
+ // perform selected operation, and display results
+ // Note: most of the real operators are not handled in the large switch statement;
+ // they fall through (using break statements) to be sent to brain.performOperation
+ //
+ // operation keys: √x, ex, 10x, yx, 1/x, CHS, SIN, COS, TAN, ÷, ×, -, +
+ // operations sent from digitKeyPressed: f-1 (→R), f-2 (→H.MS), f-3 (→RAD), g-1 (→P), g-2 (→H), g-3 (→DEG)
+ // operations sent from prefixKeyPressed: f-STO (FRAC), g-STO (INT)
+ @IBAction func operationKeyPressed(_ sender: UIButton) {
+     simulatePressingButton(sender)
+     if restoreFromError() { return }
+     let keyName = sender.currentTitle!
+     
+     if isProgramMode {
+         sendToProgram(keyName)
+         prefix = nil
+         return
+     }
+
+     if isUserMode {
+         // swap the primary functions and f-shifted functions of keys A-E
+         switch keyName {
+         case "√x", "ex", "10x", "yx", "1/x":
+             if prefix == nil {
+                 prefix = .f
+             } else if prefix == .f {
+                 prefix = nil
+             }
+         default:
+             break
+         }
+     }
+     
+     switch prefix {
+     case .none:
+         switch keyName {
+         case "CHS":
+             if userIsEnteringExponent {
+                 // change sign of exponent, during entry
+                 let exponent2 = String(displayString.removeLast())
+                 let exponent1 = String(displayString.removeLast())
+                 var sign = String(displayString.removeLast())
+                 sign = sign == " " ? "-" : " "  // toggle sign
+                 displayString += sign + exponent1 + exponent2
+                 return
+             } else if userIsEnteringDigits {
+                 // change sign of mantissa, during entry
+                 if displayString.first == "-" {
+                     displayString.removeFirst()
+                 } else {
+                     displayString = "-" + displayString
+                 }
+                 return
+             }  // else CHS pressed with existing number on display (push "nCHS" onto stack, below)
+         default:
+             break
+         }
+     case .STO:
+         // STO [+|–|×|÷]
+         switch keyName {
+         case "+":  // don't move [+|–|×|÷] to prefixKeyPressed (too many)
+             prefix = .STO_ADD  // ex. add display to number stored in register (next key)
+         case "–":  // minus sign is an "EN DASH"
+             prefix = .STO_SUB
+         case "×":
+             prefix = .STO_MUL
+         case "÷":
+             prefix = .STO_DIV
+         case "SIN":
+             // cancel STO, and perform SIN
+             prefix = nil
+             break
+         case "COS":
+             // STO to register number stored in I (integer portion of absolute value of number stored in I)
+             print("STO (i)")  // TBD
+         case "TAN":
+             // STO to register I
+             print("STO I")  // TBD
+         case "CHS":
+             // ignore
+             prefix = nil
+             return
+         default:
+             prepStackForOperation()
+             setError(3)
+             return
+         }
+         return
+     case .STO_DOT:
+         // STO . operation (cancel "STO ." and re-issue operation)
+         prefix = nil
+         operationKeyPressed(sender)
+         return
+     case .RCL:
+         // RCL [+|–|×|÷]
+         switch keyName {
+         case "+":
+             prefix = .RCL_ADD  // ex. add register (next key) to display
+         case "–":  // minus sign is an "EN DASH"
+             prefix = .RCL_SUB
+         case "×":
+             prefix = .RCL_MUL
+         case "÷":
+             prefix = .RCL_DIV
+         case "SIN":
+             // cancel prefix, and perform SIN
+             prefix = nil
+             break
+         case "COS":
+             // RCL from register number stored in I (integer portion of absolute value of number stored in I)
+             print("RCL (i)")  // TBD
+         case "TAN":
+             // RCL from register I
+             print("RCL I")  // TBD
+         case "CHS":
+             // ignore
+             prefix = nil
+             return
+         default:
+             prepStackForOperation()
+             setError(3)
+             return
+         }
+         return
+     case .RCL_DOT:
+         // RCL . operation (cancel "RCL ." and re-issue operation)
+         prefix = nil
+         operationKeyPressed(sender)
+         return
+     case .f:
+         switch keyName {
+         case "COS":
+             // "(i)" pressed (show imaginary part of number if complex, else Error 3)
+             if isComplexMode {
+                 // show imaginary part of number, until 1.2 sec after button is released
+                 prefix = nil
+                 if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+                 brain.swapRealImag()
+                 updateDisplayString()
+                 sender.addTarget(self, action: #selector(iButtonReleased), for: .touchUpInside)
+                 return
+             } else {
+                 prepStackForOperation()
+                 setError(3)
+             }
+         case "TAN":
+             // "I" pressed (imaginary number entered)
+             prefix = nil
+             isComplexMode = true
+             prepStackForOperation()
+             //----------------------
+             brain.moveRealXToImagX()
+             //----------------------
+             displayString = String(brain.xRegister!)  // show real part
+             updateDisplayString()
+             return
+         case "–":  // minus sign is an "EN DASH"
+             // "Re≷Im" pressed (swap real and imaginary parts of complex number)
+             prefix = nil
+             isComplexMode = true
+             prepStackForOperation()
+             //------------------
+             brain.swapRealImag()
+             //------------------
+             updateDisplayString()
+             return
+         case "√x", "ex", "10x", "yx", "1/x":
+             // label "A" - "E" pressed
+             programKeyPressed(sender)  // better handled as program key
+             return
+         case "÷":
+             // SOLVE pressed
+             prefixKeyPressed(sender)  // better handled as prefix key
+             return
+         default:
+             break
+         }
+     case .SOLVE:
+         switch keyName {
+         case "√x", "ex", "10x", "yx", "1/x":
+             // label "A" - "E" pressed
+             programKeyPressed(sender)  // better handled as program key
+             return
+         default:
+             break
+         }
+     case .g, .HYP, .HYP1:  // allowed to precede operation key (ex. g-10x, f-HYP-SIN, f-HYP1-COS)
+         break
+     case .GTO:
+         switch keyName {
+         case "CHS":
+             // goto line number
+             prefixKeyPressed(sender)  // better handled as prefix key
+             return
+         case "√x", "ex", "10x", "yx", "1/x":
+             // label "A" - "E" pressed
+             programKeyPressed(sender)  // better handled as program key
+             return
+         case "SIN", "COS", "÷", "×", "-", "+", "→R", "→P", "→H.MS", "→H", "→RAD", "→DEG":
+             // perform operation without prefix
+             prefix = nil
+         default:
+             prepStackForOperation()
+             setError(4)
+             return
+         }
+     case .GSB:
+         switch keyName {
+         case "√x", "ex", "10x", "yx", "1/x":
+             // label "A" - "E" pressed
+             programKeyPressed(sender)  // better handled as program key
+             return
+         case "CHS":
+             // perform operation without prefix
+             prefix = nil
+         default:
+             break
+         }
+     case .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:  // not allowed to precede operation key
+         prepStackForOperation()
+         setError(3)
+         return
+     default:  // .FIX, .SCI, .ENG, .RCL (these ignore the prefix) ex. 2 Enter 3 f FIX x, just does 2 Enter 3 x (= 6)
+         prefix = nil
+     }
+     
+     prepStackForOperation()
+     brain.lastXRegister = brain.xRegister!  // save xRegister before pushing operation onto stack
+     
+     let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
+     prefix = nil  // must come after previous line
+     //-------------------------------------------------
+     brain.performOperation(oneLetterPrefix + keyName)
+     //-------------------------------------------------
+     updateDisplayString()
+ }
+
+ // push digits from display onto stack when enter key is pressed
+ @IBAction func enterKeyPressed(_ sender: UIButton) {
+     simulatePressingButton(sender)
+     if restoreFromError() { return }
+     
+     if isProgramMode {
+         sendToProgram("E\nN\nT\nE\nR")  // ENTER (vertical)
+         return
+     }
+
+     switch prefix {
+     case .none:
+         // Enter pressed
+         if liftStack {
+             //------------------------------------
+             brain.pushOperand(displayStringNumber)
+             brain.pushOperand(displayStringNumber)
+             //------------------------------------
+         } else {
+             endDisplayEntry()
+             brain.pushXRegister()
+         }
+     case .f:
+         // RND# pressed
+         prefix = nil
+         srand48(seed)  // re-seed each time, so a manually stored seed will generate the same sequence each time
+         let number = drand48()
+         seed = Int(number * Double(Int32.max))  // regenerate my own seed to use next time (Note: Int.max gives same numbers for different seeds)
+         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+         displayString = String(number)
+         brain.pushOperand(number)
+         lastRandomNumberGenerated = number
+     case .g:
+         // LSTx pressed
+         prefix = nil
+         brain.pushOperand(brain.lastXRegister)
+     case .STO:
+         // STO RAN# pressed (store new seed)
+         prefix = nil
+         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+         if var number = brain.xRegister {
+             number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
+             seed = Int(number * Double(Int32.max))
+         } else {
+             return
+         }
+     case .RCL:
+         // RCL RAN# pressed (recall last random number)
+         prefix = nil
+         brain.pushOperand(lastRandomNumberGenerated)
+     default:
+         return
+     }
+     updateDisplayString()
+     brain.printMemory()
+     userIsEnteringDigits = false
+     userIsEnteringExponent = false
+     liftStack = false
+ }
+ 
+ // manipulate stack or display
+ // stack manipulation keys: R↓, x≷y, ←
+ @IBAction func stackManipulationKeyPressed(_ sender: UIButton) {
+     simulatePressingButton(sender)
+     if restoreFromError() { return }
+     let keyName = sender.currentTitle!
+     
+     if isProgramMode {
+         sendToProgram(keyName)
+         prefix = nil
+         return
+     }
+
+     var okToClearUserEnteringDigits = true
+
+     switch prefix {
+     case .none:
+         switch keyName {
+         case "R↓":
+             // R↓ key pressed (roll stack down)
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             brain.rollStack(directionDown: true)
+         case "x≷y":
+             // x≷y key pressed (swap x-y registers)
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             brain.swapXyRegisters()
+         case "←":
+             // ← key pressed (remove single digit or whole number)
+             if userIsEnteringExponent {
+                 return
+             } else {
+                 if !userIsEnteringDigits {
+                     // clear previously entered number (display 0.0)
+                     brain.xRegister = 0.0
+                     liftStack = false
+                 } else if displayString.count > 1 {
+                     // remove one digit
+                     displayString = String(displayString.dropLast())
+                     okToClearUserEnteringDigits = false  // ie. user is still entering digits
+                 } else {
+                     // push 0.0 onto stack
+                     brain.pushOperand(0.0)
+                     liftStack = false  // not sure if this is needed
+                     brain.printMemory()
+                 }
+             }
+         default:
+             break
+         }
+     case .f:
+         switch keyName {
+         case "GSB":
+             brain.clearAll()  // pws: can't get here, GSB is a program key (also doesn't clear all)
+         case "R↓":
+             // CLEAR PRGM pressed (goto line 0 without delete program)
+             program.currentLineNumber = 0
+         case "x≷y":
+             // CLEAR REG key pressed (clear storage registers, not stack)
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             brain.clearStorageRegisters()
+         case "←":
+             // CLEAR PREFIX key pressed
+             // display mantissa (all numeric digits with no punctuation), until 1.2 sec after button is released
+             prefix = nil
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             displayView.showCommas = false
+             displayString = brain.displayMantissa
+             sender.addTarget(self, action: #selector(clearPrefixButtonReleased), for: .touchUpInside)
+             return
+         default:
+             break
+         }
+     case .g:
+         switch keyName {
+         case "R↓":
+             // R↑ key pressed (roll stack up)
+             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+             brain.rollStack(directionDown: false)
+         case "←":
+             // CLx key pressed
+             displayString = String(format: displayFormat.string, 0.0)  // display 0.0
+             if userIsEnteringDigits {
+                 brain.pushOperand(0)
+             } else {
+                 brain.xRegister = 0
+             }
+             liftStack = false
+             userIsEnteringDigits = false
+             userIsEnteringExponent = false
+             prefix = nil
+             saveDefaults()
+             brain.printMemory()
+             return  // return, or prior number will be displayed
+         default:
+             break
+         }
+     default:  // .FIX, .SCI, .ENG, .STO, .RCL, .HYP, .HYP1 (not allowed to precede stack manipulation key)
+         invalidKeySequenceEntered()
+         return
+     }
+     if okToClearUserEnteringDigits {
+         userIsEnteringDigits = false
+         updateDisplayString()
+     }
+     userIsEnteringExponent = false
+     prefix = nil
+ }
+
+ // prefix keys: f, g, STO, RCL
+ // prefix sent from programKeyPressed: GTO, GSB, SST (for f-SST),
+ //                                     GTO (for f-GTO, g-, GTO-GTO, GTO_DOT-, GSB-, GSB_DOT-, SOLVE-),
+ //                                     GSB (for            GTO-GSB, GTO_DOT-, GSB-, GSB_DOT-, SOLVE-)
+ // prefix sent from operationKeyPressed: CHS (for GTO-CHS), "÷" (for f-"÷")
+ // prefix sent from digitKeyPressed: "." (for GTO-".", GSB-, STO-, RCL-)
+ @IBAction func prefixKeyPressed(_ sender: UIButton) {
+     simulatePressingButton(sender)
+     if restoreFromError() { return }
+     var keyName = sender.currentTitle!
+     if keyName == "·" { keyName = "." } // replace "MIDDLE DOT" (used on button in interface builder) with period
+
+     if isProgramMode {
+         sendToProgram(keyName)
+         // continue processing prefix for use with program keys, ex. f-R/S (PSE), g-SST (BST)
+     }
+
+     switch prefix {
+     case .none:
+         switch keyName {
+         case "f":
+             prefix = .f
+         case "g":
+             prefix = .g
+         case "STO":
+             prefix = .STO
+         case "RCL":
+             prefix = .RCL
+         case "GTO":
+             prefix = .GTO  // build-up to GTO n (go to label n) or GTO CHS nnn (go to line nnn)
+         case "GSB":
+             prefix = .GSB  // build-up to GSB n (run from label n)
+         default:
+             break
+         }
+     case .f:
+         switch keyName {
+         case "g":
+             prefix = .g
+         case "STO":
+             // "FRAC" pressed
+             prefix = .f
+             operationKeyPressed(sender)  // better handled as operation
+         case "RCL":
+             // "USER" pressed (swap the primary functions and f-shifted functions of keys A-E)
+             prefix = nil
+             isUserMode.toggle()
+         case "SST":
+             // "LBL" pressed
+             prefix = nil  // LBL key ignored in run mode (sent to program, above)
+         case "GTO":
+             // "HYP" pressed
+             if isProgramMode {
+                 prefix = nil  // program keeps its own prefix
+             } else {
+                 prefix = .HYP
+             }
+         case "÷":
+             // "SOLVE" pressed
+             prefix = .SOLVE
+         default:
+             break
+         }
+     case .g:
+         switch keyName {
+         case "f":
+             prefix = .f
+         case "STO":
+             // "INT" pressed
+             prefix = .g
+             operationKeyPressed(sender)  // better handled as operation
+         case "RCL":
+             // "MEM" pressed
+             print("MEM")  // pws: TBD
+         case "GTO":
+             if isProgramMode {
+                 prefix = nil
+             } else {
+                 prefix = .HYP1
+             }
+         default:
+             break
+         }
+     default:
+         // handle switching back and forth between prefixes (before completing command)
+         switch keyName {
+         case "f":
+             prefix = .f
+         case "g":
+             prefix = .g
+         case ".":
+             switch prefix {
+             case .STO:
+                 prefix = .STO_DOT
+             case .RCL:
+                 prefix = .RCL_DOT
+             case .GSB:
+                 prefix = .GSB_DOT
+             case .GTO:
+                 prefix = .GTO_DOT
+             default:
+                 break
+             }
+         case "STO":
+             prefix = .STO
+         case "RCL":
+             prefix = .RCL
+         case "CHS":
+             // only gets here with prefix = .GTO
+             assert(prefix == .GTO, "if you got this, add 'if prefix == .GTO {...}' below") // pws: remove after confirming
+             prefix = .GTO_CHS
+             gotoLineNumberDigits = []
+         case "GSB":
+             prefix = .GSB
+         case "GTO":
+             prefix = .GTO
+         default:
+             setError(99)  // shouldn't get here
+         }
+     }
+ }
+
+ // program manipulation keys: SST, GTO, R/S, GSB
+ // sent from digitKeyPressed if not in program mode: 0-9 (ex. GSB-0 for label 0, GSB_DOT-, GTO-, GTO_DOT-)
+ // sent from operationKeyPressed if not in program mode: √x, ex, 10x, yx, 1/x (ex. f-√x for label A, SOLVE-, GTO-, GSB-)
+ @IBAction func programKeyPressed(_ sender: UIButton) {
+     simulatePressingButton(sender)
+     if restoreFromError() { return }
+     let keyName = sender.currentTitle!
+
+     switch prefix {
+     case .none:
+         switch keyName {
+         case "SST":
+             // single-step
+             if isProgramMode {
+                 // show next instruction; don't run
+                 sendToProgram(keyName)
+             } else {
+                 // while holding down SST button, display current line of code;
+                 // after releasing SST: 1) execute current line, 2) display results, 3) increment current line (don't show)
+                 if program.currentLineNumber == 0 { _ = program.forwardStep() }
+                 saveDisplayString = displayString
+                 displayString = program.currentInstruction
+                 sender.addTarget(self, action: #selector(sstButtonReleased), for: .touchUpInside)
+             }
+         case "GTO":
+             // build-up to GTO CHS nnn (go to line nnn)
+             prefixKeyPressed(sender)  // better handled as prefix key
+         case "R/S":
+             // run/stop [program]
+             if isProgramMode {
+                 // add to program
+                 sendToProgram(keyName)
+             } else if !isRunMode {
+                 // run program from current line, to end (vs. running from a label, to end)
+                 isRunMode = true
+                 DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                     if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
+                     program.runFromCurrentLine()
+                     isRunMode = false
+                 }
+             }
+         case "GSB":
+             // GSB pressed
+             if isProgramMode {
+                 // add to program
+                 sendToProgram(keyName)
+             } else {
+                 // GSB-A acts the same as f-LBL-A (run from label A, until RTN)
+                 prefixKeyPressed(sender)  // better handled as prefix key
+             }
+         default:
+             break
+         }
+     case .f:
+         prefix = nil
+         switch keyName {
+         case "√x", "ex", "10x", "yx", "1/x":
+             // A - E pressed - run program from label A - E
+             isRunMode = true
+             DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                 program.runFrom(label: keyName) {
+                     self.isRunMode = false
+                 }
+             }
+         case "SST", "GTO":
+             // LBL or HYP pressed
+             prefix = .f
+             prefixKeyPressed(sender)  // better handled as prefix key
+         case "R/S":
+             // PSE pressed (pause program)
+             if isProgramMode {
+                 // add to program
+                 sendToProgram(keyName)
+             }  // else (no action in run mode)
+         case "GSB":
+             // Σ pressed
+             brain.clearAll()  // pws: this clears too much
+         default:
+             break
+         }
+     case .g:
+         prefix = nil
+         switch keyName {
+         case "SST":
+             // BST pressed (back step program)
+             if isProgramMode {
+                 // show previous instruction; don't run
+                 sendToProgram(keyName)
+             } else {
+                 // show previous line until button released (don't execute), then return to normal display
+                 displayString = program.backStep()
+                 sender.addTarget(self, action: #selector(bstButtonReleased), for: .touchUpInside)
+             }
+         case "GTO":
+             // HYP-1 pressed
+             prefix = .g
+             prefixKeyPressed(sender)  // better handled as prefix key
+         case "R/S":
+             // P/R pressed
+             isProgramMode.toggle()
+         case "GSB":
+             // RTN pressed
+             if isProgramMode {
+                 // add to program
+                 sendToProgram(keyName)
+             } else {
+                 // set program to line 0
+                 prepStackForOperation()
+                 program.currentLineNumber = 0
+             }
+         default:
+             break
+         }
+     case .GTO:
+         switch keyName {
+         case "√x", "ex", "10x", "yx", "1/x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // A - E or 0 - 9 pressed - goto label A - E or 0 - 9
+             prefix = nil
+             if !program.gotoLabel(keyName) {  // would only be here in non-program mode
+                 setError(4)
+             }
+         case "SST", "R/S":
+             // clear prefix and re-call programKeyPressed
+             prefix = nil
+             programKeyPressed(sender)
+         default:
+             // GTO, GSB
+             prefixKeyPressed(sender)  // better handled as prefix key
+         }
+     case .GTO_DOT:
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // .0 - .9 pressed - goto label .0 - .9
+             if !program.gotoLabel("." + keyName) {  // would only be here in non-program mode
+                 setError(4)
+             }
+         case "SST", "R/S":
+             // clear prefix and re-call programKeyPressed
+             prefix = nil
+             programKeyPressed(sender)
+         default:
+             // GTO, GSB
+             prefixKeyPressed(sender)  // better handled as prefix key
+         }
+     case .GSB:
+         switch keyName {
+         case "√x", "ex", "10x", "yx", "1/x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // A - E or 0 - 9 pressed - run program from label A - E or label 0 - 9
+             prefix = nil
+             isRunMode = true
+             DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                 program.runFrom(label: keyName) {
+                     self.isRunMode = false
+                 }
+             }
+         case "SST", "R/S":
+             // clear prefix and re-call programKeyPressed
+             prefix = nil
+             programKeyPressed(sender)
+         default:
+             // GTO, GSB
+             prefixKeyPressed(sender)  // better handled as prefix key
+         }
+     case .GSB_DOT:
+         prefix = nil
+         switch keyName {
+         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+             // .0 - .9 pressed - run program from label .0 - .9
+             isRunMode = true
+             DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                 program.runFrom(label: "." + keyName) {
+                     self.isRunMode = false
+                 }
+             }
+         case "SST", "R/S":
+             // clear prefix and re-call programKeyPressed
+             prefix = nil
+             programKeyPressed(sender)
+         default:
+             // GTO, GSB
+             prefixKeyPressed(sender)  // better handled as prefix key
+         }
+     case .SOLVE:
+         prefix = nil
+         switch keyName {
+         case "√x", "ex", "10x", "yx", "1/x":
+             // A - E pressed - solve equation at label A - E
+             isRunMode = true
+             DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                 solve.findRootOfEquationAt(label: keyName)
+             }
+         case "SST", "R/S":
+             // clear prefix and re-call programKeyPressed
+             prefix = nil
+             programKeyPressed(sender)
+         default:
+             // GTO, GSB
+             prefixKeyPressed(sender)  // better handled as prefix key
+         }
+     default:
+         assert(false, "shouldn't get here")  // pws: remove after testing
+         break  // shouldn't get here
+     }
+ }
+ 
+ // hide/unhide display (emulating ON key)
+ @IBAction func onKeyPressed(_ sender: UIButton) {
+     simulatePressingButton(sender)
+     _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error
+     calculatorIsOn = !calculatorIsOn
+     displayView.turnOnIf(calculatorIsOn)
+     if calculatorIsOn {
+         prepStackForOperation()  // HP-15C completes number entry, if power is cycled
+         restoreDisplayLabels()
+         prefix = nil  // prefix is lost after re-start
+         isProgramMode = false  // don't re-start in program mode
+     } else {
+         hideDisplayLabels()
+     }
+     buttons.forEach { $0.isUserInteractionEnabled = calculatorIsOn }
+ }
+ 
+
+ */

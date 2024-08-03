@@ -198,15 +198,16 @@ class Program: Codable {
     // f R↓    = PRGM     non-prog (clear instructions)
     // f ←     = PREFIX   non-prog (no action - ignore)
     // f ÷     = SOLVE    prog if followed by A-E, 0-9, "."
-    // f ÷ .   = SOLVE    prog if followed by 0-9
+    // f ÷ .   = SOLVE .  prog if followed by 0-9
     // f ×     = ∫xy      prog if followed by A-E, 0-9, "."
-    // f × .   = ∫xy      prog if followed by 0-9
+    // f × .   = ∫xy .    prog if followed by 0-9
     // f SST   = LBL      prog if followed by A-E, 0-9, "."
     // f SST . = LBL .    prog if followed by 0-9
     // f 7     = FIX      prog if followed by 0-9, I
     // f 8     = SCI      prog if followed by 0-9, I
     // f 9     = ENG      prog if followed by 0-9, I
-    // f 4     = x≷  ?    prog if followed by 0-9, (i), I
+    // f 4     = x≷       prog if followed by A-E, 0-9, (i), I
+    // f 4 .   = x≷ .     prog if followed by 0-9
     // f 5     = DSE ?    prog if followed by 0-9, (i), I
     // f 6     = ISG ?    prog if followed by 0-9, (i), I
     
@@ -230,11 +231,43 @@ class Program: Codable {
     // so they have to be handled here, if they are non-programmable
 
     func buildInstructionWith(_ buttonLabel: String) -> String? {
+        // first check for cases like: GTO-f-A, STO-f-B, f-÷-f-C (SOLVE C),...
+        // and remove the extra "f": GTO-A, STO-B, f-4-C,...
+        switch buttonLabel {
+        case "√x", "ex", "10x", "yx", "1/x":
+            // label A-E entered
+            switch prefix {
+            case "GTOf", "GSBf", "STOf", "STO+f", "STO–f", "STO×f", "STO÷f", "RCLf", "RCL+f", "RCL–f", "RCL×f", "RCL÷f", "f4f", "f÷f", "f×f", "fSSTf":
+                // remove "f" and add label (ex. GTO-f-label => GTO-label)
+                instructionCodes.removeLast()
+                // instruction complete
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                return insertedInstruction
+            default:
+                break
+            }
+        default:
+            break
+        }
+        // if any-f, start over with "f" ("any" is dropped), buttonLabel added in next section
+        if prefix.count > 1 && prefix.last == "f" {
+            prefix = "f"
+            // start the program instruction over with "f"
+            instructionCodes = [Program.keycodes["f"]!]
+        }
+
         switch buttonLabel {
         case "f":
-            // any time "f" is entered (except following GTO or GSB), the program instruction starts over;
-            // ie. GTO-f-A should be GTO-A and GSB-f-B should be GSB-B
-            if prefix != "GTO" && prefix != "GSB" {
+            // any time "f" is entered (except following GTO, GSB, f-4,...), the program instruction starts over;
+            // if "f" follows GTO, GSB, f-4,..., add it for now, in case it's followed by a label (check above);
+            // ie. GTO-f-A becomes GTO-A, f-4-f-A becomes f-4-A,...
+            switch prefix {
+            case "GTO", "GSB", "STO", "STO+", "STO–", "STO×", "STO÷", "RCL", "RCL+", "RCL–", "RCL×", "RCL÷", "f4", "f÷", "f×", "fSST":
+                // compound prefix (GTOf, GSBf, f4f,...)
+                prefix += buttonLabel
+                instructionCodes.append(Program.keycodes[buttonLabel]!)
+            default:
+                // start the program instruction over with "f"
                 prefix = buttonLabel
                 instructionCodes = [Program.keycodes[buttonLabel]!]
             }
@@ -330,7 +363,7 @@ class Program: Codable {
             }
         case ".":
             switch prefix {
-            case "GTO", "GSB", "STO", "STO+", "STO–", "STO×", "STO÷", "RCL", "RCL+", "RCL–", "RCL×", "RCL÷", "f÷", "f×", "fSST":
+            case "GTO", "GSB", "STO", "STO+", "STO–", "STO×", "STO÷", "RCL", "RCL+", "RCL–", "RCL×", "RCL÷", "f4", "f÷", "f×", "fSST":
                 // compound prefix (GTO ., GSB ., ...)
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
