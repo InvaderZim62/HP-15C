@@ -44,52 +44,127 @@ class ProgramUnitTests: XCTestCase {
     
     // test instructions that drop "f" before a label
     // verify:
-    // - GTO B     => GTO B (try first without f)
-    // - GTO f B   => GTO B (same answer)
-    // - GSB f C   => GSB C
-    // - STO f D   => STO D
-    // - STO + f E => STO + E
-    //
-    // "GTO", "GSB", "STO", "STO+", "STO–", "STO×", "STO÷", "RCL", "RCL+", "RCL–", "RCL×", "RCL÷", "f4", "f÷", "f×", "fSST":
+    // - GTO A     => GTO A (try first without f)
+    // - GTO f A   => GTO A (same answer)
+    // - GSB f B   => GSB B
+    // - STO f C   => STO C
+    // - STO + f C => STO + C
+    // - STO - f C => STO - C
+    // - RCL × f D => RCL × D
+    // - RCL ÷ f D => RCL ÷ D
+    // - f 4 f E   => f 4 E
+    // - f 4 f E   => f 4 E
+    // - f ÷ f E   => f ÷ E
+    // - f × f E   => f × E
+    // - f SST A   => f SST A (try first without f)
+    // - f SST f A => f SST A (same answer)
     func test02DropFBeforeLabel() {
         startNewProgram()
-        // GTO B
+        // GTO A => GTO A
         pressButton(title: "GTO")
-        pressButton(title: "ex")
-        // GTO: 22, B: 12
-        XCTAssertEqual(cvc.program.currentInstruction, "001- 22 12", "Instruction is not correct")
+        pressButton(title: "√x")
+        XCTAssertEqual(cvc.program.currentInstruction, "001- 22 11", "Instruction is not correct")
         
-        // GTO f B
+        // GTO f A => GTO A
         pressButton(title: "GTO")
         pressButton(title: "f")
-        pressButton(title: "ex")
-        // GTO: 22, B: 12 (f is dropped)
+        pressButton(title: "√x")
         // currentInstructionCodeString doesn't include line number, to allow easier cut-and-paste
-        XCTAssertEqual(cvc.program.currentInstructionCodeString, " 22 12", "Instruction codes are not correct")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, " 22 11", "Instruction codes are not correct")
         
-        // GSB f C
+        // GSB f B => GSB B
         pressButton(title: "GSB")
         pressButton(title: "f")
-        pressButton(title: "10x")
-        // GSB: 32, C: 13 (f is dropped)
-        XCTAssertEqual(cvc.program.currentInstructionCodeString, " 32 13", "Instruction codes are not correct")
+        pressButton(title: "ex")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, " 32 12", "Instruction codes are not correct")
         
-        // STO f D
+        // STO f C => STO C
         pressButton(title: "STO")
         pressButton(title: "f")
-        pressButton(title: "yx")
-        // STO: 44, D: 14 (f is dropped)
-        XCTAssertEqual(cvc.program.currentInstructionCodeString, " 44 14", "Instruction codes are not correct")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, " 44 13", "Instruction codes are not correct")
         
-        // STO + f E
+        // STO + f C => STO + C
         pressButton(title: "STO")
         pressButton(title: "+")
         pressButton(title: "f")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "44,40,13", "Instruction codes are not correct")
+        
+        // STO - f C => STO – C
+        pressButton(title: "STO")
+        pressButton(title: "–")
+        pressButton(title: "f")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "44,30,13", "Instruction codes are not correct")
+
+        // RCL × f D => RCL × D
+        pressButton(title: "RCL")
+        pressButton(title: "×")
+        pressButton(title: "f")
+        pressButton(title: "yx")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "45,20,14", "Instruction codes are not correct")
+
+        // RCL ÷ f D => RCL ÷ D
+        pressButton(title: "RCL")
+        pressButton(title: "÷")
+        pressButton(title: "f")
+        pressButton(title: "yx")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "45,10,14", "Instruction codes are not correct")
+
+        // f 4 f E => f 4 E
+        pressButton(title: "f")
+        pressButton(title: "4")
+        pressButton(title: "f")
         pressButton(title: "1/x")
-        // STO: 44, +: 40, E: 15 (f is dropped)
-        XCTAssertEqual(cvc.program.currentInstructionCodeString, "44,40,15", "Instruction codes are not correct")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 4,15", "Instruction codes are not correct")
+
+        // f ÷ f E => f ÷ E
+        pressButton(title: "f")
+        pressButton(title: "÷")
+        pressButton(title: "f")
+        pressButton(title: "1/x")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42,10,15", "Instruction codes are not correct")
+
+        // f × f E => f × E
+        pressButton(title: "f")
+        pressButton(title: "×")
+        pressButton(title: "f")
+        pressButton(title: "1/x")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42,20,15", "Instruction codes are not correct")
+
+        // f SST f A => f SST A
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "f")
+        pressButton(title: "√x")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42,21,11", "Instruction codes are not correct")
+
+        // f SST A => f SST A
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "√x")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42,21,11", "Instruction codes are not correct")
     }
     
+    // test instructions that start over when "f" pressed but not followed by a label
+    // verify:
+    // - GTO f 1   => f 1
+    // - GSB f TAN => f TAN
+    func test03FCausesRestart() {
+        startNewProgram()
+        // GTO f 1 => f 1
+        pressButton(title: "GTO")
+        pressButton(title: "f")
+        pressButton(title: "1")
+        XCTAssertEqual(cvc.program.currentInstruction, "001-  42 1", "Instruction is not correct")
+        // GSB f TAN => f TAN
+        pressButton(title: "GSB")
+        pressButton(title: "f")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, " 32 25", "Instruction codes are not correct")
+    }
+
     // MARK: - Utilities
 
     func startNewProgram() {
