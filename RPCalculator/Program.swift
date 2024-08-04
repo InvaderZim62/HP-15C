@@ -261,8 +261,6 @@ class Program: Codable {
     
     // all digit, operation, stack manipulation, and prefix buttons are automatically send here,
     // so they have to be handled here, if they are non-programmable
-    
-    // bug: g-4-√x s/b √x
 
     func buildInstructionWith(_ buttonLabel: String) -> String? {
         // first check for cases like: GTO-f-A, STO-f-B, f-÷-f-C (SOLVE C), f-FIX-f-I...
@@ -353,6 +351,9 @@ class Program: Codable {
             } else if prefix == "f7" || prefix == "f8" || prefix == "f9" {
                 // clear previous instructions
                 instructionCodes = []
+            } else if prefix == "g4" || prefix == "g5" || prefix == "g6" {
+                // clear previous instructions
+                instructionCodes = []
             }
             // instruction complete
             instructionCodes.append(Program.keycodes[buttonLabel]!)
@@ -424,6 +425,9 @@ class Program: Codable {
                 prefix == "f7" || prefix == "f8" || prefix == "f9" {
                 // clear previous instructions
                 instructionCodes = []
+            } else if prefix == "g4" || prefix == "g5" || prefix == "g6" {
+                // clear previous instructions
+                instructionCodes = []
             }
             // instruction complete
             instructionCodes.append(Program.keycodes[buttonLabel]!)
@@ -434,6 +438,9 @@ class Program: Codable {
                 prefix = ""  // ignored in program mode (show imaginary part of complex number in normal mode)
                 return nil
             } else if prefix == "f7" || prefix == "f8" || prefix == "f9" {
+                // clear previous instructions
+                instructionCodes = []
+            } else if prefix == "g4" || prefix == "g5" || prefix == "g6" {
                 // clear previous instructions
                 instructionCodes = []
             }

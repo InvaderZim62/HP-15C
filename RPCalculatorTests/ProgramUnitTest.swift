@@ -10,6 +10,7 @@
 //  - test03FCausesRestart
 //  - test04F4Thru9Trig
 //  - test05F7Thru9Label
+//  - test06F4Thru6LabelTrig
 //
 
 import XCTest
@@ -317,6 +318,55 @@ class ProgramUnitTests: XCTestCase {
         XCTAssertEqual(cvc.program.currentInstructionCodeString, "    13", "Instruction codes are not correct")
     }
     
+    // test g 4 thru 6 followed by A - E, SIN, COS, TAN
+    // verify:
+    // - g 4 A   => A
+    // - g 5 B   => B
+    // - g 6 C   => C
+    // - g 4 SIN => SIN
+    // - g 5 COS => COS
+    // - g 5 TAN => g 5 TAN
+    // - g 6 TAN => g 6 TAN
+    func test06F4Thru6LabelTrig() {
+        startNewProgram()
+        // g 4 A => A
+        pressButton(title: "g")
+        pressButton(title: "4")
+        pressButton(title: "√x")
+        XCTAssertEqual(cvc.program.currentInstruction, "001-    11", "Instruction is not correct")
+        // g 5 B => B
+        pressButton(title: "g")
+        pressButton(title: "5")
+        pressButton(title: "ex")
+        // currentInstructionCodeString doesn't include line number, to allow easier cut-and-paste
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    12", "Instruction codes are not correct")
+        // g 6 C => C
+        pressButton(title: "g")
+        pressButton(title: "6")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    13", "Instruction codes are not correct")
+        // g 4 SIN => SIN
+        pressButton(title: "g")
+        pressButton(title: "4")
+        pressButton(title: "SIN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    23", "Instruction codes are not correct")
+        // g 5 COS => COS
+        pressButton(title: "g")
+        pressButton(title: "5")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    24", "Instruction codes are not correct")
+        // g 5 TAN => g 5 TAN
+        pressButton(title: "g")
+        pressButton(title: "5")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "43, 5,25", "Instruction codes are not correct")
+        // g 6 TAN => g 6 TAN
+        pressButton(title: "g")
+        pressButton(title: "6")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "43, 6,25", "Instruction codes are not correct")
+    }
+
     // MARK: - Utilities
 
     func startNewProgram() {
