@@ -373,7 +373,7 @@ class Program: Codable {
                 return insertedInstruction
             }
         case "+", "–", "×", "÷":  // minus sign is an "EN DASH"
-            if prefix == "STO" || prefix == "RCL" {
+            if prefix == "STO" || prefix == "RCL" || prefix == "f" && (buttonLabel == "×" || buttonLabel == "÷") {
                 // compound prefix
                 prefix += buttonLabel
                 instructionCodes.append(Program.keycodes[buttonLabel]!)
