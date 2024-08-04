@@ -29,6 +29,7 @@
 		4AEBB0DB2C1CCD750000D2AF /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEBB0DA2C1CCD750000D2AF /* Program.swift */; };
 		4AF8E86F25D895A500C52D10 /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF8E86E25D895A500C52D10 /* CalculatorView.swift */; };
 		4AF947E42C5C2FF0007EF5F8 /* StackUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF947E32C5C2FF0007EF5F8 /* StackUnitTests.swift */; };
+		4AF947E82C5F10FC007EF5F8 /* ProgramUnitTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF947E72C5F10FC007EF5F8 /* ProgramUnitTest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -76,6 +77,7 @@
 		4AEBB0DA2C1CCD750000D2AF /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		4AF8E86E25D895A500C52D10 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
 		4AF947E32C5C2FF0007EF5F8 /* StackUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackUnitTests.swift; sourceTree = "<group>"; };
+		4AF947E72C5F10FC007EF5F8 /* ProgramUnitTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramUnitTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +169,7 @@
 			children = (
 				4ADE1DA82C53644E00D47C9D /* CalculatorUnitTests.swift */,
 				4AF947E32C5C2FF0007EF5F8 /* StackUnitTests.swift */,
+				4AF947E72C5F10FC007EF5F8 /* ProgramUnitTest.swift */,
 				4ADE1DA52C5306A100D47C9D /* BrainUnitTests.swift */,
 				4ADE1D9B2C51CBD500D47C9D /* ComplexUnitTests.swift */,
 			);
@@ -346,6 +349,7 @@
 			files = (
 				4AF947E42C5C2FF0007EF5F8 /* StackUnitTests.swift in Sources */,
 				4ADE1DA62C5306A100D47C9D /* BrainUnitTests.swift in Sources */,
+				4AF947E82C5F10FC007EF5F8 /* ProgramUnitTest.swift in Sources */,
 				4ADE1DA92C53644E00D47C9D /* CalculatorUnitTests.swift in Sources */,
 				4ADE1D9C2C51CBD500D47C9D /* ComplexUnitTests.swift in Sources */,
 			);

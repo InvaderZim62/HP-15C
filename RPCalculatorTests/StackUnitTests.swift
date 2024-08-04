@@ -350,5 +350,4 @@ class StackUnitTests: XCTestCase {
             assert(false, "No button has the title \"\(title)\"")
         }
     }
-
 }
