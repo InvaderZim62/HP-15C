@@ -4,6 +4,13 @@
 //
 //  Created by Phil Stern on 8/3/24.
 //
+//  Test cases:
+//  - test01FLabel
+//  - test02DropFBeforeLabel
+//  - test03FCausesRestart
+//  - test04F4Thru9Trig
+//  - test05F7Thru9Label
+//
 
 import XCTest
 @testable import RPCalculator
@@ -164,7 +171,152 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "TAN")
         XCTAssertEqual(cvc.program.currentInstructionCodeString, " 32 25", "Instruction codes are not correct")
     }
-
+    
+    // test f 4 thru 9 followed by SIN, COS, TAN
+    // verify:
+    // - f 4 SIN => SIN
+    // - f 5 SIN => SIN
+    // - f 6 SIN => SIN
+    // - f 7 SIN => SIN
+    // - f 8 SIN => SIN
+    // - f 9 SIN => SIN
+    //
+    // - f 4 COS => f 4 COS
+    // - f 5 COS => f 5 COS
+    // - f 6 COS => f 6 COS
+    // - f 7 COS => COS
+    // - f 8 COS => COS
+    // - f 9 COS => COS
+    //
+    // - f 4 TAN => f 4 TAN
+    // - f 5 TAN => f 5 TAN
+    // - f 6 TAN => f 6 TAN
+    // - f 7 TAN => f 7 TAN
+    // - f 8 TAN => f 8 TAN
+    // - f 9 TAN => f 9 TAN
+    func test04F4Thru9Trig() {
+        startNewProgram()
+        // f 4 SIN => SIN
+        pressButton(title: "f")
+        pressButton(title: "4")
+        pressButton(title: "SIN")
+        XCTAssertEqual(cvc.program.currentInstruction, "001-    23", "Instruction is not correct")
+        // f 5 SIN => SIN
+        pressButton(title: "f")
+        pressButton(title: "5")
+        pressButton(title: "SIN")
+        // currentInstructionCodeString doesn't include line number, to allow easier cut-and-paste
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    23", "Instruction codes are not correct")
+        // f 6 SIN => SIN
+        pressButton(title: "f")
+        pressButton(title: "6")
+        pressButton(title: "SIN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    23", "Instruction codes are not correct")
+        // f 7 SIN => SIN
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "SIN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    23", "Instruction codes are not correct")
+        // f 8 SIN => SIN
+        pressButton(title: "f")
+        pressButton(title: "8")
+        pressButton(title: "SIN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    23", "Instruction codes are not correct")
+        // f 9 SIN => SIN
+        pressButton(title: "f")
+        pressButton(title: "9")
+        pressButton(title: "SIN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    23", "Instruction codes are not correct")
+        
+        // f 4 COS => f 4 COS
+        pressButton(title: "f")
+        pressButton(title: "4")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 4,24", "Instruction codes are not correct")
+        // f 5 COS => f 5 COS
+        pressButton(title: "f")
+        pressButton(title: "5")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 5,24", "Instruction codes are not correct")
+        // f 6 COS => f 6 COS
+        pressButton(title: "f")
+        pressButton(title: "6")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 6,24", "Instruction codes are not correct")
+        // f 7 COS => COS
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    24", "Instruction codes are not correct")
+        // f 8 COS => COS
+        pressButton(title: "f")
+        pressButton(title: "8")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    24", "Instruction codes are not correct")
+        // f 9 COS => COS
+        pressButton(title: "f")
+        pressButton(title: "9")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    24", "Instruction codes are not correct")
+        
+        // f 4 TAN => f 4 TAN
+        pressButton(title: "f")
+        pressButton(title: "4")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 4,25", "Instruction codes are not correct")
+        // f 5 TAN => f 5 TAN
+        pressButton(title: "f")
+        pressButton(title: "5")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 5,25", "Instruction codes are not correct")
+        // f 6 TAN => f 6 TAN
+        pressButton(title: "f")
+        pressButton(title: "6")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 6,25", "Instruction codes are not correct")
+        // f 7 TAN => f 7 TAN
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 7,25", "Instruction codes are not correct")
+        // f 8 TAN => f 8 TAN
+        pressButton(title: "f")
+        pressButton(title: "8")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 8,25", "Instruction codes are not correct")
+        // f 9 TAN => f 9 TAN
+        pressButton(title: "f")
+        pressButton(title: "9")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "42, 9,25", "Instruction codes are not correct")
+    }
+    
+    // test f 7 thru 9 followed by A - E
+    // verify:
+    // - f 7 A => A
+    // - f 8 B => B
+    // - f 9 C => C
+    func test05F7Thru9Label() {
+        startNewProgram()
+        // f 7 A => A
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "√x")
+        XCTAssertEqual(cvc.program.currentInstruction, "001-    11", "Instruction is not correct")
+        // f 8 B => B
+        pressButton(title: "f")
+        pressButton(title: "8")
+        pressButton(title: "ex")
+        // currentInstructionCodeString doesn't include line number, to allow easier cut-and-paste
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    12", "Instruction codes are not correct")
+        // f 9 C => C
+        pressButton(title: "f")
+        pressButton(title: "9")
+        pressButton(title: "10x")
+        // currentInstructionCodeString doesn't include line number, to allow easier cut-and-paste
+        XCTAssertEqual(cvc.program.currentInstructionCodeString, "    13", "Instruction codes are not correct")
+    }
+    
     // MARK: - Utilities
 
     func startNewProgram() {

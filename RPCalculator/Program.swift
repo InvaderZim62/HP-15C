@@ -350,6 +350,9 @@ class Program: Codable {
             if prefix == "f" {
                 // f-label entered - use GSB-label, instead (per HP-15C)
                 instructionCodes = [Program.keycodes["GSB"]!]
+            } else if prefix == "f7" || prefix == "f8" || prefix == "f9" {
+                // clear previous instructions
+                instructionCodes = []
             }
             // instruction complete
             instructionCodes.append(Program.keycodes[buttonLabel]!)
