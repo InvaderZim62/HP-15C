@@ -9,10 +9,12 @@
 //
 //  Test cases:
 //  - test01Basic
-//  - test02RectangularToPolar
-//  - test03PolarToRectangular
-//  - test04HourToHourMinSec
-//  - test05HoursMinSecToHours
+//  - test02ConsecutivePrefixes
+//  - test03ConsecutivePrefixes
+//  - test04RectangularToPolar
+//  - test05PolarToRectangular
+//  - test06HourToHourMinSec
+//  - test07HoursMinSecToHours
 //
 
 import XCTest
@@ -53,10 +55,52 @@ class CalculatorUnitTests: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 10)
     }
     
+    // test last prefix entered is used, if consecutive prefixes entered
+    // verify: 5 RCL STO 1 stores 5 in register 1 (ie. STO overrides RCL)
+    func test02ConsecutivePrefixes() {
+        // STO 8 in register 1
+        pressButton(title: "8")
+        pressButton(title: "STO")
+        pressButton(title: "1")
+        // 5 RCL STO 1
+        pressButton(title: "5")
+        pressButton(title: "RCL")  // set prefix to RCL
+        pressButton(title: "STO")  // reset prefix to STO
+        pressButton(title: "1")  // store 5 to register 1
+        // RCL 1
+        pressButton(title: "RCL")
+        pressButton(title: "1")
+        XCTAssertEqual(cvc.displayStringNumber, 5.0000, "Register 1 is not correct")
+    }
+    
+    // test last prefix entered is used, if consecutive prefixes entered
+    // verify: 5 GTO CHS 00 STO .1 stores 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
+    func test03ConsecutivePrefixes() {
+        // STO 8 in register .1
+        pressButton(title: "8")
+        pressButton(title: "STO")
+        pressButton(title: "·")  // button label is not a period
+        pressButton(title: "1")
+        // 5 GTO CHS 00 STO .1
+        pressButton(title: "5")
+        pressButton(title: "GTO")  // set prefix to GTO (start of GTO-CHS-nnn)
+        pressButton(title: "CHS")  // set prefix to CHS
+        pressButton(title: "0")
+        pressButton(title: "0")
+        pressButton(title: "STO")  // reset prefix to STO
+        pressButton(title: "·")
+        pressButton(title: "1")  // store 5 to register .1
+        // RCL .1
+        pressButton(title: "RCL")
+        pressButton(title: "·")
+        pressButton(title: "1")
+        XCTAssertEqual(cvc.displayStringNumber, 5.0000, "Register 1 is not correct")
+    }
+
     // test conversion from rectangular to polar coordinates
     // definitions: y ENTER x →P, radius in display, angle in Y register
     // verify: 3 ENTER 4 →P = 5 x≷y 36.8699
-    func test02RectangularToPolar() {
+    func test04RectangularToPolar() {
         // set units to degrees
         pressButton(title: "g")
         pressButton(title: "7")  // g-7 = DEG
@@ -75,7 +119,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from polar to rectangular coordinates
     // definitions: angle ENTER radius →R, x in display, y in Y register
     // verify: 30 ENTER 1 →R = 0.8660 x≷y 0.5000
-    func test03PolarToRectangular() {
+    func test05PolarToRectangular() {
         // set units to degrees
         pressButton(title: "g")
         pressButton(title: "7")  // g-7 = DEG
@@ -95,7 +139,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from decimal hours to hours.minutesSeconds
     // results: H.MMSS.SSSSS
     // verify 1.2345 →H.MS = 1.14042 (1 hr, 14 min, 4.2 sec)
-    func test04HourToHourMinSec() {
+    func test06HourToHourMinSec() {
         // show 5 significant figures
         pressButton(title: "f")
         pressButton(title: "7")  // f-7 = FIX
@@ -120,7 +164,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from hours.minutesSeconds to decimal hours
     // results: H.HHHHH
     // verify 10.30 (10 hr, 30 min) →H = 10.5 hours
-    func test05HoursMinSecToHours() {
+    func test07HoursMinSecToHours() {
         // 10.30 →H
         pressButton(title: "1")
         pressButton(title: "0")

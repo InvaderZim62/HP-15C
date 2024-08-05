@@ -8,7 +8,7 @@
 //  https://masilotti.com/ui-testing-cheat-sheet/
 //
 //  To add unit test capability:
-//  - Select: File | New | Target... | Test | UI Testing Bundle
+//  - select: File | New | Target... | Test | UI Testing Bundle
 //  - other test files can be added to the unit test project, if they import XCTest
 //    and subclass XCTestCase
 //
@@ -16,20 +16,18 @@
 //  - to prevent unit test from hanging in the simulator (stuck on showing "testing..."):
 //    select: Test navigator (command 6) | PRCalculator (Autocreated) | Tests | PRCalculatorUITests | Options...
 //    uncheck: Execute in parallel (if possible) | Save
-//  - test cases are run in alphabetic order
+//  - test cases are run in alphabetical order
 //  - UI test cases don't have access to application variables (just labels, buttons, table
 //    entries,... that appear on screen)
 //  - verifying results below required adding a clear-colored label to the app, that is kept in
-//    sync with displayString (hidden label doesn't work)
+//    sync with displayString (clear, since hidden label doesn't work)
 //
 //  Test cases:
 //  - test01ButtonExists
 //  - test02Arithmetic
-//  - test03ConsecutivePrefixes
-//  - test04ConsecutivePrefixes
-//  - test05ComplexMode
-//  - test06Programming
-//  - test07GTO
+//  - test03ComplexMode
+//  - test04Programming
+//  - test05GTO
 //
 
 import XCTest
@@ -77,56 +75,6 @@ final class RPCalculatorUITests: XCTestCase {
         XCTAssert(label.exists, "Display should show 10.0000")
     }
     
-    // test last prefix entered is used, if consecutive prefixes entered
-    // verify: 5 RCL STO 1 stores 5 in register 1 (ie. STO overrides RCL)
-    func test03ConsecutivePrefixes() {
-        // setup
-        app.buttons["8"].tapElement()  // store 8 in register 1 first, to verify it gets overwritten
-        app.buttons["STO"].tapElement()
-        app.buttons["1"].tapElement()
-        // test
-        app.buttons["5"].tapElement()
-        app.buttons["RCL"].tapElement()  // set prefix to RCL
-        app.buttons["STO"].tapElement()  // reset prefix to STO
-        app.buttons["1"].tapElement()  // store 5 to register 1
-        // breakdown
-        app.buttons["7"].tapElement()
-        app.buttons["E N T E R"].tapElement()  // overwrite display to 7
-        // results
-        app.buttons["RCL"].tapElement()
-        app.buttons["1"].tapElement()  // display register 1
-        label = app.staticTexts["5.0000"]
-        XCTAssert(label.exists, "Register 1 should contain 5.0000")
-    }
-    
-    // test last prefix entered is used, if consecutive prefixes entered
-    // verify: 5 GTO CHS 00 STO .1 stores 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
-    func test04ConsecutivePrefixes() {
-        // setup
-        app.buttons["8"].tapElement()  // store 8 in register .1 first, to verify it gets overwritten
-        app.buttons["STO"].tapElement()
-        app.buttons["·"].tapElement()  // button label is not a period
-        app.buttons["1"].tapElement()
-        // test
-        app.buttons["5"].tapElement()
-        app.buttons["GTO"].tapElement()  // set prefix to GTO (start of GTO-CHS-nnn)
-        app.buttons["CHS"].tapElement()  // set prefix to CHS
-        app.buttons["0"].tapElement()
-        app.buttons["0"].tapElement()
-        app.buttons["STO"].tapElement()  // reset prefix to STO
-        app.buttons["·"].tapElement()
-        app.buttons["1"].tapElement()  // store 5 to register .1
-        // breakdown
-        app.buttons["7"].tapElement()
-        app.buttons["E N T E R"].tapElement()  // overwrite display to 7
-        // results
-        app.buttons["RCL"].tapElement()
-        app.buttons["·"].tapElement()
-        app.buttons["1"].tapElement()  // display register .1
-        label = app.staticTexts["5.0000"]
-        XCTAssert(label.exists, "Register .1 should contain 5.0000")
-    }
-    
     // test manipulation of complex numbers
     // verify:
     //   (1 + 2i) + (3 + 4i) = 4 + 6i
@@ -134,7 +82,7 @@ final class RPCalculatorUITests: XCTestCase {
     //   f-(i) shows imaginary part of complex number
     //   f-Re≷Im swaps real and imaginary parts of complex number in display
     // note: complex number operations are included in ComplexUnitTests
-    func test05ComplexMode() {
+    func test03ComplexMode() {
         // enter 1 + 2i
         app.buttons["1"].tapElement()
         app.buttons["E N T E R"].tapElement()
@@ -182,7 +130,7 @@ final class RPCalculatorUITests: XCTestCase {
     //   RTN (returns to line after GSB 0)
     //
     // verify: 5 LBL A = 5.2
-    func test06Programming() {
+    func test04Programming() {
         // enter program mode
         app.buttons["g"].tapElement()
         app.buttons["R/S"].tapElement()
@@ -258,7 +206,7 @@ final class RPCalculatorUITests: XCTestCase {
     //   GTO CHS 004 in program mode goes to line number 004
     //   GTO CHS 014 cause "Error 4" (goto non-existent line number)
     // note: must be run after previous test, which included 13 lines
-    func test07GTO() {
+    func test05GTO() {
         // GTO CHS 014 (past end of program)
         app.buttons["GTO"].tapElement()
         app.buttons["CHS"].tapElement()
