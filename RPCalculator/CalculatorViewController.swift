@@ -1473,6 +1473,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             program.runFrom(label: label) {
                 DispatchQueue.main.async {
                     self.isProgramRunning = false
+                    if self.userIsEnteringDigits { self.endDisplayEntry() }  // move display to X register
                     self.updateDisplayString()
                 }
             }

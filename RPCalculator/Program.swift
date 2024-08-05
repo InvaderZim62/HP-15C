@@ -364,6 +364,10 @@ class Program: Codable {
                 prefix += buttonTitle
                 instructionCodes = []
                 gotoLineNumberDigits = []
+            } else {
+                // instruction complete
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
+                return insertedInstruction
             }
         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
             if prefix == "GTOCHS" {  // non-programmable
