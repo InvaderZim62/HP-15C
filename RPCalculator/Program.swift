@@ -75,7 +75,7 @@ class Program: Codable {
         "R/S": "31", "GSB": "32",  "R↓": "33", "x≷y": "34",   "←": "35", "E\nN\nT\nE\nR": "36", "1": " 1", "2": " 2",  "3": " 3", "–": "30",
          "ON": "41",   "f": "42",   "g": "43", "STO": "44", "RCL": "45",                        "0": " 0", ".": "48", "Σ+": "49", "+": "40"]
 
-    // inverse of keycodes dictionary
+    // inverse of keycodes dictionary [key-code: button title]
     static let buttonTitles = Dictionary(uniqueKeysWithValues: keycodes.map({ ($1, $0) }))
 
     // these prefixes can be followed by A-E, (i), or I; if "f" appears in-between,
@@ -262,18 +262,18 @@ class Program: Codable {
     // all digit, operation, stack manipulation, and prefix buttons are automatically sent here,
     // so they have to be handled here, if they are non-programmable
 
-    func buildInstructionWith(_ buttonLabel: String) -> String? {
+    func buildInstructionWith(_ buttonTitle: String) -> String? {
         // first check for cases like: GTO-f-A, STO-f-B, f-÷-f-C (SOLVE C), f-FIX-f-I...
         // and remove the extra "f": GTO-A, STO-B, f-4-C, f-FIX-I...
-        switch buttonLabel {
+        switch buttonTitle {
         case "√x", "ex", "10x", "yx", "1/x", "COS", "TAN":
             // label A-E, (i), or I entered
             if let suffixes = Program.allowableSuffixes[prefix] {
-                if suffixes.contains(buttonLabel) {
+                if suffixes.contains(buttonTitle) {
                     // remove "f" or "g" and add label, (i), or I (ex. GTO-f-label => GTO-label)
                     instructionCodes.removeLast()
                     // instruction complete
-                    instructionCodes.append(Program.keycodes[buttonLabel]!)
+                    instructionCodes.append(Program.keycodes[buttonTitle]!)
                     return insertedInstruction
                 }
             }
@@ -288,7 +288,7 @@ class Program: Codable {
             instructionCodes = [Program.keycodes[prefix]!]
         }
 
-        switch buttonLabel {
+        switch buttonTitle {
         case "f", "g":
             // any time "f" of "g" is entered (except following GTO, GSB, f-4,...), the program instruction starts over;
             // if "f" or "g" follows GTO, GSB, f-4,..., add it for now, in case it's followed by a label (check above);
@@ -296,20 +296,20 @@ class Program: Codable {
             switch prefix {
             case _ where specialPrefixes.contains(prefix):
                 // compound prefix (GTOf, GSBf, f4f,...)
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                prefix += buttonTitle
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
             default:
                 // start the program instruction over with "f"
-                prefix = buttonLabel
-                instructionCodes = [Program.keycodes[buttonLabel]!]
+                prefix = buttonTitle
+                instructionCodes = [Program.keycodes[buttonTitle]!]
             }
         case "GTO", "GSB", "STO", "RCL":  // pws: what about STO .1 or RCL .1 ?
             if prefix == "f" || prefix == "g" {
-                if buttonLabel == "GTO" {
+                if buttonTitle == "GTO" {
                     // compound prefix (HYP or HYP-1)
-                    prefix += buttonLabel
-                    instructionCodes.append(Program.keycodes[buttonLabel]!)
-                } else if buttonLabel == "RCL" {
+                    prefix += buttonTitle
+                    instructionCodes.append(Program.keycodes[buttonTitle]!)
+                } else if buttonTitle == "RCL" {
                     if prefix == "f" {
                         // USER (non-programable)
                         // pws: TBD toggle USER mode
@@ -319,24 +319,24 @@ class Program: Codable {
                     }
                 } else {
                     // instruction complete
-                    instructionCodes.append(Program.keycodes[buttonLabel]!)
+                    instructionCodes.append(Program.keycodes[buttonTitle]!)
                     return insertedInstruction
                 }
             } else if (prefix == "f4" || prefix == "f5" || prefix == "f6" ||
-                       prefix == "f7" || prefix == "f8" || prefix == "f9") && buttonLabel == "GTO" {
+                       prefix == "f7" || prefix == "f8" || prefix == "f9") && buttonTitle == "GTO" {
                 // non-programmable (f-FIX-GTO, f-SCI-GTO, f-ENG-GTO)
                 prefix = ""
             } else {
                 // start the program instruction over with the latest one
-                prefix = buttonLabel
-                instructionCodes = [Program.keycodes[buttonLabel]!]
+                prefix = buttonTitle
+                instructionCodes = [Program.keycodes[buttonTitle]!]
             }
         case "SST":
             switch prefix {
             case "f":
                 // compound prefix (LBL)
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                prefix += buttonTitle
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
             case "g":
                 // return previous line (BST)
                 return backStep()  // non-programmable
@@ -356,19 +356,19 @@ class Program: Codable {
                 instructionCodes = []
             }
             // instruction complete
-            instructionCodes.append(Program.keycodes[buttonLabel]!)
+            instructionCodes.append(Program.keycodes[buttonTitle]!)
             return insertedInstruction
         case "CHS":
             if prefix == "GTO" {  // non-programmable
                 // compound prefix
-                prefix += buttonLabel
+                prefix += buttonTitle
                 instructionCodes = []
                 gotoLineNumberDigits = []
             }
         case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
             if prefix == "GTOCHS" {  // non-programmable
                 // add buttonLabel to gotoLineNumber
-                gotoLineNumberDigits.append(Int(buttonLabel)!)
+                gotoLineNumberDigits.append(Int(buttonTitle)!)
                 if gotoLineNumberDigits.count == 3 {
                     // all goto line number received
                     prefix = ""
@@ -382,42 +382,42 @@ class Program: Codable {
                         return currentInstruction
                     }
                 }
-            } else if prefix == "f" && (buttonLabel == "4" || buttonLabel == "5" || buttonLabel == "6" || buttonLabel == "7" || buttonLabel == "8" || buttonLabel == "9") {
+            } else if prefix == "f" && (buttonTitle == "4" || buttonTitle == "5" || buttonTitle == "6" || buttonTitle == "7" || buttonTitle == "8" || buttonTitle == "9") {
                 // compound prefix (x≷, DSE, ISG, FIX, SCI, or ENG)
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
-            } else if prefix == "g" && (buttonLabel == "4" || buttonLabel == "5" || buttonLabel == "6") {
+                prefix += buttonTitle
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
+            } else if prefix == "g" && (buttonTitle == "4" || buttonTitle == "5" || buttonTitle == "6") {
                 // compound prefix (SF, CF, f?)
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                prefix += buttonTitle
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
             } else if prefix.last == "." {
                 // instruction complete (GTO .n, GSB .n, STO .n, STO + .n, RCL .n, RCL + .n, SOLVE .n, ∫xy .n, LBL . n)
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
                 return insertedInstruction
             } else {
                 // instruction complete
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
                 return insertedInstruction
             }
         case ".":
             switch prefix {
             case "GTO", "GSB", "STO", "STO+", "STO–", "STO×", "STO÷", "RCL", "RCL+", "RCL–", "RCL×", "RCL÷", "f4", "f÷", "f×", "fSST":
                 // compound prefix (GTO ., GSB ., ...)
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                prefix += buttonTitle
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
             default:
                 // instruction complete
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
                 return insertedInstruction
             }
         case "+", "–", "×", "÷":  // minus sign is an "EN DASH"
-            if prefix == "STO" || prefix == "RCL" || prefix == "f" && (buttonLabel == "×" || buttonLabel == "÷") {
+            if prefix == "STO" || prefix == "RCL" || prefix == "f" && (buttonTitle == "×" || buttonTitle == "÷") {
                 // compound prefix
-                prefix += buttonLabel
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                prefix += buttonTitle
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
             } else {
                 // instruction complete
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
                 return insertedInstruction
             }
         case "SIN":
@@ -430,7 +430,7 @@ class Program: Codable {
                 instructionCodes = []
             }
             // instruction complete
-            instructionCodes.append(Program.keycodes[buttonLabel]!)
+            instructionCodes.append(Program.keycodes[buttonTitle]!)
             return insertedInstruction
         case "COS":
             if prefix == "f" {
@@ -445,7 +445,7 @@ class Program: Codable {
                 instructionCodes = []
             }
             // instruction complete
-            instructionCodes.append(Program.keycodes[buttonLabel]!)
+            instructionCodes.append(Program.keycodes[buttonTitle]!)
             return insertedInstruction
         case "R↓":
             if prefix == "f" {
@@ -455,7 +455,7 @@ class Program: Codable {
                 return insertedInstruction  // returns line 000
             } else {
                 // instruction complete
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
                 return insertedInstruction
             }
         case "←":
@@ -468,7 +468,7 @@ class Program: Codable {
             case "g":
                 // CLX
                 // instruction complete
-                instructionCodes.append(Program.keycodes[buttonLabel]!)
+                instructionCodes.append(Program.keycodes[buttonTitle]!)
                 return insertedInstruction
             default:
                 // ex. PREFIX (non-programmable)
@@ -476,7 +476,7 @@ class Program: Codable {
             }
         default:
             // instruction complete
-            instructionCodes.append(Program.keycodes[buttonLabel]!)
+            instructionCodes.append(Program.keycodes[buttonTitle]!)
             return insertedInstruction
         }
         return nil  // continue adding instructionCodes
