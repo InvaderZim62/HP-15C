@@ -204,22 +204,22 @@ class Program: Codable {
     // instructions, as is.
     
     // SST     = SST      non-prog (fwd step)
-    // GTO     = GTO      prog if followed by A-E, 0-9, ".", I, CHS
+    // GTO     = GTO      prog if followed by 0-9, A-E, ".", I, CHS
     // GTO .   = GTO .    prog if followed by 0-9
     // GTO CHS = GTO CHS  non-prog if followed by nnn (goto nnn)
-    // GSB     = GSB      prog if followed by A-E, 0-9, ".", I
+    // GSB     = GSB      prog if followed by 0-9, A-E, ".", I
     // GSB .   = GSB .    prog if followed by 0-9
     // ←       = ←        non-prog (delete instruction)
     
-    // STO     = STO      prog if followed by A-E, 0-9, ".", (i), I
+    // STO     = STO      prog if followed by 0-9, A-E, ".", (i), I
     // STO .   = STO .    prog if followed by 0-9
-    // STO +   = STO +    prog if followed by A-E, 0-9, ".", (i), I
+    // STO +   = STO +    prog if followed by 0-9, A-E, ".", (i), I
     // STO + . = STO + .  prog if followed by 0-9
-    // STO –   = STO –    prog if followed by A-E, 0-9, ".", (i), I
+    // STO –   = STO –    prog if followed by 0-9, A-E, ".", (i), I
     // STO – . = STO – .  prog if followed by 0-9
-    // STO ×   = STO ×    prog if followed by A-E, 0-9, ".", (i), I
+    // STO ×   = STO ×    prog if followed by 0-9, A-E, ".", (i), I
     // STO × . = STO × .  prog if followed by 0-9
-    // STO ÷   = STO ÷    prog if followed by A-E, 0-9, ".", (i), I
+    // STO ÷   = STO ÷    prog if followed by 0-9, A-E, ".", (i), I
     // STO ÷ . = STO ÷ .  prog if followed by 0-9
     
     // RCL (same as above)
@@ -229,16 +229,16 @@ class Program: Codable {
     // f COS   = (i)      non-prog (no action - ignore)
     // f R↓    = PRGM     non-prog (clear instructions)
     // f ←     = PREFIX   non-prog (no action - ignore)
-    // f ÷     = SOLVE    prog if followed by A-E, 0-9, "."
+    // f ÷     = SOLVE    prog if followed by 0-9, A-E, "."
     // f ÷ .   = SOLVE .  prog if followed by 0-9
-    // f ×     = ∫xy      prog if followed by A-E, 0-9, "."
+    // f ×     = ∫xy      prog if followed by 0-9, A-E, "."
     // f × .   = ∫xy .    prog if followed by 0-9
-    // f SST   = LBL      prog if followed by A-E, 0-9, "."
+    // f SST   = LBL      prog if followed by 0-9, A-E, "."
     // f SST . = LBL .    prog if followed by 0-9
     // f 7     = FIX      prog if followed by 0-9, I
     // f 8     = SCI      prog if followed by 0-9, I
     // f 9     = ENG      prog if followed by 0-9, I
-    // f 4     = x≷       prog if followed by A-E, 0-9, (i), I
+    // f 4     = x≷       prog if followed by 0-9, A-E, (i), I
     // f 4 .   = x≷ .     prog if followed by 0-9
     // f 5     = DSE ?    prog if followed by 0-9, (i), I
     // f 6     = ISG ?    prog if followed by 0-9, (i), I
@@ -259,7 +259,7 @@ class Program: Codable {
     // some program buttons manipulate the program (SST, BST, ←, GTO-CHS, ...) and are not added to the
     // instructions (return nil); others are added to the instructions (R/S, RTN, GTO, ...);
     
-    // all digit, operation, stack manipulation, and prefix buttons are automatically send here,
+    // all digit, operation, stack manipulation, and prefix buttons are automatically sent here,
     // so they have to be handled here, if they are non-programmable
 
     func buildInstructionWith(_ buttonLabel: String) -> String? {
@@ -281,7 +281,7 @@ class Program: Codable {
             break
         }
         // after removing trailing f above, if still have any-f or any-g, start over
-        // with "f" or "g" ("any" is dropped), current buttonLabel added in next section
+        // with "f" or "g" (drop "any"), current buttonLabel added in next section
         if prefix.count > 1 && (prefix.last == "f" || prefix.last == "g") {
             prefix = String(prefix.last!)
             // start the program instruction over with "f" or "g"

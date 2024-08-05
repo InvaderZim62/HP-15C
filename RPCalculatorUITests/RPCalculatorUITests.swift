@@ -29,6 +29,7 @@
 //  - test04ConsecutivePrefixes
 //  - test05ComplexMode
 //  - test06Programming
+//  - test07GTO
 //
 
 import XCTest
@@ -72,12 +73,12 @@ final class RPCalculatorUITests: XCTestCase {
         app.buttons["E N T E R"].tapElement()
         app.buttons["2"].tapElement()
         app.buttons["×"].tapElement()
-        label = app.staticTexts["10.0000"]  // see if the expected result appears in any on-screen label (clear label)
+        label = app.staticTexts["10.0000"]  // see if the expected result appears in any on-screen label (ie. the .clear label)
         XCTAssert(label.exists, "Display should show 10.0000")
     }
     
     // test last prefix entered is used, if consecutive prefixes entered
-    // verify: 5 RCL STO 1 stores 5 in register 1 (RCL and STO are both prefixes)
+    // verify: 5 RCL STO 1 stores 5 in register 1 (ie. STO overrides RCL)
     func test03ConsecutivePrefixes() {
         // setup
         app.buttons["8"].tapElement()  // store 8 in register 1 first, to verify it gets overwritten
@@ -195,7 +196,7 @@ final class RPCalculatorUITests: XCTestCase {
         app.buttons["SST"].tapElement()
         app.buttons["√x"].tapElement()
         label = app.staticTexts["001-42,21,11"]
-        XCTAssert(label.exists, "Instruction for for LBL A should be '000-42,21,11'")
+        XCTAssert(label.exists, "Instruction for LBL A should be '000-42,21,11'")
         // 10 x
         app.buttons["1"].tapElement()
         app.buttons["0"].tapElement()
@@ -204,7 +205,7 @@ final class RPCalculatorUITests: XCTestCase {
         app.buttons["GSB"].tapElement()
         app.buttons["0"].tapElement()
         label = app.staticTexts["005-  32 0"]
-        XCTAssert(label.exists, "Instruction for for GSB 0 should be '005-  32 0'")
+        XCTAssert(label.exists, "Instruction for GSB 0 should be '005-  32 0'")
         // 10 ÷
         app.buttons["1"].tapElement()
         app.buttons["0"].tapElement()
@@ -213,13 +214,13 @@ final class RPCalculatorUITests: XCTestCase {
         app.buttons["g"].tapElement()
         app.buttons["GSB"].tapElement()
         label = app.staticTexts["009- 43 32"]
-        XCTAssert(label.exists, "Instruction for for RTN should be '009- 43 32'")
+        XCTAssert(label.exists, "Instruction for RTN should be '009- 43 32'")
         // LBL 0
         app.buttons["f"].tapElement()
         app.buttons["SST"].tapElement()
         app.buttons["0"].tapElement()
         label = app.staticTexts["010-42,21, 0"]
-        XCTAssert(label.exists, "Instruction for for LBL 0 should be '010-42,21, 0'")
+        XCTAssert(label.exists, "Instruction for LBL 0 should be '010-42,21, 0'")
         // 2 +
         app.buttons["2"].tapElement()
         app.buttons["+"].tapElement()
@@ -227,7 +228,7 @@ final class RPCalculatorUITests: XCTestCase {
         app.buttons["g"].tapElement()
         app.buttons["GSB"].tapElement()
         label = app.staticTexts["013- 43 32"]
-        XCTAssert(label.exists, "Instruction for for RTN should be '013- 43 32'")
+        XCTAssert(label.exists, "Instruction for RTN should be '013- 43 32'")
         // exit program mode
         app.buttons["g"].tapElement()
         app.buttons["R/S"].tapElement()
@@ -244,6 +245,68 @@ final class RPCalculatorUITests: XCTestCase {
         // verify program sitting at line 0
         label = app.staticTexts["000-"]
         XCTAssert(label.exists, "Instruction for final RTN should be '000-'")
+        // exit program mode
+        app.buttons["g"].tapElement()
+        app.buttons["R/S"].tapElement()
+    }
+    
+    // test GTO CHS nnn in and out of program mode (nnn is 3-digit line number)
+    // verify:
+    //   GTO CHS 014 in run mode displays "Error 4"
+    //   GTO CHS 013 in run mode goes to line number 013
+    //   SST         in program mode increments line number to line 000
+    //   GTO CHS 004 in program mode goes to line number 004
+    //   GTO CHS 014 cause "Error 4" (goto non-existent line number)
+    // note: must be run after previous test, which included 13 lines
+    func test07GTO() {
+        // GTO CHS 014 (past end of program)
+        app.buttons["GTO"].tapElement()
+        app.buttons["CHS"].tapElement()
+        app.buttons["0"].tapElement()
+        app.buttons["1"].tapElement()
+        app.buttons["4"].tapElement()
+        label = app.staticTexts["  Error  4"]
+        XCTAssert(label.exists, "Display should show '  Error  4'")
+        // clear error
+        app.buttons["←"].tapElement()  // any key will clear it
+        // GTO CHS 013 (last line of program)
+        app.buttons["GTO"].tapElement()
+        app.buttons["CHS"].tapElement()
+        app.buttons["0"].tapElement()
+        app.buttons["1"].tapElement()
+        app.buttons["3"].tapElement()
+        // verify no error
+        label = app.staticTexts["  Error  4"]
+        XCTAssert(!label.exists, "Display should not show '  Error  4'")
+        // enter program mode
+        app.buttons["g"].tapElement()
+        app.buttons["R/S"].tapElement()
+        // verify previous goto worked
+        label = app.staticTexts["013- 43 32"]  // RTN
+        XCTAssert(label.exists, "Instruction should be '013- 43 32'")
+        // SST - increment line number
+        app.buttons["SST"].tapElement()
+        // verify line 001 (ie. line 013 was last line)
+        label = app.staticTexts["000-"]
+        XCTAssert(label.exists, "Instruction should be '000-'")
+        // GTO CHS 004
+        app.buttons["GTO"].tapElement()
+        app.buttons["CHS"].tapElement()
+        app.buttons["0"].tapElement()
+        app.buttons["0"].tapElement()
+        app.buttons["4"].tapElement()
+        label = app.staticTexts["004-    20"]  // x
+        XCTAssert(label.exists, "Instruction should be '004-    20'")
+        // GTO CHS 014
+        app.buttons["GTO"].tapElement()
+        app.buttons["CHS"].tapElement()
+        app.buttons["0"].tapElement()
+        app.buttons["1"].tapElement()
+        app.buttons["4"].tapElement()
+        label = app.staticTexts["  Error  4"]
+        XCTAssert(label.exists, "Display should show '  Error  4'")
+        // clear error
+        app.buttons["1"].tapElement()  // any key will clear it
         // exit program mode
         app.buttons["g"].tapElement()
         app.buttons["R/S"].tapElement()
