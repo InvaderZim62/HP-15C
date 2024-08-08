@@ -1778,8 +1778,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @objc private func sstButtonReleased(_ button: UIButton) {
         button.removeTarget(nil, action: nil, for: .touchUpInside)
         displayString = saveDisplayString
-        program.runCurrentInstruction()
-        _ = program.forwardStep()
+        DispatchQueue.global(qos: .userInitiated).async {  // put on queue, or runCurrentInstruction DispatchQueue.main.sync causes an exception
+            self.program.runCurrentInstruction()
+            _ = self.program.forwardStep()
+        }
     }
     
     @objc private func bstButtonReleased(_ button: UIButton) {

@@ -584,8 +584,6 @@ class Program: Codable {
                 //---------------------
                 runCurrentInstruction()
                 //---------------------
-                // pws: issue - program continues to execute (increment line number, looping, or exiting)
-                // before instruction is implemented (button pressed)
                 if brain.error == .none {
                     _ = forwardStep()  // increment currentLineNumber
                 } else {
