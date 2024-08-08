@@ -45,6 +45,7 @@ import UIKit
 protocol ProgramDelegate: AnyObject {
     func prepStackForOperation()
     func setError(_ number: Int)
+    func test(_ number: Int) -> Bool
     var buttons: [UIButton]! { get }
     var isProgramRunning: Bool { get set }
     var useSimButton: Bool { get set }
@@ -197,6 +198,8 @@ class Program: Codable {
             instructions[index] = index.asThreeDigitString + "-" + codeStringFromInstruction(instructions[index])
         }
     }
+    
+    // MARK: - Create Program
 
     // Everything that says "prog if followed by..." is added to the instructions once the follow-up
     // keys are entered.  If another key is entered before the specified follow-up, the sequence is
@@ -415,7 +418,9 @@ class Program: Codable {
                 return insertedInstruction
             }
         case "+", "–", "×", "÷":  // minus sign is an "EN DASH"
-            if prefix == "STO" || prefix == "RCL" || prefix == "f" && (buttonTitle == "×" || buttonTitle == "÷") {
+            if prefix == "STO" || prefix == "RCL" ||
+                (prefix == "f" && (buttonTitle == "×" || buttonTitle == "÷")) ||
+                (prefix == "g" && buttonTitle == "–") {
                 // compound prefix
                 prefix += buttonTitle
                 instructionCodes.append(Program.keycodes[buttonTitle]!)
@@ -620,6 +625,12 @@ class Program: Codable {
                 delegate?.setError(4)  // label not found
             }
             semaphore.signal()
+        } else if let testNumber = testNumberIfCurrentInstructionIsTest {
+            // skip next line if test is true; go to next line if test is false
+            if delegate!.test(testNumber) {
+                _ = forwardStep()
+            }
+            _ = forwardStep()
         } else if isCurrentInstructionAReturn {
             // go to previous subroutine call or start of program
             currentLineNumber = returnToLineNumbers.popLast() ?? 0
@@ -682,10 +693,10 @@ class Program: Codable {
         isLabel(codes: currentInstructionCodes)
     }
 
-    // a label is contained in a single instruction with these codes:
-    // [42, 21, 11-15] = "f LBL A-E", or
-    // [42, 21, 1] = "f LBL 0-9]
-    // [42, 21, 48, 1] = "f LBL . 0-9]
+    // a label is a single instruction with one of these code sets:
+    // [42, 21, 11-15] = "f LBL A-E"
+    // [42, 21, 1] = "f LBL 0-9"
+    // [42, 21, 48, 1] = "f LBL . 0-9"
     func isLabel(codes: [Int]) -> Bool {
         guard !codes.isEmpty else { return false }
         return codes[0] == 42 && codes[1] == 21 && (
@@ -752,6 +763,47 @@ class Program: Codable {
     
     func isGoSub(codes: [Int]) -> Bool {
         codes[0] == 32
+    }
+    
+    // program skips next line if test is true, and goes to next line if test is false
+    var testNumberIfCurrentInstructionIsTest: Int? {
+        testNumberIfCodesAreTest(codes: currentInstructionCodes)
+    }
+    
+    // ex. g x≤y    = [43, 10]    => 10 (assign x≤y 10)
+    //     g x=0    = [43, 20]    => 11 (assign x=0 11)
+    //     g TEST 9 = [43, 30, 9] => 9
+    func testNumberIfCodesAreTest(codes: [Int]) -> Int? {
+        guard !codes.isEmpty else { return nil }
+        if codes[0] == 43 {
+            if codes.count == 2 {
+                if codes[1] == 10 {
+                    return 10
+                } else if codes[1] == 20 {
+                    return 11
+                } else {
+                    return nil
+                }
+            } else if codes.count == 3 && codes[1] == 30 && codes[2] >= 0 && codes[2] <= 9 {
+                return codes[2]
+            } else {
+                return nil
+            }
+        } else {
+            return nil
+        }
+    }
+    
+    // a test is a single instruction with one of these code sets:
+    // [43, 10] = "g x≤y"
+    // [43, 20] = "g x=0"
+    // [43, 30, 0-9] = "g TEST 0-9"
+    func isTest(codes: [Int]) -> Bool {
+        guard !codes.isEmpty else { return false }
+        return codes[0] == 43 && (
+            (codes.count == 2 && (codes[1] == 10 || codes[1] == 20)) ||
+            (codes.count == 3 && (codes[1] == 30 && codes[2] >= 0 && codes[2] <= 9))
+        )
     }
 
     var isCurrentInstructionAPause: Bool {

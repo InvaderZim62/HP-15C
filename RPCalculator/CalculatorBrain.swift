@@ -55,6 +55,10 @@ class CalculatorBrain: Codable {
         }
     }
     
+    var yRegister: Double {
+        realStack[2]
+    }
+    
     var angleConversion: Double {
         if isComplexMode && !isConvertingPolar {
             return 1.0  // HP-15C does all complex trig functions in radians, except conversions between rectangular and polar coordinates

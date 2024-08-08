@@ -83,6 +83,7 @@ enum Prefix: String {
     case HYP1 = "h"  // ex. g HYP1 SIN (inverse hyperbolic sine)
     case SF  // ex. g SF 8 (set flag 8 - enable complex mode)
     case CF  // ex. g CF 8 (clear flag 8 - disable complex mode)
+    case TEST  // ex. g TEST 5 (execute next program instruction if xRegister = yRegister)
     case STO  // ex. STO 0 (store display to register 0)
     case STO_DOT  // ex. STO . 0 (.0 - .9 are valid storage registers)
     case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
@@ -544,6 +545,37 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 updateDisplayString()
             }
             return true
+        }
+    }
+    
+    func test(_ number: Int) -> Bool {
+        switch number {
+        case 0:
+            return brain.xRegister! != 0
+        case 1:
+            return brain.xRegister! > 0
+        case 2:
+            return brain.xRegister! < 0
+        case 3:
+            return brain.xRegister! >= 0
+        case 4:
+            return brain.xRegister! <= 0
+        case 5:
+            return brain.xRegister! == brain.yRegister
+        case 6:
+            return brain.xRegister! != brain.yRegister
+        case 7:
+            return brain.xRegister! > brain.yRegister
+        case 8:
+            return brain.xRegister! < brain.yRegister
+        case 9:
+            return brain.xRegister! >= brain.yRegister
+        case 10:
+            return brain.xRegister! <= brain.yRegister
+        case 11:
+            return brain.xRegister! == 0
+        default:
+            return false
         }
     }
     
@@ -1244,8 +1276,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             //------------------
             updateDisplayString()
         case .g:
-            prefix = nil
-            print("TBD: TEST")
+            prefix = .TEST
         case .STO:
             prefix = .STO_SUB
         case .RCL:
@@ -1281,7 +1312,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func fButtonPressed(_ sender: UIButton) {
-//        guard handleButton(sender) != nil else { return }
         _ = handleButton(sender)
         
         if !isProgramRunning {
