@@ -975,8 +975,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 program.isAnyButtonPressed = false
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
                     if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
-                    program.runFromCurrentLine()
-                    isProgramRunning = false
+                    program.runFromCurrentLine() {
+                        DispatchQueue.main.async {
+                            self.isProgramRunning = false
+                            if self.userIsEnteringDigits { self.endDisplayEntry() }  // move display to X register
+                            self.updateDisplayString()
+                        }
+                    }
                 }
             }
         case .f:

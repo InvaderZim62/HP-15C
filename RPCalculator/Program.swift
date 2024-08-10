@@ -46,6 +46,7 @@ protocol ProgramDelegate: AnyObject {
     func prepStackForOperation()
     func setError(_ number: Int)
     func test(_ number: Int) -> Bool
+    func updateDisplayString()
     var buttons: [UIButton]! { get }
     var isProgramRunning: Bool { get set }
     var useSimButton: Bool { get set }
@@ -521,8 +522,7 @@ class Program: Codable {
     func runFrom(label: String, completion: @escaping () -> Void) {
         if gotoLabel(label) {
             // label found
-            runFromCurrentLine()
-            completion()
+            runFromCurrentLine(completion: completion)
         } else {
             delegate?.setError(4)  // label not found
         }
@@ -540,19 +540,21 @@ class Program: Codable {
     // - runFromCurrentLine may not be at a label when called (ex. if called after pause)
     // - if adding a new "else if" section, also add to runCurrentInstruction,
     //   since runFromCurrentLine isn't used for single-step mode (SST)
-    func runFromCurrentLine() {
+    func runFromCurrentLine(completion: @escaping () -> Void) {
         var isStopRunning = false
         while currentLineNumber > 0  && !isStopRunning {
             if isCurrentInstructionARunStop {
-                // stop running - increment line number
+                // stop running - increment line number and quit running
                 isStopRunning = isAnyButtonPressed
                 _ = forwardStep()
-                return
+                completion()
+                return  // pws: or chenge all the returns to exit while loop
             } else if let label = labelIfCurrentInstructionIsGoto {
                 // goto label (if found) and continue running
                 isStopRunning = isAnyButtonPressed
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
+                    completion()
                     return
                 }
             } else if let label = labelIfCurrentInstructionIsGoSub {
@@ -561,6 +563,7 @@ class Program: Codable {
                 returnToLineNumbers.append((currentLineNumber + 1) % instructions.count)
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
+                    completion()
                     return
                 }
             } else if isCurrentInstructionAReturn {
@@ -570,13 +573,22 @@ class Program: Codable {
             } else if isCurrentInstructionAPause {
                 // pause and continue, recursively
                 isStopRunning = isAnyButtonPressed
+                DispatchQueue.main.async {
+                    self.delegate?.isProgramRunning = false  // removes "running"
+                    // pws: potentially move next two lines to isProgramRunning setter for false
+//                    if self.userIsEnteringDigits { self.endDisplayEntry() }  // move display to X register
+                    self.delegate?.updateDisplayString()
+                }
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
-                    delegate?.isProgramRunning = true  // show "running" when continuing after pause
+                    DispatchQueue.main.async {
+                        self.delegate?.isProgramRunning = true  // show "running" when continuing after pause
+                    }
                     DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                         _ = forwardStep()
-                        runFromCurrentLine()
+                        runFromCurrentLine(completion: completion)
                     }
                 }
+                completion()
                 return  // stop and wait for pause to restart program
             } else {
                 // run instruction
@@ -592,6 +604,7 @@ class Program: Codable {
                 }
             }
         }
+        completion()
     }
 
     // called from either runFromCurrentLine (looping through several instructions) or during
@@ -624,11 +637,9 @@ class Program: Codable {
             }
             semaphore.signal()
         } else if let testNumber = testNumberIfCurrentInstructionIsTest {
-            // skip next line if test is true; go to next line if test is false
-            if delegate!.test(testNumber) {
-                _ = forwardStep()
-            }
-            _ = forwardStep()
+            // skip next line if test is false, else continue
+            if !delegate!.test(testNumber) { _ = forwardStep() }
+            semaphore.signal()
         } else if isCurrentInstructionAReturn {
             // go to previous subroutine call or start of program
             currentLineNumber = returnToLineNumbers.popLast() ?? 0
