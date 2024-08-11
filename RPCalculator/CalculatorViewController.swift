@@ -76,6 +76,7 @@ enum Prefix: String {
     case XSWAP  // ex. XSWAP 4 (swap X register with register 4)
     case XSWAP_DOT  // ex. XSWAP . 4 (swap X register with register .4)
     case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
+    case SOLVE_DOT  // ex. f SOLVE . 2 (solve for roots of equation starting at label .2)
     case FIX  // ex. f FIX 4 (format numbers in fixed-point with 4 decimal places)
     case SCI
     case ENG
@@ -1408,6 +1409,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = .GSB_DOT
         case .GTO:
             prefix = .GTO_DOT
+        case .SOLVE:
+            prefix = .SOLVE_DOT
         case .XSWAP:
             prefix = .XSWAP_DOT
         default:
@@ -1546,6 +1549,26 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .ENG:
             prefix = nil
             setDisplayFormatTo(.engineering(min(Int(buttonName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+        case .SOLVE:
+            prefix = nil
+            isProgramRunning = true
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                solve.findRootOfEquationAt(label: buttonName) {
+                    DispatchQueue.main.async {
+                        self.isProgramRunning = false
+                    }
+                }
+            }
+        case .SOLVE_DOT:
+            prefix = nil
+            isProgramRunning = true
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                solve.findRootOfEquationAt(label: "." + buttonName) {
+                    DispatchQueue.main.async {
+                        self.isProgramRunning = false
+                    }
+                }
+            }
         case .SF:
             prefix = nil
             if buttonName == "8" {  // flag 8 is complex mode
