@@ -46,7 +46,6 @@ protocol ProgramDelegate: AnyObject {
     func prepStackForOperation()
     func setError(_ number: Int)
     func test(_ number: Int) -> Bool
-    func updateDisplayString()
     var buttons: [UIButton]! { get }
     var isProgramRunning: Bool { get set }
     var useSimButton: Bool { get set }
@@ -575,9 +574,6 @@ class Program: Codable {
                 isStopRunning = isAnyButtonPressed
                 DispatchQueue.main.async {
                     self.delegate?.isProgramRunning = false  // removes "running"
-                    // pws: potentially move next two lines to isProgramRunning setter for false
-//                    if self.userIsEnteringDigits { self.endDisplayEntry() }  // move display to X register
-                    self.delegate?.updateDisplayString()
                 }
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                     DispatchQueue.main.async {

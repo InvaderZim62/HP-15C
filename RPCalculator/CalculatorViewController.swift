@@ -233,7 +233,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     var isProgramRunning = false {
         didSet {
-            if isProgramRunning { displayView.displayString = " Running" }  // send directly to displayView, else displayStringNumber fails
+            if isProgramRunning {
+                displayView.displayString = " Running"  // send directly to displayView, else displayStringNumber fails
+            } else {
+                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+                updateDisplayString()
+            }
         }
     }
 
@@ -616,7 +621,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 solve.findRootOfEquationAt(label: buttonName) {
                     DispatchQueue.main.async {
                         self.isProgramRunning = false
-                        self.updateDisplayString()
                     }
                 }
             }
@@ -986,8 +990,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     program.runFromCurrentLine() {
                         DispatchQueue.main.async {
                             self.isProgramRunning = false
-                            if self.userIsEnteringDigits { self.endDisplayEntry() }  // move display to X register
-                            self.updateDisplayString()
                         }
                     }
                 }
@@ -1516,8 +1518,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             program.runFrom(label: label) {
                 DispatchQueue.main.async {
                     self.isProgramRunning = false
-                    if self.userIsEnteringDigits { self.endDisplayEntry() }  // move display to X register
-                    self.updateDisplayString()
                 }
             }
         }
