@@ -12,6 +12,7 @@
 //  - test05F7Thru9Label
 //  - test06F4Thru6LabelTrig
 //  - test07ConditionalTest
+//  - test08RootSolving
 //
 
 import XCTest
@@ -446,6 +447,52 @@ class ProgramUnitTests: XCTestCase {
         let exp4 = expectation(description: "Wait for results to display")
         _ = XCTWaiter.wait(for: [exp4], timeout: 1.1 * Pause.time)
         XCTAssertEqual(cvc.displayString, "99.0000", "Display is not correct")
+    }
+
+    // test root solver (from p.182 User's Handbook)
+    // enter program:
+    //   LBL A
+    //   3
+    //   –
+    //   x
+    //   10
+    //   –
+    //   RTN
+    //
+    // verify: root = 5, with initial guesses of 0 and 10
+    func test08RootSolving() {
+        startNewProgram()
+        // LBL A
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "√x")
+        // 3 – x 10
+        pressButton(title: "3")
+        pressButton(title: "–")
+        pressButton(title: "×")
+        pressButton(title: "1")
+        pressButton(title: "0")
+        pressButton(title: "–")
+        // RTN
+        pressButton(title: "g")
+        pressButton(title: "GSB")
+        // end program
+        pressButton(title: "g")
+        pressButton(title: "R/S")
+        
+        // initial guesses of 0 and 10
+        pressButton(title: "0")
+        pressButton(title: "ENTER")
+        pressButton(title: "1")
+        pressButton(title: "0")
+        // SOLVE A
+        pressButton(title: "f")
+        pressButton(title: "÷")
+        pressButton(title: "√x")
+        // verify display = 5.0000
+        let exp1 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "5.0000", "Display is not correct")
     }
 
     // MARK: - Utilities
