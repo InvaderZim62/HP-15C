@@ -617,14 +617,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // LBL A-E - ignore in run mode
             break
         case .SOLVE:
-            isProgramRunning = true
-            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                solve.findRootOfEquationAt(label: buttonName) {
-                    DispatchQueue.main.async {
-                        self.isProgramRunning = false
-                    }
-                }
-            }
+            solveFrom(label: buttonName)
         case .GTO:
             if !program.gotoLabel(buttonName) {
                 setError(4)
@@ -1526,6 +1519,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
+    private func solveFrom(label: String) {
+        isProgramRunning = true
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+            solve.findRootOfEquationAt(label: label) {
+                DispatchQueue.main.async {
+                    self.isProgramRunning = false
+                }
+            }
+        }
+    }
+    
     private func setDisplayFormatTo(_ format: DisplayFormat) {
         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
         displayFormat = format
@@ -1551,24 +1555,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             setDisplayFormatTo(.engineering(min(Int(buttonName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
         case .SOLVE:
             prefix = nil
-            isProgramRunning = true
-            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                solve.findRootOfEquationAt(label: buttonName) {
-                    DispatchQueue.main.async {
-                        self.isProgramRunning = false
-                    }
-                }
-            }
+            solveFrom(label: buttonName)
         case .SOLVE_DOT:
             prefix = nil
-            isProgramRunning = true
-            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
-                solve.findRootOfEquationAt(label: "." + buttonName) {
-                    DispatchQueue.main.async {
-                        self.isProgramRunning = false
-                    }
-                }
-            }
+            solveFrom(label: "." + buttonName)
         case .SF:
             prefix = nil
             if buttonName == "8" {  // flag 8 is complex mode
