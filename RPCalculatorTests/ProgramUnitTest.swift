@@ -11,6 +11,7 @@
 //  - test04F4Thru9Trig
 //  - test05F7Thru9Label
 //  - test06F4Thru6LabelTrig
+//  - test07ConditionalTest
 //
 
 import XCTest
@@ -27,6 +28,7 @@ class ProgramUnitTests: XCTestCase {
         cvc = storyboard.instantiateViewController(withIdentifier: "CVC") as? CalculatorViewController  // identifier added in Storyboard
         cvc.beginAppearanceTransition(true, animated: false)  // run lifecycle, connect outlets
         cvc.endAppearanceTransition()
+        continueAfterFailure = false  // stop existing test case from continuing after failure
     }
     
     override func tearDownWithError() throws {
@@ -365,6 +367,85 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "6")
         pressButton(title: "TAN")
         XCTAssertEqual(cvc.program.currentInstructionCodeString, "43, 6,25", "Instruction codes are not correct")
+    }
+    
+    //  n  test    n  test
+    //  -  -----   -  -----
+    //  0  x ≠ 0   6  x ≠ y
+    //  1  x > 0   7  x > y
+    //  2  x < 0   8  x < y
+    //  3  x ≥ 0   9  x ≥ y
+    //  4  x ≤ 0  10  x ≤ y
+    //  5  x = y  11  x = 0
+
+    // test conditional test, where true continues to next line, and false skips a line
+    // enter program:
+    //   LBL A
+    //   1
+    //   -
+    //   R/S
+    //   g TEST 1
+    //   GTO 1
+    //   99 ENTER
+    //
+    // verify: display counts down from initial value to zero, stopping at each number
+    func test07ConditionalTest() {
+        startNewProgram()
+        // LBL A
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "√x")
+        // 1 –
+        pressButton(title: "1")
+        pressButton(title: "–")
+        // R/S
+        pressButton(title: "R/S")
+        // TEST 1
+        pressButton(title: "g")
+        pressButton(title: "–")
+        pressButton(title: "1")
+        // GTO A (if true)
+        pressButton(title: "GTO")
+        pressButton(title: "√x")
+        // 99 ENTER (if false)
+        pressButton(title: "9")
+        pressButton(title: "9")
+        pressButton(title: "ENTER")
+        // end program
+        pressButton(title: "g")
+        pressButton(title: "R/S")
+        
+        // set display to 4 digits fixed
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "4")
+        // start with 3 in display
+        pressButton(title: "3")
+        // run from LBL A
+        pressButton(title: "f")
+        pressButton(title: "√x")
+        // verify display = 2.0000
+        let exp1 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "2.0000", "Display is not correct")
+        // continue
+        pressButton(title: "R/S")
+        // verify display = 1.0000
+        let exp2 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "1.0000", "Display is not correct")
+        // continue
+        pressButton(title: "R/S")
+        // verify display = 0.0000
+        let exp3 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp3], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "0.0000", "Display is not correct")
+        // continue
+        pressButton(title: "R/S")
+        // verify display = 99.0000
+        let exp4 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp4], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "99.0000", "Display is not correct")
     }
 
     // MARK: - Utilities

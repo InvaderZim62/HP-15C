@@ -16,6 +16,7 @@ final class BrainUnitTests: XCTestCase {
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         try? super.setUpWithError()
+        continueAfterFailure = false  // stop existing test case from continuing after failure
     }
 
     override func tearDownWithError() throws {

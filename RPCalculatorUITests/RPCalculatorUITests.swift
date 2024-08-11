@@ -22,6 +22,20 @@
 //  - verifying results below required adding a clear-colored label to the app, that is kept in
 //    sync with displayString (clear, since hidden label doesn't work)
 //
+//  UI test asserts:
+//    // button with title = "press" is on screen
+//    let window = app.windows.element(boundBy: 0)
+//    let element = app.buttons["press"]
+//    XCTAssert(window.frame.contains(element.frame))
+//
+//    // label with text = "Hello, world!" is on screen
+//    label = app.staticTexts["Hello, world!"]
+//    XCTAssert(label.exists, "Label should say 'Hello, world!'")
+//
+//    // delay before checking if label with text is on screen
+//    label = app.staticTexts["5.2"]
+//    XCTAssert(label.waitForExistence(timeout: 5), "Results should be 5.2")
+//
 //  Test cases:
 //  - test01ButtonExists
 //  - test02Arithmetic

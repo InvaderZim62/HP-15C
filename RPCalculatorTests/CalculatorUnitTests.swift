@@ -7,6 +7,14 @@
 //  Method for testing UIViewController obtained from:
 //  https://oliverpeate.com/testing-a-uiviewcontroller/
 //
+//  Unit test asserts:
+//    XCTAssertEqual(cvc.program.currentInstruction, "001- 32 11", "Instruction is not correct")
+//    XCTAssertTrue(cvc.liftStack, "STO key should enable stack lift")
+//
+//    // wait before continuing test
+//    let exp = expectation(description: "Wait for results to display")
+//    _ = XCTWaiter.wait(for: [exp], timeout: 1.5)
+//
 //  Test cases:
 //  - test01Basic
 //  - test02ConsecutivePrefixes
@@ -31,7 +39,8 @@ class CalculatorUnitTests: XCTestCase {
         cvc = storyboard.instantiateViewController(withIdentifier: "CVC") as? CalculatorViewController  // identifier added in Storyboard
         cvc.beginAppearanceTransition(true, animated: false)  // run lifecycle, connect outlets
         cvc.endAppearanceTransition()
-        
+        continueAfterFailure = false  // stop existing test case from continuing after failure
+
         // use this to set display format to 4 digit fixed width before each test
 //        pressButton(title: "f")
 //        pressButton(title: "7")  // f-7 = FIX

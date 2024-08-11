@@ -548,6 +548,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
+    //  n  test    n  test
+    //  -  -----   -  -----
+    //  0  x ≠ 0   6  x ≠ y
+    //  1  x > 0   7  x > y
+    //  2  x < 0   8  x < y
+    //  3  x ≥ 0   9  x ≥ y
+    //  4  x ≤ 0  10  x ≤ y
+    //  5  x = y  11  x = 0
     func test(_ number: Int) -> Bool {
         switch number {
         case 0:
