@@ -546,15 +546,13 @@ class Program: Codable {
                 // stop running - increment line number and quit running
                 isStopRunning = isAnyButtonPressed
                 _ = forwardStep()
-                completion()
-                return  // pws: or chenge all the returns to exit while loop
+                break  // exit while
             } else if let label = labelIfCurrentInstructionIsGoto {
                 // goto label (if found) and continue running
                 isStopRunning = isAnyButtonPressed
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
-                    completion()
-                    return
+                    break  // exit while
                 }
             } else if let label = labelIfCurrentInstructionIsGoSub {
                 // goto subroutine label and continue running, until return found, then return to instruction after go-sub
@@ -562,8 +560,7 @@ class Program: Codable {
                 returnToLineNumbers.append((currentLineNumber + 1) % instructions.count)
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
-                    completion()
-                    return
+                    break  // exit while
                 }
             } else if isCurrentInstructionAReturn {
                 // go to previous subroutine call and continue running, or to start of program and stop
@@ -584,8 +581,7 @@ class Program: Codable {
                         runFromCurrentLine(completion: completion)
                     }
                 }
-                completion()
-                return  // stop and wait for pause to restart program
+                break  // stop and wait for pause to restart program
             } else {
                 // run instruction
                 semaphore.wait()  // throttle calls, or foreground may get blocked
