@@ -554,45 +554,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
-    //  n  test    n  test
-    //  -  -----   -  -----
-    //  0  x ≠ 0   6  x ≠ y
-    //  1  x > 0   7  x > y
-    //  2  x < 0   8  x < y
-    //  3  x ≥ 0   9  x ≥ y
-    //  4  x ≤ 0  10  x ≤ y
-    //  5  x = y  11  x = 0
-    func test(_ number: Int) -> Bool {
-        switch number {
-        case 0:
-            return brain.xRegister! != 0
-        case 1:
-            return brain.xRegister! > 0
-        case 2:
-            return brain.xRegister! < 0
-        case 3:
-            return brain.xRegister! >= 0
-        case 4:
-            return brain.xRegister! <= 0
-        case 5:
-            return brain.xRegister! == brain.yRegister
-        case 6:
-            return brain.xRegister! != brain.yRegister
-        case 7:
-            return brain.xRegister! > brain.yRegister
-        case 8:
-            return brain.xRegister! < brain.yRegister
-        case 9:
-            return brain.xRegister! >= brain.yRegister
-        case 10:
-            return brain.xRegister! <= brain.yRegister
-        case 11:
-            return brain.xRegister! == 0
-        default:
-            return false
-        }
-    }
-    
     private func sendToProgram(_ buttonName: String) {
         if let instruction = program.buildInstructionWith(buttonName) {
             displayString = instruction
@@ -711,8 +672,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .f:
             prefix = .SOLVE
         case .g:
+            // "x≤y" doesn't do anything in run mode (handled by program)
             prefix = nil
-            print("TBD: x<=y")
+            endDisplayEntry()
+            updateDisplayString()
         case .STO:
             prefix = .STO_DIV
         case .RCL:
@@ -949,8 +912,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             print("TBD: integral")
         case .g:
+            // "x=0" doesn't do anything in run mode (handled by program)
             prefix = nil
-            print("TBD: x=0")
+            endDisplayEntry()
+            updateDisplayString()
         case .STO:
             prefix = .STO_MUL
         case .RCL:
@@ -1569,6 +1534,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if buttonName == "8" {  // flag 8 is complex mode
                 isComplexMode = false
             }
+        case .TEST:  // TEST n doesn't do anything in run mode (handled by program)
+            prefix = nil
+            endDisplayEntry()
+            updateDisplayString()
         case .GTO:
             prefix = nil
             if !program.gotoLabel(buttonName) {  // would only be here in non-program mode

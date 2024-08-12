@@ -45,7 +45,6 @@ import UIKit
 protocol ProgramDelegate: AnyObject {
     func prepStackForOperation()
     func setError(_ number: Int)
-    func test(_ number: Int) -> Bool
     var buttons: [UIButton]! { get }
     var isProgramRunning: Bool { get set }
     var useSimButton: Bool { get set }
@@ -110,6 +109,45 @@ class Program: Codable {
     ]
     
     let specialPrefixes = allowableSuffixes.keys.map { String($0.dropLast()) }
+    
+    //  n  test    n  test
+    //  -  -----   -  -----
+    //  0  x ≠ 0   6  x ≠ y
+    //  1  x > 0   7  x > y
+    //  2  x < 0   8  x < y
+    //  3  x ≥ 0   9  x ≥ y
+    //  4  x ≤ 0  10  x ≤ y
+    //  5  x = y  11  x = 0
+    func test(_ number: Int) -> Bool {
+        switch number {
+        case 0:
+            return brain.xRegister! != 0
+        case 1:
+            return brain.xRegister! > 0
+        case 2:
+            return brain.xRegister! < 0
+        case 3:
+            return brain.xRegister! >= 0
+        case 4:
+            return brain.xRegister! <= 0
+        case 5:
+            return brain.xRegister! == brain.yRegister
+        case 6:
+            return brain.xRegister! != brain.yRegister
+        case 7:
+            return brain.xRegister! > brain.yRegister
+        case 8:
+            return brain.xRegister! < brain.yRegister
+        case 9:
+            return brain.xRegister! >= brain.yRegister
+        case 10:
+            return brain.xRegister! <= brain.yRegister
+        case 11:
+            return brain.xRegister! == 0
+        default:
+            return false
+        }
+    }
 
     // MARK: - Codable
 
@@ -630,7 +668,7 @@ class Program: Codable {
             semaphore.signal()
         } else if let testNumber = testNumberIfCurrentInstructionIsTest {
             // skip next line if test is false, else continue
-            if !delegate!.test(testNumber) { _ = forwardStep() }
+            if !test(testNumber) { _ = forwardStep() }
             semaphore.signal()
         } else if isCurrentInstructionAReturn {
             // go to previous subroutine call or start of program
@@ -771,9 +809,10 @@ class Program: Codable {
         testNumberIfCodesAreTest(codes: currentInstructionCodes)
     }
     
-    // ex. g x≤y    = [43, 10]    => 10 (assign x≤y 10)
-    //     g x=0    = [43, 20]    => 11 (assign x=0 11)
+    // ex. g x≤y    = [43, 10]    => 10 (assign x≤y to test 10)
+    //     g x=0    = [43, 20]    => 11 (assign x=0 to test 11)
     //     g TEST 9 = [43, 30, 9] => 9
+    //     g TEST n = [43, 30, n] => n
     func testNumberIfCodesAreTest(codes: [Int]) -> Int? {
         guard !codes.isEmpty else { return nil }
         if codes[0] == 43 {
