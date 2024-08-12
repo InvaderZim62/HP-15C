@@ -1009,7 +1009,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = .GSB  // build-up to GSB n (run from label n)
         case .f:
             // Σ pressed
-            // from Handbook p.20: "Clears statistics storage registers, display, and
+            // from Owner's Handbook p.20: "Clears statistics storage registers, display, and
             // the memory stack (described in section 3)."
             prefix = nil
             brain.clearAll()  // pws: this clears too much
