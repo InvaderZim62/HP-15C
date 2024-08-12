@@ -470,7 +470,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="subtractButtonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="GlW-6j-fDh"/>
+                                                            <action selector="minusButtonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="GlW-6j-fDh"/>
                                                         </connections>
                                                     </button>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zAF-Do-b02">
@@ -481,7 +481,7 @@ R</string>
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="addButtonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="9KQ-Wa-VkG"/>
+                                                            <action selector="plusButtonPressed:" destination="BYZ-38-t0r" eventType="touchDown" id="9KQ-Wa-VkG"/>
                                                         </connections>
                                                     </button>
                                                 </subviews>

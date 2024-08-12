@@ -277,7 +277,7 @@ class CalculatorUnitTests: XCTestCase {
         case "3":
             cvc.threeButtonPressed(button)
         case "–":
-            cvc.subtractButtonPressed(button)
+            cvc.minusButtonPressed(button)
         case "f":
             cvc.fButtonPressed(button)
         case "g":
@@ -293,7 +293,7 @@ class CalculatorUnitTests: XCTestCase {
         case "Σ+":
             cvc.summationPlusButtonPressed(button)
         case "+":
-            cvc.addButtonPressed(button)
+            cvc.plusButtonPressed(button)
         case "ENTER":  // ENTER is written vertically on the button, but title is not used in enterButtonPressed(button)
             cvc.enterButtonPressed(button)
         default:

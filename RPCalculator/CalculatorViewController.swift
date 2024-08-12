@@ -1271,7 +1271,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
     }
     
-    @IBAction func subtractButtonPressed(_ sender: UIButton) {
+    @IBAction func minusButtonPressed(_ sender: UIButton) {
         guard let buttonName = handleButton(sender) else { return }
 
         switch prefix {
@@ -1430,7 +1430,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
-    @IBAction func addButtonPressed(_ sender: UIButton) {
+    @IBAction func plusButtonPressed(_ sender: UIButton) {
         guard let buttonName = handleButton(sender) else { return }
 
         switch prefix {
