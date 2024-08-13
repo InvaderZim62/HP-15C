@@ -84,6 +84,7 @@ enum Prefix: String {
     case HYP1 = "h"  // ex. g HYP1 SIN (inverse hyperbolic sine)
     case SF  // ex. g SF 8 (set flag 8 - enable complex mode)
     case CF  // ex. g CF 8 (clear flag 8 - disable complex mode)
+    case FQM  // ex. g F? 2 (test if flag 2 is set)
     case TEST  // ex. g TEST 5 (execute next program instruction if xRegister = yRegister)
     case STO  // ex. STO 0 (store display to register 0)
     case STO_DOT  // ex. STO . 0 (.0 - .9 are valid storage registers)
@@ -131,6 +132,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var isGettingDefaults = false
     var useSimButton = true  // true: call simulatePressingButton to play click sound; set false in program before issuing button action
     var gotoLineNumberDigits = [Int]()
+    var flags = [Bool](repeating: false, count: 8)
     
     // displayString is scientific, if 11 digits and ends in "-nn" or " nn"
     var isDisplayStringScientific: Bool {
@@ -345,6 +347,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             defaults.set(isComplexMode, forKey: "isComplexMode")
             defaults.set(isUserMode, forKey: "isUserMode")
             defaults.set(liftStack, forKey: "liftStack")
+            defaults.set(flags, forKey: "flags")
             saveProgram()
         }
     }
@@ -377,6 +380,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
         isUserMode = defaults.bool(forKey: "isUserMode")
         liftStack = defaults.bool(forKey: "liftStack")
+        flags = defaults.array(forKey: "flags") as? [Bool] ?? [Bool](repeating: false, count: 8)
         if let data = defaults.data(forKey: "program") {
             program = try! JSONDecoder().decode(Program.self, from: data)
         }
@@ -898,8 +902,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             print("TBD: ISG")
         }
         let gAction = {
-            self.prefix = nil
-            print("TBD: F?")
+            self.prefix = .FQM  // ex. F? 0-9
         }
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
     }
@@ -1128,8 +1131,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func enterButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         if restoreFromError() { return }
-        if isProgramRunning && sender.tag != 1 {
-            // user pressed button while program running
+        if (isProgramRunning || program.isProgramPaused) && sender.tag != 1 {
+            // user pressed button while program running or paused
             program.isAnyButtonPressed = true  // causes program to stop
             return
         }
@@ -1265,8 +1268,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @IBAction func onButtonPressed(_ sender: UIButton) {
         simulatePressingButton(sender)
         _ = restoreFromError()  // ON is the only key that finishes performing its function, if restoring from error
-        if isProgramRunning && sender.tag != 1 {
-            // user pressed button while program running
+        if (isProgramRunning || program.isProgramPaused) && sender.tag != 1 {
+            // user pressed button while program running or paused
             program.isAnyButtonPressed = true  // causes program to stop
         }
 
@@ -1433,8 +1436,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     private func handleButton(_ button: UIButton) -> String? {
         simulatePressingButton(button)
         if restoreFromError() { return nil }
-        if isProgramRunning && button.tag != 1 {
-            // user pressed button while program running
+        if (isProgramRunning || program.isProgramPaused) && button.tag != 1 {
+            // user pressed button while program running or paused
             program.isAnyButtonPressed = true  // causes program to stop
             return nil
         }
@@ -1526,15 +1529,30 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             solveFrom(label: "." + buttonName)
         case .SF:
             prefix = nil
-            if buttonName == "8" {  // flag 8 is complex mode
+            let number = Int(buttonName)!
+            switch number {
+            case 0...7:
+                flags[number] = true
+            case 8:
                 isComplexMode = true
+            case 9:
+                print("TBD: set blinking display")
+            default:
+                break
             }
         case .CF:
-            prefix = nil
-            if buttonName == "8" {  // flag 8 is complex mode
+            let number = Int(buttonName)!
+            switch number {
+            case 0...7:
+                flags[number] = false
+            case 8:
                 isComplexMode = false
+            case 9:
+                print("TBD: clear blinking display")
+            default:
+                break
             }
-        case .TEST:  // TEST n doesn't do anything in run mode (handled by program)
+        case .FQM, .TEST:  // F? n and TEST n don't do anything in run mode (handled by program)
             prefix = nil
             endDisplayEntry()
             updateDisplayString()

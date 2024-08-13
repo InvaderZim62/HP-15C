@@ -46,6 +46,7 @@ protocol ProgramDelegate: AnyObject {
     func prepStackForOperation()
     func setError(_ number: Int)
     var buttons: [UIButton]! { get }
+    var flags: [Bool] { get }
     var isProgramRunning: Bool { get set }
     var useSimButton: Bool { get set }
 }
@@ -64,6 +65,7 @@ class Program: Codable {
     var gotoLineNumberDigits = [Int]()
     var returnToLineNumbers = [Int]()
     let codeStart = "nnn-".index("nnn-".startIndex, offsetBy: 4)
+    var isProgramPaused = false
     var isAnyButtonPressed = false  // use to interrupt running of program
 
     // note: period is used (replaced in digitKeyPressed), instead of "MIDDLE-DOT" (actual key label);
@@ -82,7 +84,7 @@ class Program: Codable {
     // it gets removed (ex. GTO-f-A => GTO-A, f-4-f-I => f-4-I,...)
     static let allowableSuffixes: [String: [String]] = [
         //          A     B      C     D      E     (i)     I
-        "GTOf"  : ["√x", "ex", "10x", "yx", "1/x",        "TAN"],
+        "GTOf"  : ["√x", "ex", "10x", "yx", "1/x",        "TAN"],  // don't include buttons followed by numbers (ex. f FIX 4)
         "GSBf"  : ["√x", "ex", "10x", "yx", "1/x",        "TAN"],
         "STOf"  : ["√x", "ex", "10x", "yx", "1/x", "COS", "TAN"],
         "STO+f" : ["√x", "ex", "10x", "yx", "1/x", "COS", "TAN"],
@@ -578,8 +580,9 @@ class Program: Codable {
     // - if adding a new "else if" section, also add to runCurrentInstruction,
     //   since runFromCurrentLine isn't used for single-step mode (SST)
     func runFromCurrentLine(completion: @escaping () -> Void) {
-        var isStopRunning = false
-        while currentLineNumber > 0  && !isStopRunning {
+        var isStopRunning = isAnyButtonPressed
+        isProgramPaused = false
+        while currentLineNumber > 0 && !isStopRunning {
             if isCurrentInstructionARunStop {
                 // stop running - increment line number and quit running
                 isStopRunning = isAnyButtonPressed
@@ -590,7 +593,7 @@ class Program: Codable {
                 isStopRunning = isAnyButtonPressed
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
-                    break  // exit while
+                    break  // exit while, if error
                 }
             } else if let label = labelIfCurrentInstructionIsGoSub {
                 // goto subroutine label and continue running, until return found, then return to instruction after go-sub
@@ -598,7 +601,7 @@ class Program: Codable {
                 returnToLineNumbers.append((currentLineNumber + 1) % instructions.count)
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
-                    break  // exit while
+                    break  // exit while, if error
                 }
             } else if isCurrentInstructionAReturn {
                 // go to previous subroutine call and continue running, or to start of program and stop
@@ -607,12 +610,17 @@ class Program: Codable {
             } else if isCurrentInstructionAPause {
                 // pause and continue, recursively
                 isStopRunning = isAnyButtonPressed
+                // show results on display, pause, show "running", pause, continue running
                 DispatchQueue.main.async {
-                    self.delegate?.isProgramRunning = false  // removes "running"
+                    self.delegate?.isProgramRunning = false  // removes "running" from display
+                    self.isProgramPaused = true
                 }
                 DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
-                    DispatchQueue.main.async {
-                        self.delegate?.isProgramRunning = true  // show "running" when continuing after pause
+                    if !isAnyButtonPressed {
+                        DispatchQueue.main.async {
+                            self.delegate?.isProgramRunning = true  // show "running" when continuing after pause
+                            self.isProgramPaused = false
+                        }
                     }
                     DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
                         _ = forwardStep()
@@ -630,7 +638,7 @@ class Program: Codable {
                     _ = forwardStep()  // increment currentLineNumber
                 } else {
                     // error - stop running
-                    return
+                    return  // pws: should this be a break, like errors above?
                 }
             }
         }
@@ -669,6 +677,10 @@ class Program: Codable {
         } else if let testNumber = testNumberIfCurrentInstructionIsTest {
             // skip next line if test is false, else continue
             if !test(testNumber) { _ = forwardStep() }
+            semaphore.signal()
+        } else if let flagNumber = flagNumberIfCurrentInstructionIsFQM {
+            // skip next line if flag is false, else continue
+            if !delegate!.flags[flagNumber] { _ = forwardStep() }
             semaphore.signal()
         } else if isCurrentInstructionAReturn {
             // go to previous subroutine call or start of program
@@ -804,7 +816,7 @@ class Program: Codable {
         codes[0] == 32
     }
     
-    // program skips next line if test is true, and goes to next line if test is false
+    // program goes to next line if test is true, and skips to next line if test is false
     var testNumberIfCurrentInstructionIsTest: Int? {
         testNumberIfCodesAreTest(codes: currentInstructionCodes)
     }
@@ -834,16 +846,19 @@ class Program: Codable {
         }
     }
     
-    // a test is a single instruction with one of these code sets:
-    // [43, 10] = "g x≤y"
-    // [43, 20] = "g x=0"
-    // [43, 30, 0-9] = "g TEST 0-9"
-    func isTest(codes: [Int]) -> Bool {
-        guard !codes.isEmpty else { return false }
-        return codes[0] == 43 && (
-            (codes.count == 2 && (codes[1] == 10 || codes[1] == 20)) ||
-            (codes.count == 3 && (codes[1] == 30 && codes[2] >= 0 && codes[2] <= 9))
-        )
+    // program goes to next line if flag is true, and skips to next line if flag is false
+    var flagNumberIfCurrentInstructionIsFQM: Int? {
+        flagNumberIfCodesAreFQM(codes: currentInstructionCodes)
+    }
+    
+    // ex. g F? n   = [43, 6, n]  => n, where n = 0-7
+    func flagNumberIfCodesAreFQM(codes: [Int]) -> Int? {
+        guard !codes.isEmpty else { return nil }
+        if codes.count == 3 && codes[0] == 43 && codes[1] == 6 && codes[2] >= 0 && codes[2] <= 7 {
+            return codes[2]
+        } else {
+            return nil
+        }
     }
 
     var isCurrentInstructionAPause: Bool {
