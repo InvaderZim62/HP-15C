@@ -13,7 +13,8 @@
 //  - test06F4Thru6LabelTrig
 //  - test07ConditionalTest
 //  - test08ConditionalTest
-//  - test09RootSolving
+//  - test09ConditionalTest
+//  - test10RootSolving
 //
 
 import XCTest
@@ -528,6 +529,10 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "R/S")
         
         // setup
+        // set display to 4 digits fixed
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "4")
         // 2 STO 0
         pressButton(title: "2")
         pressButton(title: "STO")
@@ -577,6 +582,84 @@ class ProgramUnitTests: XCTestCase {
         _ = XCTWaiter.wait(for: [exp7], timeout: factor * Pause.time)
         XCTAssertEqual(cvc.displayString, "50.0000", "Display is not correct")
     }
+
+    // test flags, where true continues to next line, and false skips a line
+    // enter program:
+    //   LBL A
+    //   g F? 1
+    //   GTO .2
+    //   1 –
+    //   g RTN
+    //   LBL .2
+    //   1 +
+    //   g RTN
+    //
+    // verify: add one to display if flag 1 is set;
+    //         subtract 1 from display if flag is cleared
+    func test09ConditionalTest() {
+        startNewProgram()
+        // LBL A
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "√x")
+        // g F? 1
+        pressButton(title: "g")
+        pressButton(title: "6")
+        pressButton(title: "1")
+        // GTO .2
+        pressButton(title: "GTO")
+        pressButton(title: "·")
+        pressButton(title: "2")
+        // 1 –
+        pressButton(title: "1")
+        pressButton(title: "–")
+        // g RTN
+        pressButton(title: "g")
+        pressButton(title: "GSB")
+        // LBL .2
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "·")
+        pressButton(title: "2")
+        // 1 +
+        pressButton(title: "1")
+        pressButton(title: "+")
+        // g RTN
+        pressButton(title: "g")
+        pressButton(title: "GSB")
+        // end program
+        pressButton(title: "g")
+        pressButton(title: "R/S")
+        
+        // set display to 4 digits fixed
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "4")
+        // set flag 1
+        pressButton(title: "g")
+        pressButton(title: "4")
+        pressButton(title: "1")
+        // start with 3 in display
+        pressButton(title: "3")
+        // run from LBL A
+        pressButton(title: "f")
+        pressButton(title: "√x")
+        // verify display = 4
+        let exp1 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "4.0000", "Display is not correct")
+        // clear flag 1
+        pressButton(title: "g")
+        pressButton(title: "5")
+        pressButton(title: "1")
+        // run from LBL A
+        pressButton(title: "f")
+        pressButton(title: "√x")
+        // verify display = 3
+        let exp2 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "3.0000", "Display is not correct")
+    }
     
     // test root solver (from p.182 Owner's Handbook)
     // enter program:
@@ -589,7 +672,7 @@ class ProgramUnitTests: XCTestCase {
     //   RTN
     //
     // verify: root = 5, with initial guesses of 0 and 10
-    func test09RootSolving() {
+    func test10RootSolving() {
         startNewProgram()
         // LBL A
         pressButton(title: "f")
