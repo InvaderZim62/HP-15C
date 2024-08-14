@@ -13,8 +13,9 @@
 //  - test06F4Thru6LabelTrig
 //  - test07ConditionalTest
 //  - test08ConditionalTest
-//  - test09ConditionalTest
-//  - test10RootSolving
+//  - test09Flags
+//  - test10Flags
+//  - test11RootSolving
 //
 
 import XCTest
@@ -596,7 +597,7 @@ class ProgramUnitTests: XCTestCase {
     //
     // verify: add one to display if flag 1 is set;
     //         subtract 1 from display if flag is cleared
-    func test09ConditionalTest() {
+    func test09Flags() {
         startNewProgram()
         // LBL A
         pressButton(title: "f")
@@ -661,6 +662,143 @@ class ProgramUnitTests: XCTestCase {
         XCTAssertEqual(cvc.displayString, "3.0000", "Display is not correct")
     }
     
+    // test flags (from p.96 Owner's Handbook)
+    // enter program:
+    //   LBL B
+    //   g CF 0
+    //   GTO 1
+    //   f LBL E
+    //   g SF 0
+    //   f LBL 1
+    //   STO 1
+    //   1 +
+    //   x≷y
+    //   CHS
+    //   yx
+    //   CHS
+    //   1 +
+    //   RCL ÷ 1
+    //   ×
+    //   g F? 0
+    //   g RTN
+    //   RCL 1
+    //   1 + x
+    //   g RTN
+    // setup:
+    //   250 ENTER 48 ENTER .005
+    // verify: result of running from LBL B is 10698.3049
+    //         result of running from LBL E is 10645.0795
+    func test10Flags() {
+        startNewProgram()
+        // LBL B
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "ex")
+        // g CF 0
+        pressButton(title: "g")
+        pressButton(title: "5")
+        pressButton(title: "0")
+        // GTO 1
+        pressButton(title: "GTO")
+        pressButton(title: "1")
+        // f LBL E
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "1/x")
+        // g SF 0
+        pressButton(title: "g")
+        pressButton(title: "4")
+        pressButton(title: "0")
+        // f LBL 1
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "1")
+        // STO 1
+        pressButton(title: "STO")
+        pressButton(title: "1")
+        // 1 +
+        pressButton(title: "1")
+        pressButton(title: "+")
+        // x≷y
+        pressButton(title: "x≷y")
+        // CHS
+        pressButton(title: "CHS")
+        // yx
+        pressButton(title: "yx")
+        // CHS
+        pressButton(title: "CHS")
+        // 1 +
+        pressButton(title: "1")
+        pressButton(title: "+")
+        // RCL ÷ 1
+        pressButton(title: "RCL")
+        pressButton(title: "÷")
+        pressButton(title: "1")
+        // x
+        pressButton(title: "×")
+        // g F? 0
+        pressButton(title: "g")
+        pressButton(title: "6")
+        pressButton(title: "0")
+        // g RTN
+        pressButton(title: "g")
+        pressButton(title: "GSB")
+        // RCL 1
+        pressButton(title: "RCL")
+        pressButton(title: "1")
+        // 1 + x
+        pressButton(title: "1")
+        pressButton(title: "+")
+        pressButton(title: "×")
+        // g RTN
+        pressButton(title: "g")
+        pressButton(title: "GSB")
+        // end program
+        pressButton(title: "g")
+        pressButton(title: "R/S")
+        
+        // setup
+        setupTest10()
+        // run from LBL B
+        pressButton(title: "f")
+        pressButton(title: "ex")
+        // verify display = 10698.3049
+        let exp1 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "10698.3048", "Display is not correct")  // s/b 10698.3049 (close enough)
+        
+        // setup
+        setupTest10()
+        // run from LBL E
+        pressButton(title: "f")
+        pressButton(title: "1/x")
+        // verify display = 10645.0795
+        let exp2 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.time)
+        XCTAssertEqual(cvc.displayString, "10645.0794", "Display is not correct")  // s/b 10645.0795 (close enough)
+    }
+    
+    func setupTest10() {
+        // set display to 4 digits fixed
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "4")
+        // 250 ENTER
+        pressButton(title: "2")
+        pressButton(title: "5")
+        pressButton(title: "0")
+        pressButton(title: "ENTER")
+        // 48 ENTER
+        pressButton(title: "4")
+        pressButton(title: "8")
+        pressButton(title: "ENTER")
+        // .005
+        pressButton(title: "·")
+        pressButton(title: "0")
+        pressButton(title: "0")
+        pressButton(title: "5")
+    }
+
     // test root solver (from p.182 Owner's Handbook)
     // enter program:
     //   LBL A
@@ -672,7 +810,7 @@ class ProgramUnitTests: XCTestCase {
     //   RTN
     //
     // verify: root = 5, with initial guesses of 0 and 10
-    func test10RootSolving() {
+    func test11RootSolving() {
         startNewProgram()
         // LBL A
         pressButton(title: "f")
