@@ -178,10 +178,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     var prefix: Prefix? {
         didSet {
-            if !isProgramRunning {  // program runs on background queue (can't update alpha)
-                fLabel.alpha = 0  // use alpha, instead of isHidden, to maintain stackView layout
-                gLabel.alpha = 0
-            }
+            fLabel.alpha = 0  // use alpha, instead of isHidden, to maintain stackView layout
+            gLabel.alpha = 0
             switch prefix {
             case .f:
                 fLabel.alpha = 1  // show "f" on display
@@ -1289,19 +1287,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @IBAction func fButtonPressed(_ sender: UIButton) {
-        _ = handleButton(sender)
+        // if nil and !isProgramMode, user must have pressed a button while program running - return
+        guard handleButton(sender) != nil || isProgramMode else { return }
         
-        if !isProgramRunning {
-            prefix = .f  // don't set if program running, in case "f" was pressed to stop the program
-        }
+            prefix = .f
     }
     
     @IBAction func gButtonPressed(_ sender: UIButton) {
-        _ = handleButton(sender)
-
-        if !isProgramRunning {
-            prefix = .g  // set here, even if program mode, for use in g-R/S (P/R)
-        }
+        // if nil and !isProgramMode, user must have pressed a button while program running - return
+        guard handleButton(sender) != nil || isProgramMode else { return }
+        
+            prefix = .g
     }
     
     @IBAction func stoButtonPressed(_ sender: UIButton) {
@@ -1541,6 +1537,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 break
             }
         case .CF:
+            prefix = nil
             let number = Int(buttonName)!
             switch number {
             case 0...7:
