@@ -110,7 +110,7 @@ class CalculatorBrain: Codable {
         }
     }
 
-    private var storageRegisters = [String: Double]()  // [register name: number]
+    private var storageRegisters = [String: Double]()  // [register name: number], where register name = "0" - "9", ".0" - ".9"
 
     // MARK: - Codable
 

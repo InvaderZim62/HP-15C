@@ -150,6 +150,33 @@ class Program: Codable {
             return false
         }
     }
+    
+    // using control number (ccccc.tttii) from storage resister
+    // apply increment (ii) to counter (ccccc)
+    // return true, if target (ttt) met
+    // store updated control number (uuuuu.tttii) in register
+    func loop(isDSE: Bool, registerName: String) -> Bool {
+        let controlNumber = brain.recallNumberFromStorageRegister(registerName)  // ccccc.tttii
+        let counter = Int(controlNumber)  // ccccc
+        let xyDecimals = controlNumber - Double(counter)  // 0.tttii
+        let shifted = xyDecimals * 1000  // ttt.ii
+        let target = Int(shifted)  // xxx
+        let yDecimals = shifted - Double(target)  // 0.ii
+        var increment = Int(round(yDecimals * 100))  // ii
+        if increment == 0 { increment = 1 }  // can't be 0
+        var newCounter: Int
+        var isLoop: Bool
+        if isDSE {
+            newCounter = counter - increment
+            isLoop = newCounter <= target
+        } else {  // else ISG
+            newCounter = counter + increment
+            isLoop = newCounter > target
+        }
+        let updatedControlNumber = Double(newCounter) + xyDecimals
+        brain.storeResultInRegister(registerName, result: updatedControlNumber)
+        return isLoop
+    }
 
     // MARK: - Codable
 
@@ -272,6 +299,8 @@ class Program: Codable {
     // f COS   = (i)      non-prog (no action - ignore)
     // f R↓    = PRGM     non-prog (clear instructions)
     // f ←     = PREFIX   non-prog (no action - ignore)
+    // f 5     = DSE      prog if followed by 0-9, ".", (i), I
+    // f 6     = ISG      prog if followed by 0-9, ".", (i), I
     // f ÷     = SOLVE    prog if followed by 0-9, A-E, "."
     // f ÷ .   = SOLVE .  prog if followed by 0-9
     // f ×     = ∫xy      prog if followed by 0-9, A-E, "."
@@ -678,9 +707,17 @@ class Program: Codable {
             // skip next line if test is false, else continue
             if !test(testNumber) { _ = forwardStep() }
             semaphore.signal()
-        } else if let flagNumber = flagNumberIfCurrentInstructionIsFQM {
+        } else if let flagNumber = flagNumberIfCurrentInstructionIsFQM {  // F Question Mark (F?)
             // skip next line if flag is false, else continue
             if !delegate!.flags[flagNumber] { _ = forwardStep() }
+            semaphore.signal()
+        } else if let registerName = storageRegisterNameIfCurrentInstructionIsDSE {
+            // skip next line if loop control is true, else continue
+            if loop(isDSE: true, registerName: registerName) { _ = forwardStep() }
+            semaphore.signal()
+        } else if let registerName = storageRegisterNameIfCurrentInstructionIsISG {
+            // skip next line if loop control is true, else continue
+            if loop(isDSE: false, registerName: registerName) { _ = forwardStep() }
             semaphore.signal()
         } else if isCurrentInstructionAReturn {
             // go to previous subroutine call or start of program
@@ -776,7 +813,8 @@ class Program: Codable {
     
     // ex. GTO A  = [22, 11]    => "√x" (A)
     //     GTO 1  = [22, 1]     => " 1"
-    //     GTO .1 = [22, 48, 1] => ".1"
+    //     GTO .1 = [22, 48, 1] => ".1"  note: HP-15C codes for this are [22, .1], but this app codes the dot separately
+    //     GTO I  = [22, 25]    => TBD  pws
     var labelIfCurrentInstructionIsGoto: String? {
         if isGoto(codes: currentInstructionCodes) {
             var labelString = ""
@@ -797,7 +835,7 @@ class Program: Codable {
     
     // ex. GSB A  = [32, 11]    => "√x" (A)
     //     GSB 1  = [32, 1]     => " 1"
-    //     GSB .1 = [32, 48, 1] => ".1"
+    //     GSB .1 = [32, 48, 1] => ".1"  note: HP-15C codes for this are [32, .1], but this app codes the dot separately
     var labelIfCurrentInstructionIsGoSub: String? {
         if isGoSub(codes: currentInstructionCodes) {
             var labelString = ""
@@ -816,6 +854,36 @@ class Program: Codable {
         codes[0] == 32
     }
     
+    // ex. f DSE 1  = [42, 5, 1]     => " 1"
+    //     f DSE .1 = [42, 5, 48, 1] => ".1"  note: HP-15C codes for this are [42, 5, .1], but this app codes the dot separately
+    var storageRegisterNameIfCurrentInstructionIsDSE: String? {
+        if currentInstructionCodes[0] == 42 && currentInstructionCodes[1] == 5 {
+            return storageRegisterNameFromCodes(currentInstructionCodes)
+        } else {
+            return nil
+        }
+    }
+    
+    // ex. f ISG 1  = [42, 6, 1]     => " 1"
+    //     f ISG .1 = [42, 6, 48, 1] => ".1"  note: HP-15C codes for this are [42, 5, .1], but this app codes the dot separately
+    var storageRegisterNameIfCurrentInstructionIsISG: String? {
+        if currentInstructionCodes[0] == 42 && currentInstructionCodes[1] == 6 {
+            return storageRegisterNameFromCodes(currentInstructionCodes)
+        } else {
+            return nil
+        }
+    }
+    
+    func storageRegisterNameFromCodes(_ codes: [Int]) -> String? {
+        var registerName = ""
+        if codes[2] == 48 {
+            registerName = ".\(codes[3])"
+        } else {
+            registerName = Program.buttonTitles[String(format: "%2d", codes[2])]!
+        }
+        return registerName
+    }
+
     // program goes to next line if test is true, and skips to next line if test is false
     var testNumberIfCurrentInstructionIsTest: Int? {
         testNumberIfCodesAreTest(codes: currentInstructionCodes)
