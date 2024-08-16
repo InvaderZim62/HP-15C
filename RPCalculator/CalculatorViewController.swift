@@ -1582,14 +1582,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             swapDisplayWithRegister(buttonName)
         case .XSWAP_DOT:
             prefix = nil
-            swapDisplayWithRegister("DOT" + buttonName)
+            swapDisplayWithRegister("." + buttonName)
         case .STO:
             prefix = nil
             storeDisplayToRegister(buttonName)
             liftStack = true
         case .STO_DOT:
             prefix = nil
-            storeDisplayToRegister("DOT" + buttonName)
+            storeDisplayToRegister("." + buttonName)
             liftStack = true
         case .RCL:
             prefix = nil
@@ -1597,7 +1597,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             liftStack = true
         case .RCL_DOT:
             prefix = nil
-            recallRegister("DOT" + buttonName)
+            recallRegister("." + buttonName)
             liftStack = true
         case .STO_ADD:
             prefix = nil

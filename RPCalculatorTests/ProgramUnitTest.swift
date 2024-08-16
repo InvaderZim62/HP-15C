@@ -16,7 +16,8 @@
 //  - test09Flags
 //  - test10Flags
 //  - test11DSE
-//  - test12RootSolving
+//  - test12ISG
+//  - test13RootSolving
 //
 
 import XCTest
@@ -838,32 +839,117 @@ class ProgramUnitTests: XCTestCase {
         // run from LBL A
         pressButton(title: "f")
         pressButton(title: "√x")
-        // verify display = 10.0
         let factor = 2.0  // found by trial and error
-        // verify display = 10.0
+        // verify display = 10
         let exp0 = expectation(description: "Wait for results to display")
         _ = XCTWaiter.wait(for: [exp0], timeout: factor * Pause.time)
         XCTAssertEqual(cvc.displayString, "10.0000", "Display is not correct")
-        // verify display = 9.0
+        // verify display = 9
         let exp1 = expectation(description: "Wait for results to display")
         _ = XCTWaiter.wait(for: [exp1], timeout: factor * Pause.time)
         XCTAssertEqual(cvc.displayString, "9.0000", "Display is not correct")
-        // verify display = 8.0
+        // verify display = 8
         let exp2 = expectation(description: "Wait for results to display")
         _ = XCTWaiter.wait(for: [exp2], timeout: factor * Pause.time)
         XCTAssertEqual(cvc.displayString, "8.0000", "Display is not correct")
-        // verify display = 7.0
+        // verify display = 7
         let exp3 = expectation(description: "Wait for results to display")
         _ = XCTWaiter.wait(for: [exp3], timeout: factor * Pause.time)
         XCTAssertEqual(cvc.displayString, "7.0000", "Display is not correct")
-        // verify display = 6.0
+        // verify display = 6
         let exp4 = expectation(description: "Wait for results to display")
         _ = XCTWaiter.wait(for: [exp4], timeout: factor * Pause.time)
         XCTAssertEqual(cvc.displayString, "6.0000", "Display is not correct")
-        // verify display = 5.0
+        // verify display = 5
         let exp5 = expectation(description: "Wait for results to display")
         _ = XCTWaiter.wait(for: [exp5], timeout: factor * Pause.time)
         XCTAssertEqual(cvc.displayString, "5.0000", "Display is not correct")
+    }
+    
+    // test ISG (increment loop control)
+    // enter program:
+    //   LBL A
+    //   f PSE
+    //   1 +
+    //   f DSE .3  <- use loop counter in storage register .3
+    //   GTO A
+    //   g RTN
+    // setup:
+    //   0.00401 STO .3  <- loop counter starts at 0 and counts up by 1, until reaching 4 (ccccc.tttii)
+    //   5
+    // verify: display counts down from 5 to 10
+    func test12ISG() {
+        startNewProgram()
+        // LBL A
+        pressButton(title: "f")
+        pressButton(title: "SST")
+        pressButton(title: "√x")
+        // f PSE
+        pressButton(title: "f")
+        pressButton(title: "R/S")
+        // 1 +
+        pressButton(title: "1")
+        pressButton(title: "+")
+        // f ISG .3
+        pressButton(title: "f")
+        pressButton(title: "6")
+        pressButton(title: "·")
+        pressButton(title: "3")
+        // GTO A
+        pressButton(title: "GTO")
+        pressButton(title: "√x")
+        // g RTN
+        pressButton(title: "g")
+        pressButton(title: "GSB")
+        // end program
+        pressButton(title: "g")
+        pressButton(title: "R/S")
+
+        // setup
+        // set display to 4 digits fixed
+        pressButton(title: "f")
+        pressButton(title: "7")
+        pressButton(title: "4")
+        // 0.00401 STO .3
+        pressButton(title: "·")
+        pressButton(title: "0")
+        pressButton(title: "0")
+        pressButton(title: "4")
+        pressButton(title: "0")
+        pressButton(title: "1")
+        pressButton(title: "STO")
+        pressButton(title: "·")
+        pressButton(title: "3")
+        // 5
+        pressButton(title: "5")
+        // run from LBL A
+        pressButton(title: "f")
+        pressButton(title: "√x")
+        let factor = 2.0  // found by trial and error
+        // verify display = 5
+        let exp0 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp0], timeout: factor * Pause.time)
+        XCTAssertEqual(cvc.displayString, "5.0000", "Display is not correct")
+        // verify display = 6
+        let exp1 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp1], timeout: factor * Pause.time)
+        XCTAssertEqual(cvc.displayString, "6.0000", "Display is not correct")
+        // verify display = 7
+        let exp2 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp2], timeout: factor * Pause.time)
+        XCTAssertEqual(cvc.displayString, "7.0000", "Display is not correct")
+        // verify display = 8
+        let exp3 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp3], timeout: factor * Pause.time)
+        XCTAssertEqual(cvc.displayString, "8.0000", "Display is not correct")
+        // verify display = 9
+        let exp4 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp4], timeout: factor * Pause.time)
+        XCTAssertEqual(cvc.displayString, "9.0000", "Display is not correct")
+        // verify display = 10
+        let exp5 = expectation(description: "Wait for results to display")
+        _ = XCTWaiter.wait(for: [exp5], timeout: factor * Pause.time)
+        XCTAssertEqual(cvc.displayString, "10.0000", "Display is not correct")
     }
 
     // test root solver (from p.182 Owner's Handbook)
@@ -877,7 +963,7 @@ class ProgramUnitTests: XCTestCase {
     //   RTN
     //
     // verify: root = 5, with initial guesses of 0 and 10
-    func test12RootSolving() {
+    func test13RootSolving() {
         startNewProgram()
         // LBL A
         pressButton(title: "f")

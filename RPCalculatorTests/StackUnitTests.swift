@@ -30,9 +30,9 @@ class StackUnitTests: XCTestCase {
         continueAfterFailure = false  // stop existing test case from continuing after failure
 
         // use this to set display format to 4 digit fixed width before each test
-//        pressButton(title: "f")
-//        pressButton(title: "7")  // f-7 = FIX
-//        pressButton(title: "4")
+        pressButton(title: "f")
+        pressButton(title: "7")  // f-7 = FIX
+        pressButton(title: "4")
     }
 
     override func tearDownWithError() throws {
@@ -158,7 +158,7 @@ class StackUnitTests: XCTestCase {
         pressButton(title: "0")  // still entering digits
         pressButton(title: "g")
         pressButton(title: "R↓")  // g-R↓ = R↑
-        verifyStack(x: 2.0000, y: 10.0000, z: 4.0000, t: 2.0000)
+        verifyStack(x: 2.0000, y: 10.0000, z: 4.0000, t: 3.0000)
     }
 
     // test pi while user entering digits

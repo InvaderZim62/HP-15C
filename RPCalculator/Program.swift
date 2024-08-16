@@ -467,7 +467,7 @@ class Program: Codable {
                 prefix += buttonTitle
                 instructionCodes.append(Program.keycodes[buttonTitle]!)
             } else if prefix.last == "." {
-                // instruction complete (GTO .n, GSB .n, STO .n, STO + .n, RCL .n, RCL + .n, SOLVE .n, ∫xy .n, LBL . n)
+                // instruction complete (GTO .n, GSB .n, STO .n, STO + .n, RCL .n, RCL + .n, SOLVE .n, ∫xy .n, LBL . n, DSE .n, ISG .n))
                 instructionCodes.append(Program.keycodes[buttonTitle]!)
                 return insertedInstruction
             } else {
@@ -477,7 +477,7 @@ class Program: Codable {
             }
         case ".":
             switch prefix {
-            case "GTO", "GSB", "STO", "STO+", "STO–", "STO×", "STO÷", "RCL", "RCL+", "RCL–", "RCL×", "RCL÷", "f4", "f÷", "f×", "fSST":
+            case "GTO", "GSB", "STO", "STO+", "STO–", "STO×", "STO÷", "RCL", "RCL+", "RCL–", "RCL×", "RCL÷", "f4", "f5", "f6", "f÷", "f×", "fSST":
                 // compound prefix (GTO ., GSB ., ...)
                 prefix += buttonTitle
                 instructionCodes.append(Program.keycodes[buttonTitle]!)

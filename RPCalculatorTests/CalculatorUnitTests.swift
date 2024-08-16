@@ -16,13 +16,14 @@
 //    _ = XCTWaiter.wait(for: [exp], timeout: 1.5)
 //
 //  Test cases:
-//  - test01Basic
-//  - test02ConsecutivePrefixes
+//  - test01BasicArithmetic
+//  - test02StorageRegisters
 //  - test03ConsecutivePrefixes
-//  - test04RectangularToPolar
-//  - test05PolarToRectangular
-//  - test06HourToHourMinSec
-//  - test07HoursMinSecToHours
+//  - test04ConsecutivePrefixes
+//  - test05RectangularToPolar
+//  - test06PolarToRectangular
+//  - test07HourToHourMinSec
+//  - test08HoursMinSecToHours
 //
 
 import XCTest
@@ -56,7 +57,7 @@ class CalculatorUnitTests: XCTestCase {
     
     // test basic arithmetic
     // verify: 5 ENTER 2 x = 10
-    func test01Basic() {
+    func test01BasicArithmetic() {
         pressButton(title: "5")
         pressButton(title: "ENTER")
         pressButton(title: "2")
@@ -64,9 +65,54 @@ class CalculatorUnitTests: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 10)
     }
     
+    // test storage registers
+    // verify:
+    //   1 STO 0, RCL 0
+    //   2 STO 9, RCL 9
+    //   3 STO .0, RCL .0
+    //   4 STO .9, RCL .9
+    func test02StorageRegisters() {
+        // 1 STO 0
+        pressButton(title: "1")
+        pressButton(title: "STO")
+        pressButton(title: "0")
+        // RCL 0
+        pressButton(title: "RCL")
+        pressButton(title: "0")
+        XCTAssertEqual(cvc.displayStringNumber, 1, "Register 0 is not correct")
+        // 2 STO 9
+        pressButton(title: "2")
+        pressButton(title: "STO")
+        pressButton(title: "9")
+        // RCL 9
+        pressButton(title: "RCL")
+        pressButton(title: "9")
+        XCTAssertEqual(cvc.displayStringNumber, 2, "Register 9 is not correct")
+        // 3 STO .0
+        pressButton(title: "3")
+        pressButton(title: "STO")
+        pressButton(title: "·")
+        pressButton(title: "0")
+        // RCL .0
+        pressButton(title: "RCL")
+        pressButton(title: "·")
+        pressButton(title: "0")
+        XCTAssertEqual(cvc.displayStringNumber, 3, "Register .0 is not correct")
+        // 4 STO .9
+        pressButton(title: "4")
+        pressButton(title: "STO")
+        pressButton(title: "·")
+        pressButton(title: "9")
+        // RCL 0
+        pressButton(title: "RCL")
+        pressButton(title: "·")
+        pressButton(title: "9")
+        XCTAssertEqual(cvc.displayStringNumber, 4, "Register .9 is not correct")
+    }
+    
     // test last prefix entered is used, if consecutive prefixes entered
     // verify: 5 RCL STO 1 stores 5 in register 1 (ie. STO overrides RCL)
-    func test02ConsecutivePrefixes() {
+    func test03ConsecutivePrefixes() {
         // STO 8 in register 1
         pressButton(title: "8")
         pressButton(title: "STO")
@@ -79,12 +125,12 @@ class CalculatorUnitTests: XCTestCase {
         // RCL 1
         pressButton(title: "RCL")
         pressButton(title: "1")
-        XCTAssertEqual(cvc.displayStringNumber, 5.0000, "Register 1 is not correct")
+        XCTAssertEqual(cvc.displayStringNumber, 5, "Register 1 is not correct")
     }
     
     // test last prefix entered is used, if consecutive prefixes entered
     // verify: 5 GTO CHS 00 STO .1 stores 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
-    func test03ConsecutivePrefixes() {
+    func test04ConsecutivePrefixes() {
         // STO 8 in register .1
         pressButton(title: "8")
         pressButton(title: "STO")
@@ -103,13 +149,13 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "RCL")
         pressButton(title: "·")
         pressButton(title: "1")
-        XCTAssertEqual(cvc.displayStringNumber, 5.0000, "Register 1 is not correct")
+        XCTAssertEqual(cvc.displayStringNumber, 5, "Register 1 is not correct")
     }
 
     // test conversion from rectangular to polar coordinates
     // definitions: y ENTER x →P, radius in display, angle in Y register
     // verify: 3 ENTER 4 →P = 5 x≷y 36.8699
-    func test04RectangularToPolar() {
+    func test05RectangularToPolar() {
         // set units to degrees
         pressButton(title: "g")
         pressButton(title: "7")  // g-7 = DEG
@@ -128,7 +174,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from polar to rectangular coordinates
     // definitions: angle ENTER radius →R, x in display, y in Y register
     // verify: 30 ENTER 1 →R = 0.8660 x≷y 0.5000
-    func test05PolarToRectangular() {
+    func test06PolarToRectangular() {
         // set units to degrees
         pressButton(title: "g")
         pressButton(title: "7")  // g-7 = DEG
@@ -148,7 +194,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from decimal hours to hours.minutesSeconds
     // results: H.MMSS.SSSSS
     // verify 1.2345 →H.MS = 1.14042 (1 hr, 14 min, 4.2 sec)
-    func test06HourToHourMinSec() {
+    func test07HourToHourMinSec() {
         // show 5 significant figures
         pressButton(title: "f")
         pressButton(title: "7")  // f-7 = FIX
@@ -173,7 +219,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from hours.minutesSeconds to decimal hours
     // results: H.HHHHH
     // verify 10.30 (10 hr, 30 min) →H = 10.5 hours
-    func test07HoursMinSecToHours() {
+    func test08HoursMinSecToHours() {
         // 10.30 →H
         pressButton(title: "1")
         pressButton(title: "0")
@@ -211,15 +257,15 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "RCL")
         pressButton(title: "+")
         pressButton(title: "0")  // add register 0 to display (xRegister)
-        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        XCTAssertEqual(cvc.displayStringNumber, 4, "Stack is not correct")
         pressButton(title: "R↓")
-        XCTAssertEqual(cvc.displayStringNumber, 3.0000, "Stack is not correct")
+        XCTAssertEqual(cvc.displayStringNumber, 3, "Stack is not correct")
         pressButton(title: "R↓")
-        XCTAssertEqual(cvc.displayStringNumber, 2.0000, "Stack is not correct")
+        XCTAssertEqual(cvc.displayStringNumber, 2, "Stack is not correct")
         pressButton(title: "R↓")
-        XCTAssertEqual(cvc.displayStringNumber, 1.0000, "Stack is not correct")
+        XCTAssertEqual(cvc.displayStringNumber, 1, "Stack is not correct")
         pressButton(title: "R↓")
-        XCTAssertEqual(cvc.displayStringNumber, 4.0000, "Stack is not correct")
+        XCTAssertEqual(cvc.displayStringNumber, 4, "Stack is not correct")
         XCTAssertTrue(cvc.liftStack, "Setup should leave stack lift enabled")
     }
 

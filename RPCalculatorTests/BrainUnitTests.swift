@@ -4,6 +4,10 @@
 //
 //  Created by Phil Stern on 7/25/24.
 //
+//  Test cases:
+//  - test01Trig
+//  - test02HyperbolicTrig
+//
 
 import XCTest
 @testable import RPCalculator
