@@ -14,7 +14,7 @@ import XCTest
 
 final class BrainUnitTests: XCTestCase {
     
-    let brain = CalculatorBrain()
+    let brain = Brain()
     var difference = 0.0
 
     override func setUpWithError() throws {

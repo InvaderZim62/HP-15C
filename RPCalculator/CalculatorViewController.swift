@@ -112,7 +112,7 @@ enum TrigUnits: String, Codable {
 
 class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate {
     
-    var brain = CalculatorBrain()
+    var brain = Brain()
     var program = Program()
     var solve = Solve()
     var clickSoundPlayer: AVAudioPlayer?
@@ -344,7 +344,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             defaults.set(gradLabel.text, forKey: "gradLabelText")
             defaults.setValue(displayLabelAlphas, forKey: "displayLabelAlphas")
             if let data = try? JSONEncoder().encode(brain) {
-                defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to CalculatorBrain.init and .encode
+                defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to Brain.init and .encode
             }
             defaults.set(isComplexMode, forKey: "isComplexMode")
             defaults.set(isUserMode, forKey: "isUserMode")
@@ -377,7 +377,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         prefix = nil  // prefix is lost after re-start
         isProgramMode = false  // don't re-start in program mode
         if let data = defaults.data(forKey: "brain") {
-            brain = try! JSONDecoder().decode(CalculatorBrain.self, from: data)
+            brain = try! JSONDecoder().decode(Brain.self, from: data)
         }
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
         isUserMode = defaults.bool(forKey: "isUserMode")

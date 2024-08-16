@@ -1,5 +1,5 @@
 //
-//  CalculatorBrain.swift
+//  Brain.swift
 //  RPCalculator
 //
 //  Created by Phil Stern on 2/5/21.
@@ -28,7 +28,7 @@ enum Error: Equatable, Codable {
     case none
 }
 
-class CalculatorBrain: Codable {
+class Brain: Codable {
     
     var trigUnits = TrigUnits.DEG
     var lastXRegister = 0.0

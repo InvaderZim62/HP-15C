@@ -16,7 +16,7 @@ class Solve {
     
     weak var delegate: SolveDelegate?
     
-    var brain: CalculatorBrain!
+    var brain: Brain!
     var program: Program!
     
     var solveLoopCount = 0

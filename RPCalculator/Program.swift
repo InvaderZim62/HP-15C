@@ -55,7 +55,7 @@ class Program: Codable {
     
     weak var delegate: ProgramDelegate?
     
-    var brain: CalculatorBrain!
+    var brain: Brain!
     
     let semaphore = DispatchSemaphore(value: 1)
     var instructions = [String]()

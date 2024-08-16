@@ -14,7 +14,7 @@
 		4AA20A6525CD0E2A00012341 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AA20A6325CD0E2A00012341 /* Main.storyboard */; };
 		4AA20A6725CD0E2B00012341 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4AA20A6625CD0E2B00012341 /* Assets.xcassets */; };
 		4AA20A6A25CD0E2B00012341 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AA20A6825CD0E2B00012341 /* LaunchScreen.storyboard */; };
-		4AA20A7625CDBBAF00012341 /* CalculatorBrain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A7525CDBBAF00012341 /* CalculatorBrain.swift */; };
+		4AA20A7625CDBBAF00012341 /* Brain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A7525CDBBAF00012341 /* Brain.swift */; };
 		4AA20A7A25CE5C1E00012341 /* ButtonCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A7925CE5C1E00012341 /* ButtonCoverView.swift */; };
 		4AA20A7D25CF6DC400012341 /* DisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A7C25CF6DC400012341 /* DisplayView.swift */; };
 		4AA20A8025CF84DB00012341 /* DigitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A7F25CF84DB00012341 /* DigitView.swift */; };
@@ -59,7 +59,7 @@
 		4AA20A6625CD0E2B00012341 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4AA20A6925CD0E2B00012341 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		4AA20A6B25CD0E2B00012341 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4AA20A7525CDBBAF00012341 /* CalculatorBrain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorBrain.swift; sourceTree = "<group>"; };
+		4AA20A7525CDBBAF00012341 /* Brain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brain.swift; sourceTree = "<group>"; };
 		4AA20A7925CE5C1E00012341 /* ButtonCoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonCoverView.swift; sourceTree = "<group>"; };
 		4AA20A7C25CF6DC400012341 /* DisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayView.swift; sourceTree = "<group>"; };
 		4AA20A7F25CF84DB00012341 /* DigitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitView.swift; sourceTree = "<group>"; };
@@ -131,7 +131,7 @@
 			children = (
 				4AA20A6325CD0E2A00012341 /* Main.storyboard */,
 				4AA20A6125CD0E2A00012341 /* CalculatorViewController.swift */,
-				4AA20A7525CDBBAF00012341 /* CalculatorBrain.swift */,
+				4AA20A7525CDBBAF00012341 /* Brain.swift */,
 				4AEBB0DA2C1CCD750000D2AF /* Program.swift */,
 				4A70BB5B2C346C51008EC0A6 /* Solve.swift */,
 				4AAA222F25E855C10035D219 /* DisplayFormat.swift */,
@@ -324,7 +324,7 @@
 				4AA20A7A25CE5C1E00012341 /* ButtonCoverView.swift in Sources */,
 				4AA20A7D25CF6DC400012341 /* DisplayView.swift in Sources */,
 				4AF8E86F25D895A500C52D10 /* CalculatorView.swift in Sources */,
-				4AA20A7625CDBBAF00012341 /* CalculatorBrain.swift in Sources */,
+				4AA20A7625CDBBAF00012341 /* Brain.swift in Sources */,
 				4AEBB0DB2C1CCD750000D2AF /* Program.swift in Sources */,
 				4A70BB5C2C346C51008EC0A6 /* Solve.swift in Sources */,
 				4AA20A8025CF84DB00012341 /* DigitView.swift in Sources */,
