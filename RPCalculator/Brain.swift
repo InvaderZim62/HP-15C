@@ -59,6 +59,21 @@ class Brain: Codable {
         realStack[2]
     }
     
+    // register name stored in the I register
+    //  0:  "0",  1:  "1",...  9:  "9"
+    // 10: ".0", 11: ".1",... 19: ".9"
+    // 20: "20", 21: "21",... 29: "29"
+    // ...
+    var iRegisterName: String {
+        let registerNumber = min(Int(abs(storageRegisters["I"]!)), 65)
+        switch registerNumber {
+        case 10...19:
+            return String(String(format: "%.1f", (Double(registerNumber) - 10)/10).dropFirst())
+        default:
+            return String(registerNumber)
+        }
+    }
+    
     var angleConversion: Double {
         if isComplexMode && !isConvertingPolar {
             return 1.0  // HP-15C does all complex trig functions in radians, except conversions between rectangular and polar coordinates
@@ -110,7 +125,18 @@ class Brain: Codable {
         }
     }
 
-    private var storageRegisters = [String: Double]()  // [register name: number], where register name = "0" - "9", ".0" - ".9"
+    private var storageRegisters: [String: Double] = [  // [register name: number]
+         "I": 0,
+         "0": 0,  "1": 0,  "2": 0,  "3": 0,  "4": 0,  "5": 0,  "6": 0,  "7": 0,  "8": 0,  "9": 0,
+        ".0": 0, ".1": 0, ".2": 0, ".3": 0, ".4": 0, ".5": 0, ".6": 0, ".7": 0, ".8": 0, ".9": 0,
+         // the remaining registers are not available on the HP-15C by default;
+         // they can be accessed by reallocating memory using the DIM function
+//        "20": 0, "21": 0, "22": 0, "23": 0, "24": 0, "25": 0, "26": 0, "27": 0, "28": 0, "29": 0,
+//        "30": 0, "31": 0, "32": 0, "33": 0, "34": 0, "35": 0, "36": 0, "37": 0, "38": 0, "39": 0,
+//        "40": 0, "41": 0, "42": 0, "43": 0, "44": 0, "45": 0, "46": 0, "47": 0, "48": 0, "49": 0,
+//        "50": 0, "51": 0, "52": 0, "53": 0, "54": 0, "55": 0, "56": 0, "57": 0, "58": 0, "59": 0,
+//        "60": 0, "61": 0, "62": 0, "63": 0, "64": 0, "65": 0
+        ]
 
     // MARK: - Codable
 
@@ -193,7 +219,7 @@ class Brain: Codable {
     }
     
     func clearStorageRegisters() {
-        storageRegisters.removeAll()
+        storageRegisters.keys.forEach { storageRegisters[$0] = 0 }
         printMemory()
     }
     
@@ -211,7 +237,7 @@ class Brain: Codable {
     }
     
     func swapXWithRegister(_ name: String) {
-        let temp = storageRegisters[name] ?? 0
+        let temp = storageRegisters[name]!
         storageRegisters[name] = xRegister!
         xRegister = temp
     }
@@ -236,7 +262,7 @@ class Brain: Codable {
     }
     
     func recallNumberFromStorageRegister(_ name: String) -> Double {
-        storageRegisters[name] ?? 0.0
+        storageRegisters[name]!
     }
     
     func moveRealXToImagX() {
@@ -496,7 +522,8 @@ class Brain: Codable {
             print(String(format: "   %@:  %@  % 8f", labels[index], realString, imagStack[index]))
         }
         print(String(format: "LSTx:  % 8f", lastXRegister))
-        print(String(format: " RCL 0: %8f  1: %8f  2: %8f  3: %8f  4: %8f", storageRegisters["0"] ?? 0, storageRegisters["1"] ?? 0, storageRegisters["2"] ?? 0, storageRegisters["3"] ?? 0, storageRegisters["4"] ?? 0))
+        print(String(format: "Reg 0: %8f  1: %8f  2: %8f  3: %8f  4: %8f", storageRegisters["0"]!, storageRegisters["1"]!, storageRegisters["2"]!, storageRegisters["3"]!, storageRegisters["4"]!))
+        print(String(format: "    I: %8f", storageRegisters["I"]!))
         print("---------------------------------------------------------")
     }
 }

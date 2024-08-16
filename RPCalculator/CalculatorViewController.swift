@@ -776,13 +776,15 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 setError(3)
             }
         case .STO:
-            // STO to register number stored in I (integer portion of absolute value of number stored in I)
+            // STO (i) - STO to register number stored in I (integer portion of absolute value of number stored in I)
             prefix = nil
-            print("TBD: STO (i)")
+            storeDisplayToRegister(brain.iRegisterName)
+            liftStack = true
         case .RCL:
-            // RCL from register number stored in I (integer portion of absolute value of number stored in I)
+            // RCL (i) - RCL from register number stored in I (integer portion of absolute value of number stored in I)
             prefix = nil
-            print("TBD: RCL (i)")
+            recallRegister(brain.iRegisterName)
+            liftStack = true
         default:
             // clear prefix and re-run
             prefix = nil
@@ -809,11 +811,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .STO:
             // STO to register I
             prefix = nil
-            print("TBD: STO I")
+            storeDisplayToRegister("I")
+            liftStack = true
         case .RCL:
             // RCL from register I
             prefix = nil
-            print("TBD: RCL I")
+            recallRegister("I")
+            liftStack = true
         default:
             // clear prefix and re-run
             prefix = nil
