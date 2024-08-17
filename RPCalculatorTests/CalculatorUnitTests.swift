@@ -247,17 +247,24 @@ class CalculatorUnitTests: XCTestCase {
     // test swapping display (X register) with another storage register using the x≷ function
     // setup:
     //   1 STO 0
+    //   5 STO .0
     //   4 STO 1
     //   2 STO I
     // verify:
     //   3 x≷ 0 (1 in display, 3 in register 0)
     //   x≷ I   (2 in display, 1 in register I)
     //   x≷ (i) (4 in display, 2 in register 1) - (i) represents register 1, since register I = 1
+    //   x≷ .0  (5 in display, 4 in register .0)
     func test06Xswap() {
         // setup
         // 1 STO 0
         pressButton(title: "1")
         pressButton(title: "STO")
+        pressButton(title: "0")
+        // 5 STO .0
+        pressButton(title: "5")
+        pressButton(title: "STO")
+        pressButton(title: "·")
         pressButton(title: "0")
         // 4 STO 1
         pressButton(title: "4")
@@ -288,6 +295,13 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "COS")
         XCTAssertEqual(cvc.displayStringNumber, 4, "Display is not correct")
         XCTAssertEqual(cvc.brain.recallValueFromStorageRegister("1"), 2, "Storage register 1 is not correct")
+        // x≷ .0
+        pressButton(title: "f")
+        pressButton(title: "4")
+        pressButton(title: "·")
+        pressButton(title: "0")
+        XCTAssertEqual(cvc.displayStringNumber, 5, "Display is not correct")
+        XCTAssertEqual(cvc.brain.recallValueFromStorageRegister(".0"), 4, "Storage register .0 is not correct")
     }
 
     // test conversion from rectangular to polar coordinates
