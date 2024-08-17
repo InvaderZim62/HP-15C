@@ -1698,18 +1698,25 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     // call with register name "0" - "9", ".0" - ".9"
     private func storeDisplayToRegister(_ registerName: String) {
         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-        brain.storeResultInRegister(registerName, result: brain.xRegister!)
-        updateDisplayString()
-        brain.printMemory()
+        if brain.storeValueInRegister(registerName, value: brain.xRegister!) {
+            updateDisplayString()
+            brain.printMemory()
+        } else {
+            setError(3)
+        }
     }
     
     // call with register name "0" - "9", ".0" - ".9"
     private func recallRegister(_ registerName: String) {
         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-        displayString = String(brain.recallNumberFromStorageRegister(registerName))
-        brain.pushOperand(displayStringNumber)
-        updateDisplayString()
-        brain.printMemory()
+        if let value = brain.recallValueFromStorageRegister(registerName) {
+            displayString = String(value)
+            brain.pushOperand(displayStringNumber)
+            updateDisplayString()
+            brain.printMemory()
+        } else {
+            setError(3)
+        }
     }
     
     private func applyDisplayToRegister(_ registerName: String, using operation: ((Double, Double) -> Double)) {
@@ -1718,30 +1725,38 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringDigits = false
             userIsEnteringExponent = false
         }
-        let result = operation(brain.recallNumberFromStorageRegister(registerName), brain.xRegister!)
-        if result.isNaN || result.isInfinite {
-            displayString = "nan"  // triggers displayView to show "  Error  0"
+        if let value = brain.recallValueFromStorageRegister(registerName) {
+            let result = operation(value, brain.xRegister!)
+            if result.isNaN || result.isInfinite {
+                displayString = "nan"  // triggers displayView to show "  Error  0"
+            } else {
+                _ = brain.storeValueInRegister(registerName, value: result)
+                updateDisplayString()
+            }
+            brain.printMemory()
         } else {
-            brain.storeResultInRegister(registerName, result: result)
-            updateDisplayString()
+            setError(3)
         }
-        brain.printMemory()
     }
     
-    private func applyRegisterToDisplay(_ register: String, using operation: ((Double, Double) -> Double)) {
+    private func applyRegisterToDisplay(_ registerName: String, using operation: ((Double, Double) -> Double)) {
         if userIsEnteringDigits {
             brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
             userIsEnteringDigits = false
             userIsEnteringExponent = false
         }
-        let result = operation(brain.xRegister!, brain.recallNumberFromStorageRegister(register))
-        if result.isNaN || result.isInfinite {
-            displayString = "nan"  // triggers displayView to show "  Error  0"
+        if let value = brain.recallValueFromStorageRegister(registerName) {
+            let result = operation(brain.xRegister!, value)
+            if result.isNaN || result.isInfinite {
+                displayString = "nan"  // triggers displayView to show "  Error  0"
+            } else {
+                brain.xRegister = result
+                updateDisplayString()
+            }
+            brain.printMemory()
         } else {
-            brain.xRegister = result
-            updateDisplayString()
+            setError(3)
         }
-        brain.printMemory()
     }
     
     private func swapDisplayWithRegister(_ registerName: String) {

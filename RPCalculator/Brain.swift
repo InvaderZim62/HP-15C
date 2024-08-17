@@ -257,12 +257,18 @@ class Brain: Codable {
         printMemory()
     }
     
-    func storeResultInRegister(_ name: String, result: Double) {
-        storageRegisters[name] = result
+    // store value in register, if it exists, else return false
+    func storeValueInRegister(_ name: String, value: Double) -> Bool {
+        if let _ = storageRegisters[name] {
+            storageRegisters[name] = value
+            return true
+        } else {
+            return false
+        }
     }
     
-    func recallNumberFromStorageRegister(_ name: String) -> Double {
-        storageRegisters[name]!
+    func recallValueFromStorageRegister(_ name: String) -> Double? {
+        storageRegisters[name]
     }
     
     func moveRealXToImagX() {
