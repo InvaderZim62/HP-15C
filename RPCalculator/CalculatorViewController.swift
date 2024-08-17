@@ -118,8 +118,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var clickSoundPlayer: AVAudioPlayer?
     var displayString = "" {
         didSet {
-            displayLabel.text = displayString
-            if !isProgramRunning { displayView.displayString = displayString }
+            if !isProgramRunning {
+                displayLabel.text = displayString
+                displayView.displayString = displayString
+            }
         }
     }
     var displayFormat = DisplayFormat.fixed(4)

@@ -671,7 +671,7 @@ class Program: Codable {
                     _ = forwardStep()  // increment currentLineNumber
                 } else {
                     // error - stop running
-                    return  // pws: should this be a break, like errors above?
+                    break
                 }
             }
         }
