@@ -119,7 +119,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var displayString = "" {
         didSet {
             if !isProgramRunning {
-                displayLabel.text = displayString
+                displayLabel.text = displayString  // used in UI tests
                 displayView.displayString = displayString
             }
         }
@@ -786,6 +786,38 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // RCL (i) - RCL from register number stored in I (integer portion of absolute value of number stored in I)
             prefix = nil
             recallRegister(brain.iRegisterName)
+            liftStack = true
+        case .STO_ADD:
+            prefix = nil
+            applyDisplayToRegister(brain.iRegisterName, using: { $0 + $1 })
+            liftStack = true
+        case .STO_SUB:
+            prefix = nil
+            applyDisplayToRegister(brain.iRegisterName, using: { $0 - $1 })
+            liftStack = true
+        case .STO_MUL:
+            prefix = nil
+            applyDisplayToRegister(brain.iRegisterName, using: { $0 * $1 })
+            liftStack = true
+        case .STO_DIV:
+            prefix = nil
+            applyDisplayToRegister(brain.iRegisterName, using: { $0 / $1 })
+            liftStack = true
+        case .RCL_ADD:
+            prefix = nil
+            applyRegisterToDisplay(brain.iRegisterName, using: { $0 + $1 })
+            liftStack = true
+        case .RCL_SUB:
+            prefix = nil
+            applyRegisterToDisplay(brain.iRegisterName, using: { $0 - $1 })
+            liftStack = true
+        case .RCL_MUL:
+            prefix = nil
+            applyRegisterToDisplay(brain.iRegisterName, using: { $0 * $1 })
+            liftStack = true
+        case .RCL_DIV:
+            prefix = nil
+            applyRegisterToDisplay(brain.iRegisterName, using: { $0 / $1 })
             liftStack = true
         default:
             // clear prefix and re-run
