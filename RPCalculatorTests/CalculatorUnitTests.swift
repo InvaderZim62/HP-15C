@@ -21,10 +21,11 @@
 //  - test03StorageRegisterMath
 //  - test04ConsecutivePrefixes
 //  - test05ConsecutivePrefixes
-//  - test06RectangularToPolar
-//  - test07PolarToRectangular
-//  - test08HourToHourMinSec
-//  - test09HoursMinSecToHours
+//  - test06Xswap
+//  - test07RectangularToPolar
+//  - test08PolarToRectangular
+//  - test09HourToHourMinSec
+//  - test10HoursMinSecToHours
 //
 
 import XCTest
@@ -242,11 +243,57 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "1")
         XCTAssertEqual(cvc.displayStringNumber, 5, "Register 1 is not correct")
     }
+    
+    // test swapping display (X register) with another storage register using the x≷ function
+    // setup:
+    //   1 STO 0
+    //   4 STO 1
+    //   2 STO I
+    // verify:
+    //   3 x≷ 0 (1 in display, 3 in register 0)
+    //   x≷ I   (2 in display, 1 in register I)
+    //   x≷ (i) (4 in display, 2 in register 1) - (i) represents register 1, since register I = 1
+    func test06Xswap() {
+        // setup
+        // 1 STO 0
+        pressButton(title: "1")
+        pressButton(title: "STO")
+        pressButton(title: "0")
+        // 4 STO 1
+        pressButton(title: "4")
+        pressButton(title: "STO")
+        pressButton(title: "1")
+        // 2 STO I
+        pressButton(title: "2")
+        pressButton(title: "STO")
+        pressButton(title: "TAN")
+        
+        // test
+        // 3 x≷ 0
+        pressButton(title: "3")
+        pressButton(title: "f")
+        pressButton(title: "4")
+        pressButton(title: "0")
+        XCTAssertEqual(cvc.displayStringNumber, 1, "Display is not correct")
+        XCTAssertEqual(cvc.brain.recallValueFromStorageRegister("0"), 3, "Storage register 0 is not correct")
+        // x≷ I
+        pressButton(title: "f")
+        pressButton(title: "4")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.displayStringNumber, 2, "Display is not correct")
+        XCTAssertEqual(cvc.brain.recallValueFromStorageRegister("I"), 1, "Storage register I is not correct")
+        // x≷ (i)
+        pressButton(title: "f")
+        pressButton(title: "4")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.displayStringNumber, 4, "Display is not correct")
+        XCTAssertEqual(cvc.brain.recallValueFromStorageRegister("1"), 2, "Storage register 1 is not correct")
+    }
 
     // test conversion from rectangular to polar coordinates
     // definitions: y ENTER x →P, radius in display, angle in Y register
     // verify: 3 ENTER 4 →P = 5 x≷y 36.8699
-    func test06RectangularToPolar() {
+    func test07RectangularToPolar() {
         // set units to degrees
         pressButton(title: "g")
         pressButton(title: "7")  // g-7 = DEG
@@ -265,7 +312,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from polar to rectangular coordinates
     // definitions: angle ENTER radius →R, x in display, y in Y register
     // verify: 30 ENTER 1 →R = 0.8660 x≷y 0.5000
-    func test07PolarToRectangular() {
+    func test08PolarToRectangular() {
         // set units to degrees
         pressButton(title: "g")
         pressButton(title: "7")  // g-7 = DEG
@@ -285,7 +332,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from decimal hours to hours.minutesSeconds
     // results: H.MMSS.SSSSS
     // verify 1.2345 →H.MS = 1.14042 (1 hr, 14 min, 4.2 sec)
-    func test08HourToHourMinSec() {
+    func test09HourToHourMinSec() {
         // show 5 significant figures
         pressButton(title: "f")
         pressButton(title: "7")  // f-7 = FIX
@@ -310,7 +357,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from hours.minutesSeconds to decimal hours
     // results: H.HHHHH
     // verify 10.30 (10 hr, 30 min) →H = 10.5 hours
-    func test09HoursMinSecToHours() {
+    func test10HoursMinSecToHours() {
         // 10.30 →H
         pressButton(title: "1")
         pressButton(title: "0")

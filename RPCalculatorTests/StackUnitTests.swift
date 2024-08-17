@@ -51,7 +51,7 @@ class StackUnitTests: XCTestCase {
     // LSTx: 5.0000                                                 //
     //==============================================================//
 
-    // test swapping x and Y registers using the x≷y button
+    // test swapping X and Y registers using the x≷y button
     // verify:
     //   T: 1.0000     1.0000
     //   Z: 2.0000     2.0000
