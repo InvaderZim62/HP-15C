@@ -528,8 +528,9 @@ class Brain: Codable {
             print(String(format: "   %@:  %@  % 8f", labels[index], realString, imagStack[index]))
         }
         print(String(format: "LSTx:  % 8f", lastXRegister))
-        print(String(format: "Reg 0: %8f  1: %8f  2: %8f  3: %8f  4: %8f", storageRegisters["0"]!, storageRegisters["1"]!, storageRegisters["2"]!, storageRegisters["3"]!, storageRegisters["4"]!))
-        print(String(format: "    I: %8f", storageRegisters["I"]!))
+        print(String(format: "Reg  0: %8f   1: %8f   2: %8f   3: %8f   4: %8f", storageRegisters["0"]!, storageRegisters["1"]!, storageRegisters["2"]!, storageRegisters["3"]!, storageRegisters["4"]!))
+        print(String(format: "    .0: %8f  .1: %8f  .2: %8f  .3: %8f  .4: %8f", storageRegisters[".0"]!, storageRegisters[".1"]!, storageRegisters[".2"]!, storageRegisters[".3"]!, storageRegisters[".4"]!))
+        print(String(format: "     I: %8f", storageRegisters["I"]!))
         print("---------------------------------------------------------")
     }
 }

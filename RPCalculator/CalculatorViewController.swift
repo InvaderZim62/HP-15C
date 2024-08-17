@@ -93,15 +93,23 @@ enum Prefix: String {
     case STO  // ex. STO 0 (store display to register 0)
     case STO_DOT  // ex. STO . 0 (.0 - .9 are valid storage registers)
     case STO_ADD  // ex. 4 STO + 1 (ADD 4 to register 1)
+    case STO_ADD_DOT  // ex. 4 STO + . 1 (ADD 4 to register .1)
     case STO_SUB
+    case STO_SUB_DOT
     case STO_MUL
+    case STO_MUL_DOT
     case STO_DIV
+    case STO_DIV_DOT
     case RCL  // ex. RCL 0 (recall register 0 to display)
     case RCL_DOT  // ex. RCL . 0 (.0 - .9 are valid storage registers)
     case RCL_ADD  // ex. RCL + 1 (ADD register 1 to display)
+    case RCL_ADD_DOT  // ex. RCL + . 1 (ADD register .1 to display)
     case RCL_SUB
+    case RCL_SUB_DOT
     case RCL_MUL
+    case RCL_MUL_DOT
     case RCL_DIV
+    case RCL_DIV_DOT
 }
 
 enum TrigUnits: String, Codable {
@@ -777,48 +785,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 prepStackForOperation()
                 setError(3)
             }
-        case .STO:
-            // STO (i) - STO to register number stored in I (integer portion of absolute value of number stored in I)
-            prefix = nil
-            storeDisplayToRegister(brain.iRegisterName)
-            liftStack = true
-        case .RCL:
-            // RCL (i) - RCL from register number stored in I (integer portion of absolute value of number stored in I)
-            prefix = nil
-            recallRegister(brain.iRegisterName)
-            liftStack = true
-        case .STO_ADD:
-            prefix = nil
-            applyDisplayToRegister(brain.iRegisterName, using: { $0 + $1 })
-            liftStack = true
-        case .STO_SUB:
-            prefix = nil
-            applyDisplayToRegister(brain.iRegisterName, using: { $0 - $1 })
-            liftStack = true
-        case .STO_MUL:
-            prefix = nil
-            applyDisplayToRegister(brain.iRegisterName, using: { $0 * $1 })
-            liftStack = true
-        case .STO_DIV:
-            prefix = nil
-            applyDisplayToRegister(brain.iRegisterName, using: { $0 / $1 })
-            liftStack = true
-        case .RCL_ADD:
-            prefix = nil
-            applyRegisterToDisplay(brain.iRegisterName, using: { $0 + $1 })
-            liftStack = true
-        case .RCL_SUB:
-            prefix = nil
-            applyRegisterToDisplay(brain.iRegisterName, using: { $0 - $1 })
-            liftStack = true
-        case .RCL_MUL:
-            prefix = nil
-            applyRegisterToDisplay(brain.iRegisterName, using: { $0 * $1 })
-            liftStack = true
-        case .RCL_DIV:
-            prefix = nil
-            applyRegisterToDisplay(brain.iRegisterName, using: { $0 / $1 })
-            liftStack = true
+        case .STO, .RCL, .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:
+            operateOnStorageRegister(brain.iRegisterName)
         default:
             // clear prefix and re-run
             prefix = nil
@@ -842,48 +810,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             //----------------------
             displayString = String(brain.xRegister!)  // show real part
             updateDisplayString()
-        case .STO:
-            // STO to register I
-            prefix = nil
-            storeDisplayToRegister("I")
-            liftStack = true
-        case .RCL:
-            // RCL from register I
-            prefix = nil
-            recallRegister("I")
-            liftStack = true
-        case .STO_ADD:
-            prefix = nil
-            applyDisplayToRegister("I", using: { $0 + $1 })
-            liftStack = true
-        case .STO_SUB:
-            prefix = nil
-            applyDisplayToRegister("I", using: { $0 - $1 })
-            liftStack = true
-        case .STO_MUL:
-            prefix = nil
-            applyDisplayToRegister("I", using: { $0 * $1 })
-            liftStack = true
-        case .STO_DIV:
-            prefix = nil
-            applyDisplayToRegister("I", using: { $0 / $1 })
-            liftStack = true
-        case .RCL_ADD:
-            prefix = nil
-            applyRegisterToDisplay("I", using: { $0 + $1 })
-            liftStack = true
-        case .RCL_SUB:
-            prefix = nil
-            applyRegisterToDisplay("I", using: { $0 - $1 })
-            liftStack = true
-        case .RCL_MUL:
-            prefix = nil
-            applyRegisterToDisplay("I", using: { $0 * $1 })
-            liftStack = true
-        case .RCL_DIV:
-            prefix = nil
-            applyRegisterToDisplay("I", using: { $0 / $1 })
-            liftStack = true
+        case .STO, .RCL, .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:
+            operateOnStorageRegister("I")
         default:
             // clear prefix and re-run
             prefix = nil
@@ -1434,6 +1362,22 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = .STO_DOT
         case .RCL:
             prefix = .RCL_DOT
+        case .STO_ADD:
+            prefix = .STO_ADD_DOT
+        case .STO_SUB:
+            prefix = .STO_SUB_DOT
+        case .STO_MUL:
+            prefix = .STO_MUL_DOT
+        case .STO_DIV:
+            prefix = .STO_DIV_DOT
+        case .RCL_ADD:
+            prefix = .RCL_ADD_DOT
+        case .RCL_SUB:
+            prefix = .RCL_SUB_DOT
+        case .RCL_MUL:
+            prefix = .RCL_MUL_DOT
+        case .RCL_DIV:
+            prefix = .RCL_DIV_DOT
         case .GSB:
             prefix = .GSB_DOT
         case .GTO:
@@ -1653,54 +1597,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .XSWAP_DOT:
             prefix = nil
             swapDisplayWithRegister("." + buttonName)
-        case .STO:
-            prefix = nil
-            storeDisplayToRegister(buttonName)
-            liftStack = true
-        case .STO_DOT:
-            prefix = nil
-            storeDisplayToRegister("." + buttonName)
-            liftStack = true
-        case .RCL:
-            prefix = nil
-            recallRegister(buttonName)
-            liftStack = true
-        case .RCL_DOT:
-            prefix = nil
-            recallRegister("." + buttonName)
-            liftStack = true
-        case .STO_ADD:
-            prefix = nil
-            applyDisplayToRegister(buttonName, using: { $0 + $1 })
-            liftStack = true
-        case .STO_SUB:
-            prefix = nil
-            applyDisplayToRegister(buttonName, using: { $0 - $1 })
-            liftStack = true
-        case .STO_MUL:
-            prefix = nil
-            applyDisplayToRegister(buttonName, using: { $0 * $1 })
-            liftStack = true
-        case .STO_DIV:
-            prefix = nil
-            applyDisplayToRegister(buttonName, using: { $0 / $1 })
-            liftStack = true
-        case .RCL_ADD:
-            prefix = nil
-            applyRegisterToDisplay(buttonName, using: { $0 + $1 })
-            liftStack = true
-        case .RCL_SUB:
-            prefix = nil
-            applyRegisterToDisplay(buttonName, using: { $0 - $1 })
-            liftStack = true
-        case .RCL_MUL:
-            prefix = nil
-            applyRegisterToDisplay(buttonName, using: { $0 * $1 })
-            liftStack = true
-        case .RCL_DIV:
-            prefix = nil
-            applyRegisterToDisplay(buttonName, using: { $0 / $1 })
-            liftStack = true
+        case .STO, .RCL, .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:
+            operateOnStorageRegister(buttonName)
+        case .STO_DOT, .RCL_DOT, .STO_ADD_DOT, .STO_SUB_DOT, .STO_MUL_DOT, .STO_DIV_DOT, .RCL_ADD_DOT, .RCL_SUB_DOT, .RCL_MUL_DOT, .RCL_DIV_DOT:
+            operateOnStorageRegister("." + buttonName)
         default:
             break
         }
@@ -1761,6 +1661,55 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
+    private func operateOnStorageRegister(_ register: String) {
+        switch prefix {
+        case .STO:
+            // STO (i) - STO to register number stored in I (integer portion of absolute value of number stored in I)
+            prefix = nil
+            storeDisplayToRegister(register)
+            liftStack = true
+        case .RCL, .RCL_DOT:
+            // RCL (i) - RCL from register number stored in I (integer portion of absolute value of number stored in I)
+            prefix = nil
+            recallRegister(register)
+            liftStack = true
+        case .STO_ADD, .STO_ADD_DOT:
+            prefix = nil
+            applyDisplayToRegister(register, using: { $0 + $1 })
+            liftStack = true
+        case .STO_SUB, .STO_SUB_DOT:
+            prefix = nil
+            applyDisplayToRegister(register, using: { $0 - $1 })
+            liftStack = true
+        case .STO_MUL, .STO_MUL_DOT:
+            prefix = nil
+            applyDisplayToRegister(register, using: { $0 * $1 })
+            liftStack = true
+        case .STO_DIV, .STO_DIV_DOT:
+            prefix = nil
+            applyDisplayToRegister(register, using: { $0 / $1 })
+            liftStack = true
+        case .RCL_ADD, .RCL_ADD_DOT:
+            prefix = nil
+            applyRegisterToDisplay(register, using: { $0 + $1 })
+            liftStack = true
+        case .RCL_SUB, .RCL_SUB_DOT:
+            prefix = nil
+            applyRegisterToDisplay(register, using: { $0 - $1 })
+            liftStack = true
+        case .RCL_MUL, .RCL_MUL_DOT:
+            prefix = nil
+            applyRegisterToDisplay(register, using: { $0 * $1 })
+            liftStack = true
+        case .RCL_DIV, .RCL_DIV_DOT:
+            prefix = nil
+            applyRegisterToDisplay(register, using: { $0 / $1 })
+            liftStack = true
+        default:
+            break
+        }
+    }
+
     // call with register name "0" - "9", ".0" - ".9"
     private func storeDisplayToRegister(_ registerName: String) {
         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
