@@ -852,6 +852,38 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             recallRegister("I")
             liftStack = true
+        case .STO_ADD:
+            prefix = nil
+            applyDisplayToRegister("I", using: { $0 + $1 })
+            liftStack = true
+        case .STO_SUB:
+            prefix = nil
+            applyDisplayToRegister("I", using: { $0 - $1 })
+            liftStack = true
+        case .STO_MUL:
+            prefix = nil
+            applyDisplayToRegister("I", using: { $0 * $1 })
+            liftStack = true
+        case .STO_DIV:
+            prefix = nil
+            applyDisplayToRegister("I", using: { $0 / $1 })
+            liftStack = true
+        case .RCL_ADD:
+            prefix = nil
+            applyRegisterToDisplay("I", using: { $0 + $1 })
+            liftStack = true
+        case .RCL_SUB:
+            prefix = nil
+            applyRegisterToDisplay("I", using: { $0 - $1 })
+            liftStack = true
+        case .RCL_MUL:
+            prefix = nil
+            applyRegisterToDisplay("I", using: { $0 * $1 })
+            liftStack = true
+        case .RCL_DIV:
+            prefix = nil
+            applyRegisterToDisplay("I", using: { $0 / $1 })
+            liftStack = true
         default:
             // clear prefix and re-run
             prefix = nil
