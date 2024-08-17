@@ -18,12 +18,13 @@
 //  Test cases:
 //  - test01BasicArithmetic
 //  - test02StorageRegisters
-//  - test03ConsecutivePrefixes
+//  - test03StorageRegisterMath
 //  - test04ConsecutivePrefixes
-//  - test05RectangularToPolar
-//  - test06PolarToRectangular
-//  - test07HourToHourMinSec
-//  - test08HoursMinSecToHours
+//  - test05ConsecutivePrefixes
+//  - test06RectangularToPolar
+//  - test07PolarToRectangular
+//  - test08HourToHourMinSec
+//  - test09HoursMinSecToHours
 //
 
 import XCTest
@@ -68,9 +69,11 @@ class CalculatorUnitTests: XCTestCase {
     // test storage registers
     // verify:
     //   1 STO 0, RCL 0
-    //   2 STO 9, RCL 9
-    //   3 STO .0, RCL .0
+    //   2 STO .0, RCL .0
+    //   3 STO 9, RCL 9
     //   4 STO .9, RCL .9
+    //   5 STO I, RCL I
+    //   6 STO (i), RCL (I), RCL 5  <- store 6 to register pointed to by register I (register 5 from previous step)
     func test02StorageRegisters() {
         // 1 STO 0
         pressButton(title: "1")
@@ -80,16 +83,8 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "RCL")
         pressButton(title: "0")
         XCTAssertEqual(cvc.displayStringNumber, 1, "Register 0 is not correct")
-        // 2 STO 9
+        // 2 STO .0
         pressButton(title: "2")
-        pressButton(title: "STO")
-        pressButton(title: "9")
-        // RCL 9
-        pressButton(title: "RCL")
-        pressButton(title: "9")
-        XCTAssertEqual(cvc.displayStringNumber, 2, "Register 9 is not correct")
-        // 3 STO .0
-        pressButton(title: "3")
         pressButton(title: "STO")
         pressButton(title: "·")
         pressButton(title: "0")
@@ -97,7 +92,15 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "RCL")
         pressButton(title: "·")
         pressButton(title: "0")
-        XCTAssertEqual(cvc.displayStringNumber, 3, "Register .0 is not correct")
+        XCTAssertEqual(cvc.displayStringNumber, 2, "Register .0 is not correct")
+        // 3 STO 9
+        pressButton(title: "3")
+        pressButton(title: "STO")
+        pressButton(title: "9")
+        // RCL 9
+        pressButton(title: "RCL")
+        pressButton(title: "9")
+        XCTAssertEqual(cvc.displayStringNumber, 3, "Register 9 is not correct")
         // 4 STO .9
         pressButton(title: "4")
         pressButton(title: "STO")
@@ -108,11 +111,99 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "·")
         pressButton(title: "9")
         XCTAssertEqual(cvc.displayStringNumber, 4, "Register .9 is not correct")
+        // 5 STO I
+        pressButton(title: "5")
+        pressButton(title: "STO")
+        pressButton(title: "TAN")
+        // RCL I
+        pressButton(title: "RCL")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.displayStringNumber, 5, "Register I is not correct")
+        // 6 STO (i)
+        pressButton(title: "6")
+        pressButton(title: "STO")
+        pressButton(title: "COS")
+        // RCL I
+        pressButton(title: "RCL")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.displayStringNumber, 6, "Register (i) is not correct")
+        // RCL 5
+        pressButton(title: "RCL")
+        pressButton(title: "5")
+        XCTAssertEqual(cvc.displayStringNumber, 6, "Register 5 is not correct")
+    }
+    
+    // test storage register math
+    // verify:
+    //   1 STO 0, 2 STO + 0, RCL 0 (= 3)
+    //   5 STO .9, 3 STO - .9, RCL .9 (= 2)
+    //   3 STO I, 2 STO x I, RCL I (= 6)
+    //   8 STO (i), 2 STO ÷ (i), RCL (i), RCL 6 (= 4)  <- store 8 ÷ 2 to register pointed to by register I (register 6 from previous step)
+    func test03StorageRegisterMath() {
+        // 1 STO 0
+        pressButton(title: "1")
+        pressButton(title: "STO")
+        pressButton(title: "0")
+        // 2 STO + 0
+        pressButton(title: "2")
+        pressButton(title: "STO")
+        pressButton(title: "+")
+        pressButton(title: "0")
+        // RCL 0
+        pressButton(title: "RCL")
+        pressButton(title: "0")
+        XCTAssertEqual(cvc.displayStringNumber, 3, "Register 0 is not correct")
+        // 5 STO .9
+        pressButton(title: "5")
+        pressButton(title: "STO")
+        pressButton(title: "·")
+        pressButton(title: "9")
+        // 3 STO – .9
+        pressButton(title: "3")
+        pressButton(title: "STO")
+        pressButton(title: "–")
+        pressButton(title: "·")
+        pressButton(title: "9")
+        // RCL .9
+        pressButton(title: "RCL")
+        pressButton(title: "·")
+        pressButton(title: "9")
+        XCTAssertEqual(cvc.displayStringNumber, 2, "Register .9 is not correct")
+        // 3 STO I
+        pressButton(title: "3")
+        pressButton(title: "STO")
+        pressButton(title: "TAN")
+        // 2 STO × I
+        pressButton(title: "2")
+        pressButton(title: "STO")
+        pressButton(title: "×")
+        pressButton(title: "TAN")
+        // RCL I
+        pressButton(title: "RCL")
+        pressButton(title: "TAN")
+        XCTAssertEqual(cvc.displayStringNumber, 6, "Register I is not correct")
+        // 8 STO (i)
+        pressButton(title: "8")
+        pressButton(title: "STO")
+        pressButton(title: "COS")
+        // 2 STO ÷ (i)
+        pressButton(title: "2")
+        pressButton(title: "STO")
+        pressButton(title: "÷")
+        pressButton(title: "COS")
+        // RCL (i)
+        pressButton(title: "RCL")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.displayStringNumber, 4, "Register I is not correct")
+        // RCL 6
+        pressButton(title: "RCL")
+        pressButton(title: "6")
+        XCTAssertEqual(cvc.displayStringNumber, 4, "Register 6 is not correct")
     }
     
     // test last prefix entered is used, if consecutive prefixes entered
     // verify: 5 RCL STO 1 stores 5 in register 1 (ie. STO overrides RCL)
-    func test03ConsecutivePrefixes() {
+    func test04ConsecutivePrefixes() {
         // STO 8 in register 1
         pressButton(title: "8")
         pressButton(title: "STO")
@@ -130,7 +221,7 @@ class CalculatorUnitTests: XCTestCase {
     
     // test last prefix entered is used, if consecutive prefixes entered
     // verify: 5 GTO CHS 00 STO .1 stores 5 in register .1 (GTO, CHS after GTO, and STO are all prefixes)
-    func test04ConsecutivePrefixes() {
+    func test05ConsecutivePrefixes() {
         // STO 8 in register .1
         pressButton(title: "8")
         pressButton(title: "STO")
@@ -155,7 +246,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from rectangular to polar coordinates
     // definitions: y ENTER x →P, radius in display, angle in Y register
     // verify: 3 ENTER 4 →P = 5 x≷y 36.8699
-    func test05RectangularToPolar() {
+    func test06RectangularToPolar() {
         // set units to degrees
         pressButton(title: "g")
         pressButton(title: "7")  // g-7 = DEG
@@ -174,7 +265,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from polar to rectangular coordinates
     // definitions: angle ENTER radius →R, x in display, y in Y register
     // verify: 30 ENTER 1 →R = 0.8660 x≷y 0.5000
-    func test06PolarToRectangular() {
+    func test07PolarToRectangular() {
         // set units to degrees
         pressButton(title: "g")
         pressButton(title: "7")  // g-7 = DEG
@@ -194,7 +285,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from decimal hours to hours.minutesSeconds
     // results: H.MMSS.SSSSS
     // verify 1.2345 →H.MS = 1.14042 (1 hr, 14 min, 4.2 sec)
-    func test07HourToHourMinSec() {
+    func test08HourToHourMinSec() {
         // show 5 significant figures
         pressButton(title: "f")
         pressButton(title: "7")  // f-7 = FIX
@@ -219,7 +310,7 @@ class CalculatorUnitTests: XCTestCase {
     // test conversion from hours.minutesSeconds to decimal hours
     // results: H.HHHHH
     // verify 10.30 (10 hr, 30 min) →H = 10.5 hours
-    func test08HoursMinSecToHours() {
+    func test09HoursMinSecToHours() {
         // 10.30 →H
         pressButton(title: "1")
         pressButton(title: "0")

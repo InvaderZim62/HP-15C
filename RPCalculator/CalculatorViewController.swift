@@ -1663,7 +1663,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     private func operateOnStorageRegister(_ register: String) {
         switch prefix {
-        case .STO:
+        case .STO, .STO_DOT:
             // STO (i) - STO to register number stored in I (integer portion of absolute value of number stored in I)
             prefix = nil
             storeDisplayToRegister(register)
