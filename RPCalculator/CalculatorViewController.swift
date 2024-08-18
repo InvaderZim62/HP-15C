@@ -791,6 +791,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .XSWAP:
             prefix = nil
             swapDisplayWithRegister(brain.iRegisterName)
+        case .DSE, .ISG:  // DSE I, ISG I... don't do anything in run mode (handled by program)
+            prefix = nil
+            endDisplayEntry()
+            updateDisplayString()
         case .STO, .RCL, .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:
             operateOnStorageRegister(brain.iRegisterName)
             prefix = nil
@@ -836,6 +840,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .XSWAP:
             prefix = nil
             swapDisplayWithRegister("I")
+        case .DSE, .ISG:  // DSE I, ISG I... don't do anything in run mode (handled by program)
+            prefix = nil
+            endDisplayEntry()
+            updateDisplayString()
         case .STO, .RCL, .STO_ADD, .STO_SUB, .STO_MUL, .STO_DIV, .RCL_ADD, .RCL_SUB, .RCL_MUL, .RCL_DIV:
             operateOnStorageRegister("I")
             prefix = nil

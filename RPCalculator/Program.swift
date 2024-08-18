@@ -858,8 +858,10 @@ class Program: Codable {
         codes[0] == 32
     }
     
-    // ex. f DSE 1  = [42, 5, 1]     => " 1"
-    //     f DSE .1 = [42, 5, 48, 1] => ".1"  note: HP-15C codes for this are [42, 5, .1], but this app codes the dot separately
+    // ex. f DSE 1   = [42, 5, 1]     => "1"
+    //     f DSE .1  = [42, 5, 48, 1] => ".1"  note: HP-15C codes for this are [42, 5, .1], but this app codes the dot separately
+    //     f DSE I   = [42, 5, 25]    => "I"
+    //     f DSE (i) = [42, 5, 24]    => "n", where n is the integer value stored in I
     var storageRegisterNameIfCurrentInstructionIsDSE: String? {
         if currentInstructionCodes[0] == 42 && currentInstructionCodes[1] == 5 {
             return storageRegisterNameFromCodes(currentInstructionCodes)
@@ -868,8 +870,10 @@ class Program: Codable {
         }
     }
     
-    // ex. f ISG 1  = [42, 6, 1]     => " 1"
-    //     f ISG .1 = [42, 6, 48, 1] => ".1"  note: HP-15C codes for this are [42, 5, .1], but this app codes the dot separately
+    // ex. f ISG 1   = [42, 6, 1]     => "1"
+    //     f ISG .1  = [42, 6, 48, 1] => ".1"  note: HP-15C codes for this are [42, 5, .1], but this app codes the dot separately
+    //     f ISG I   = [42, 6, 25]    => "I"
+    //     f ISG (i) = [42, 6, 24]    => "n", where n is the integer value stored in I
     var storageRegisterNameIfCurrentInstructionIsISG: String? {
         if currentInstructionCodes[0] == 42 && currentInstructionCodes[1] == 6 {
             return storageRegisterNameFromCodes(currentInstructionCodes)
@@ -879,13 +883,16 @@ class Program: Codable {
     }
     
     func storageRegisterNameFromCodes(_ codes: [Int]) -> String? {
-        var registerName = ""
-        if codes[2] == 48 {
-            registerName = ".\(codes[3])"
-        } else {
-            registerName = Program.buttonTitles[String(format: "%2d", codes[2])]!
+        switch codes[2] {
+        case 24:
+            return brain.iRegisterName
+        case 25:
+            return "I"
+        case 48:
+            return ".\(codes[3])"
+        default:
+            return "\(codes[2])"
         }
-        return registerName
     }
 
     // program goes to next line if test is true, and skips to next line if test is false
