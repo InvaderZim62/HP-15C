@@ -156,7 +156,7 @@ class Program: Codable {
     // return true, if target (ttt) met
     // store updated control number (uuuuu.tttii) in register
     func loop(isDSE: Bool, registerName: String) -> Bool {
-        if let controlNumber = brain.recallValueFromStorageRegister(registerName) {  // ccccc.tttii
+        if let controlNumber = brain.valueFromStorageRegister(registerName) {  // ccccc.tttii
             let counter = Int(controlNumber)  // ccccc
             let xyDecimals = controlNumber - Double(counter)  // 0.tttii
             let shifted = xyDecimals * 1000  // ttt.ii

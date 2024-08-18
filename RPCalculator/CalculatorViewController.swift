@@ -47,13 +47,16 @@
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
 //  - some numbers don't allow entering exponent EEX (ex. 12345678 EEX doesn't, 1234567 EEX does, 1.2345678 EEX does)
-//  - p59 rounding displayed scientific numbers not implemented
-//  - p61 swapping "." and "," in displaying number is not implemented
+//  - p.59 rounding displayed scientific numbers not implemented
+//  - p.61 swapping "." and "," in displaying number is not implemented
 //  - make display blink when +/-overflow (9.999999 99) ex. 1 EEX 99 Enter 10 x
 //  - following overflow on real HP-15C, pressing "←" key causes blinking to stop, but leaves 9.999999 99 in display (xRegister)
 //  - p61 implement underflow (displays 0.0)
 //  - p90 implement program branching and control
 //  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
+//  - p.108 indirect branching
+//  - p.109 to label
+//  - p.109 to line number
 //
 
 import UIKit
@@ -815,6 +818,21 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             //----------------------
             displayString = String(brain.xRegister!)  // show real part
             updateDisplayString()
+        case .FIX:
+            // f-FIX-I (use value in register I to set display format)
+            prefix = nil
+            let decimalPlaces = Int(abs(brain.valueFromStorageRegister("I")!))
+            setDisplayFormatTo(.fixed(decimalPlaces))
+        case .SCI:
+            // f-SCI-I (use value in register I to set display format)
+            prefix = nil
+            let decimalPlaces = Int(abs(brain.valueFromStorageRegister("I")!))
+            setDisplayFormatTo(.scientific(min(decimalPlaces, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+        case .ENG:
+            // f-ENG-I (use value in register I to set display format)
+            prefix = nil
+            let additionalDigits = Int(abs(brain.valueFromStorageRegister("I")!))
+            setDisplayFormatTo(.engineering(min(additionalDigits, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
         case .XSWAP:
             prefix = nil
             swapDisplayWithRegister("I")
@@ -1718,7 +1736,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     // call with register name "0" - "9", ".0" - ".9"
     private func recallRegister(_ registerName: String) {
         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-        if let value = brain.recallValueFromStorageRegister(registerName) {
+        if let value = brain.valueFromStorageRegister(registerName) {
             displayString = String(value)
             brain.pushOperand(displayStringNumber)
             updateDisplayString()
@@ -1734,7 +1752,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringDigits = false
             userIsEnteringExponent = false
         }
-        if let value = brain.recallValueFromStorageRegister(registerName) {
+        if let value = brain.valueFromStorageRegister(registerName) {
             let result = operation(value, brain.xRegister!)
             if result.isNaN || result.isInfinite {
                 displayString = "nan"  // triggers displayView to show "  Error  0"
@@ -1754,7 +1772,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringDigits = false
             userIsEnteringExponent = false
         }
-        if let value = brain.recallValueFromStorageRegister(registerName) {
+        if let value = brain.valueFromStorageRegister(registerName) {
             let result = operation(brain.xRegister!, value)
             if result.isNaN || result.isInfinite {
                 displayString = "nan"  // triggers displayView to show "  Error  0"

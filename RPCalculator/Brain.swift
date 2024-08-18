@@ -267,7 +267,7 @@ class Brain: Codable {
         }
     }
     
-    func recallValueFromStorageRegister(_ name: String) -> Double? {
+    func valueFromStorageRegister(_ name: String) -> Double? {
         storageRegisters[name]
     }
     

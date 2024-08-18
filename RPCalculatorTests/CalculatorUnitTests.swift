@@ -282,26 +282,26 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "4")
         pressButton(title: "0")
         XCTAssertEqual(cvc.displayStringNumber, 1, "Display is not correct")
-        XCTAssertEqual(cvc.brain.recallValueFromStorageRegister("0"), 3, "Storage register 0 is not correct")
+        XCTAssertEqual(cvc.brain.valueFromStorageRegister("0"), 3, "Storage register 0 is not correct")
         // x≷ I
         pressButton(title: "f")
         pressButton(title: "4")
         pressButton(title: "TAN")
         XCTAssertEqual(cvc.displayStringNumber, 2, "Display is not correct")
-        XCTAssertEqual(cvc.brain.recallValueFromStorageRegister("I"), 1, "Storage register I is not correct")
+        XCTAssertEqual(cvc.brain.valueFromStorageRegister("I"), 1, "Storage register I is not correct")
         // x≷ (i)
         pressButton(title: "f")
         pressButton(title: "4")
         pressButton(title: "COS")
         XCTAssertEqual(cvc.displayStringNumber, 4, "Display is not correct")
-        XCTAssertEqual(cvc.brain.recallValueFromStorageRegister("1"), 2, "Storage register 1 is not correct")
+        XCTAssertEqual(cvc.brain.valueFromStorageRegister("1"), 2, "Storage register 1 is not correct")
         // x≷ .0
         pressButton(title: "f")
         pressButton(title: "4")
         pressButton(title: "·")
         pressButton(title: "0")
         XCTAssertEqual(cvc.displayStringNumber, 5, "Display is not correct")
-        XCTAssertEqual(cvc.brain.recallValueFromStorageRegister(".0"), 4, "Storage register .0 is not correct")
+        XCTAssertEqual(cvc.brain.valueFromStorageRegister(".0"), 4, "Storage register .0 is not correct")
     }
 
     // test conversion from rectangular to polar coordinates
