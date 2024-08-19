@@ -509,9 +509,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // format specifiers %.0f and %.0e remove decimal (ie. returns 123 instead of 123., and 1e+02 instead of 1.e+02)
             if case .fixed = displayFormat {
                 potentialDisplayString += "."
-            } else {
-                let index = potentialDisplayString.index(potentialDisplayString.startIndex, offsetBy: 1)
-                potentialDisplayString.insert(".", at: index)
+            } else if let eIndex = potentialDisplayString.range(of: "e")?.lowerBound {
+                potentialDisplayString.insert(".", at: eIndex)  // add decimal to left of "e"
             }
         }
         
@@ -524,9 +523,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 mantissa *= 10
                 exponent -= 1
             }
-            let mantissaLength = additionalDigits + (potentialDisplayString.first == "-" ? 1 : 0) + 2
+            let digitsLeftOfDecimal = String(Int(mantissa)).count
+            let mantissaLength = max(additionalDigits + (potentialDisplayString.first == "-" ? 1 : 0) + 2, digitsLeftOfDecimal + 1)
             let mantissaString = String(mantissa).padding(toLength: mantissaLength, withPad: "0", startingAt: 0)
-            potentialDisplayString = mantissaString.prefix(mantissaLength) + String(format: "e%+03d", exponent)  // 2-digit exponent, including sign
+            potentialDisplayString = mantissaString + String(format: "e%+03d", exponent)  // 2-digit exponent, including sign
         }
         var digitsLeftOfDecimal = potentialDisplayString.components(separatedBy: ".")[0].count
         if potentialDisplayString.first != "-" {
