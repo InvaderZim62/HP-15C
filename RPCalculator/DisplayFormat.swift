@@ -22,4 +22,15 @@ enum DisplayFormat: Codable {
             return "%.\(additionalDigits)e"  // engineering format can't be done through string alone (see runAndUpdateInterface)
         }
     }
+    
+    var decimals: Int {
+        switch self {
+        case .fixed(let decimals):
+            return decimals
+        case .scientific(let decimals):
+            return decimals
+        case .engineering(let decimals):
+            return decimals
+        }
+    }
 }

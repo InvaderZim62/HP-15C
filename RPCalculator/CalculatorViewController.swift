@@ -52,7 +52,6 @@
 //  - make display blink when +/-overflow (9.999999 99) ex. 1 EEX 99 Enter 10 x
 //  - following overflow on real HP-15C, pressing "←" key causes blinking to stop, but leaves 9.999999 99 in display (xRegister)
 //  - p61 implement underflow (displays 0.0)
-//  - p90 implement program branching and control
 //  - HP-15C displays Error 5, if there are more than 7 nested subroutine calls (GSB) in a program
 //  - p.108 indirect branching
 //  - p.109 to label
@@ -505,6 +504,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         let numericalResult = brain.xRegister!
         //--------------------------------------
         var potentialDisplayString = String(format: displayFormat.string, numericalResult)
+        if displayFormat.decimals == 0 {
+            // HP-15C includes decimal point for FIX 0 and SCI 0
+            // format specifiers %.0f and %.0e remove decimal (ie. returns 123 instead of 123., and 1e+02 instead of 1.e+02)
+            if case .fixed = displayFormat {
+                potentialDisplayString += "."
+            } else {
+                let index = potentialDisplayString.index(potentialDisplayString.startIndex, offsetBy: 1)
+                potentialDisplayString.insert(".", at: index)
+            }
+        }
         
         // for engineering notation, adjust mantissa so that exponent is a factor of 3
         if case .engineering(let additionalDigits) = displayFormat {
