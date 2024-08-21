@@ -20,6 +20,7 @@
 		4AA20A8025CF84DB00012341 /* DigitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA20A7F25CF84DB00012341 /* DigitView.swift */; };
 		4AA20A8425D1124800012341 /* click.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4AA20A8325D1124800012341 /* click.wav */; };
 		4AAA223025E855C10035D219 /* DisplayFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAA222F25E855C10035D219 /* DisplayFormat.swift */; };
+		4AAA32CA2C758C9D001640EA /* DisplayUnitTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAA32C92C758C9D001640EA /* DisplayUnitTest.swift */; };
 		4ADE1D7F2C504D7F00D47C9D /* RPCalculatorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D7E2C504D7F00D47C9D /* RPCalculatorUITests.swift */; };
 		4ADE1D812C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D802C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift */; };
 		4ADE1D9C2C51CBD500D47C9D /* ComplexUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D9B2C51CBD500D47C9D /* ComplexUnitTests.swift */; };
@@ -65,6 +66,7 @@
 		4AA20A7F25CF84DB00012341 /* DigitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitView.swift; sourceTree = "<group>"; };
 		4AA20A8325D1124800012341 /* click.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = click.wav; sourceTree = "<group>"; };
 		4AAA222F25E855C10035D219 /* DisplayFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormat.swift; sourceTree = "<group>"; };
+		4AAA32C92C758C9D001640EA /* DisplayUnitTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayUnitTest.swift; sourceTree = "<group>"; };
 		4ADE1D7C2C504D7F00D47C9D /* RPCalculatorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RPCalculatorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ADE1D7E2C504D7F00D47C9D /* RPCalculatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPCalculatorUITests.swift; sourceTree = "<group>"; };
 		4ADE1D802C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPCalculatorUITestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -168,6 +170,7 @@
 			isa = PBXGroup;
 			children = (
 				4ADE1DA82C53644E00D47C9D /* CalculatorUnitTests.swift */,
+				4AAA32C92C758C9D001640EA /* DisplayUnitTest.swift */,
 				4AF947E32C5C2FF0007EF5F8 /* StackUnitTests.swift */,
 				4AF947E72C5F10FC007EF5F8 /* ProgramUnitTest.swift */,
 				4ADE1DA52C5306A100D47C9D /* BrainUnitTests.swift */,
@@ -351,6 +354,7 @@
 				4ADE1DA62C5306A100D47C9D /* BrainUnitTests.swift in Sources */,
 				4AF947E82C5F10FC007EF5F8 /* ProgramUnitTest.swift in Sources */,
 				4ADE1DA92C53644E00D47C9D /* CalculatorUnitTests.swift in Sources */,
+				4AAA32CA2C758C9D001640EA /* DisplayUnitTest.swift in Sources */,
 				4ADE1D9C2C51CBD500D47C9D /* ComplexUnitTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

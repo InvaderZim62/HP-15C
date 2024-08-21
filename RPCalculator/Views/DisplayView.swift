@@ -75,6 +75,7 @@ class DisplayView: UIView {
         } else if displayString.first != "-" {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }
+        modifiedDisplayString = modifiedDisplayString.replacingOccurrences(of: "+", with: " ")
         // set data for each digitView
         var displayIndex = 0
         var stringIndex = 0
@@ -118,3 +119,13 @@ class DisplayView: UIView {
         }
     }
 }
+
+#if DEBUG  // ie. don't ship with production code
+extension DisplayView {
+    // expose private var digitViews to unit test
+    // from: https://stackoverflow.com/a/50136916/2526464
+    public var privateDigitViews: [DigitView] {
+        digitViews
+    }
+}
+#endif
