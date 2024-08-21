@@ -210,14 +210,6 @@ class Brain: Codable {
         xRegister = temp
     }
     
-    func clearAll() {
-        clearStorageRegisters()
-        clearRealStack()
-        clearImaginaryStack()
-        lastXRegister = 0.0
-        printMemory()
-    }
-    
     func clearStorageRegisters() {
         storageRegisters.keys.forEach { storageRegisters[$0] = 0 }
         printMemory()

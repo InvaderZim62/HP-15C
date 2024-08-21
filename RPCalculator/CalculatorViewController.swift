@@ -44,6 +44,17 @@
 //    - to see the imaginary part of a complex number, press and hold f-(i)
 //    - to exit complex mode, select g-CF-8
 //
+//  Useful memory functions:
+//    overwrite xRegister with display:    if userIsEnteringDigits { endDisplayEntry() }
+//    push display onto stack:             if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
+//    move display to memory stack before
+//      performing an operations:          prepStackForOperation()
+//
+//  Not implemented:
+//  - statistics function
+//  - matrices
+//  - integrals
+//
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
 //  - some numbers don't allow entering exponent EEX (ex. 12345678 EEX doesn't, 1234567 EEX does, 1.2345678 EEX does)
@@ -461,6 +472,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         return attributedString
     }
     
+    // move display to memory stack before performing an operations (ex. +, -, x,
+    // ÷, sin, cos,...); if user entering digits, behavior depends on liftStack
     func prepStackForOperation() {
         if userIsEnteringDigits {
             if liftStack {
@@ -471,13 +484,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // operation follows enter or "←"; ex. 1 enter 2 +
                 endDisplayEntry()  // overwrite xRegister with display
             }
-        }  // else complete number already in xRegister; ex. pi pi +
+        }  // else complete number is already in xRegister; ex. pi pi +
         updateDisplayString()
         userIsEnteringDigits = false
         userIsEnteringExponent = false
         liftStack = true
     }
     
+    // overwrite xRegister with display
     private func endDisplayEntry() {
         brain.xRegister = displayStringNumber
         userIsEnteringDigits = false
@@ -1020,10 +1034,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = .GSB  // build-up to GSB n (run from label n)
         case .f:
             // Σ pressed
-            // from Owner's Handbook p.20: "Clears statistics storage registers, display, and
-            // the memory stack (described in section 3)."
+            // clear statistics storage registers, memory stack, and display
             prefix = nil
-            brain.clearAll()  // pws: this clears too much
+            // TBD: clear statistics storage registers
+            brain.clearRealStack()
+            brain.clearImaginaryStack()
+            clearDisplayAndXRegister()
         case .g:
             // RTN pressed
             prefix = nil
@@ -1048,6 +1064,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .f:
             // CLEAR PRGM pressed (goto line 0 without delete program)
             prefix = nil
+            endDisplayEntry()  // overwrite xRegister
             program.currentLineNumber = 0
         case .g:
             // R↑ key pressed (roll stack up)
@@ -1063,6 +1080,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         userIsEnteringDigits = false
         updateDisplayString()
         userIsEnteringExponent = false
+        saveDefaults()
     }
     
     @IBAction func xyButtonPressed(_ sender: UIButton) {
@@ -1090,6 +1108,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         userIsEnteringDigits = false
         updateDisplayString()
         userIsEnteringExponent = false
+        saveDefaults()
     }
     
     @IBAction func leftArrowButtonPressed(_ sender: UIButton) {
@@ -1143,19 +1162,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             displayString = brain.displayMantissa
             sender.addTarget(self, action: #selector(clearPrefixButtonReleased), for: .touchUpInside)
         case .g:
-            // CLx key pressed
+            // CLx key pressed - clear display and x register
             prefix = nil
-            displayString = String(format: displayFormat.string, 0.0)  // display 0.0
-            if userIsEnteringDigits {
-                brain.pushOperand(0)
-            } else {
-                brain.xRegister = 0
-            }
-            liftStack = false
-            userIsEnteringDigits = false
-            userIsEnteringExponent = false
-            saveDefaults()
-            brain.printMemory()
+            clearDisplayAndXRegister()
             return  // return, or prior number will be displayed
         default:
             prefix = nil
@@ -1763,6 +1772,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
+    // apply operation on value in storage register and display; store results back in storage register
     private func applyDisplayToRegister(_ registerName: String, using operation: ((Double, Double) -> Double)) {
         if userIsEnteringDigits {
             brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
@@ -1783,6 +1793,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
+    // apply operation on value in storage register and display; show results in display
     private func applyRegisterToDisplay(_ registerName: String, using operation: ((Double, Double) -> Double)) {
         if userIsEnteringDigits {
             brain.pushOperand(displayStringNumber)  // push up xRegister before overwriting
@@ -1801,6 +1812,20 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         } else {
             setError(3)
         }
+    }
+    
+    private func clearDisplayAndXRegister() {
+        displayString = String(format: displayFormat.string, 0.0)  // display 0.0
+        if userIsEnteringDigits {
+            brain.pushOperand(0)
+        } else {
+            brain.xRegister = 0
+        }
+        liftStack = false
+        userIsEnteringDigits = false
+        userIsEnteringExponent = false
+        saveDefaults()
+        brain.printMemory()
     }
     
     private func swapDisplayWithRegister(_ registerName: String) {
