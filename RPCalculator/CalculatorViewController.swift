@@ -4,6 +4,8 @@
 //
 //  Created by Phil Stern on 2/4/21.
 //
+//  HP-15C Owner's Handbook: https://www.hp.com/ctg/Manual/c03030589.pdf
+//
 //  click.wav obtained from: https://freesound.org/people/kwahmah_02/sounds/256116
 //  file is in the public domain (CC0 1.0 Universal)
 //
@@ -52,8 +54,8 @@
 //
 //  Not implemented:
 //  - statistics function
-//  - matrices
-//  - integrals
+//  - matrices (see https://developer.apple.com/documentation/accelerate/working_with_matrices)
+//  - numerical integration
 //
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
