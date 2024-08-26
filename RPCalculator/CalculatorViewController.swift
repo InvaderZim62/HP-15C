@@ -48,6 +48,7 @@
 //
 //  Useful memory functions:
 //    overwrite xRegister with display:    if userIsEnteringDigits { endDisplayEntry() }
+//                                         updateDisplayString()
 //    push display onto stack:             if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
 //    move display to memory stack before
 //      performing an operations:          prepStackForOperation()
@@ -88,6 +89,7 @@ enum Prefix: String {
     case GTO  // ex. GTO 5 (goto label 5)
     case GTO_DOT  // ex. GTO . 5 (goto label .5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
+    case MATRIX  // ex. RCL MATRIX A (display dimensions of matrix A)
     case XSWAP  // ex. XSWAP 4 (swap X register with register 4)
     case XSWAP_DOT  // ex. XSWAP . 4 (swap X register with register .4)
     case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
@@ -101,6 +103,8 @@ enum Prefix: String {
     case ENG
     case HYP = "H"  // ex. f HYP SIN (hyperbolic sine)
     case HYP1 = "h"  // ex. g HYP1 SIN (inverse hyperbolic sine)
+    case DIM  // ex. f DIM A (dimension matrix A to y rows and x cols)
+    case RCL_DIM  // ex. RCL DIM A (place number of rows of matrix A in Y register and number of columns in X register)
     case SF  // ex. g SF 8 (set flag 8 - enable complex mode)
     case CF  // ex. g CF 8 (clear flag 8 - disable complex mode)
     case FQM  // ex. g F? 2 (test if flag 2 is set)
@@ -138,6 +142,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var brain = Brain()
     var program = Program()
     var solve = Solve()
+    var matrix = Matrix()
     var clickSoundPlayer: AVAudioPlayer?
     var displayString = "" {
         didSet {
@@ -371,6 +376,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if let data = try? JSONEncoder().encode(brain) {
                 defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to Brain.init and .encode
             }
+            if let data = try? JSONEncoder().encode(matrix) {
+                defaults.set(data, forKey: "matrix")
+            }
             defaults.set(isComplexMode, forKey: "isComplexMode")
             defaults.set(isUserMode, forKey: "isUserMode")
             defaults.set(liftStack, forKey: "liftStack")
@@ -403,6 +411,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         isProgramMode = false  // don't re-start in program mode
         if let data = defaults.data(forKey: "brain") {
             brain = try! JSONDecoder().decode(Brain.self, from: data)
+        }
+        if let data = defaults.data(forKey: "matrix") {
+            matrix = try! JSONDecoder().decode(Matrix.self, from: data)
         }
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
         isUserMode = defaults.bool(forKey: "isUserMode")
@@ -627,6 +638,27 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if !program.gotoLabel(buttonName) {
                 setError(4)
             }
+        case .DIM:
+            // DIM A-E - create matrix with dimensions in X and Y registers (Y rows, X cols)
+            if userIsEnteringDigits { endDisplayEntry() }
+            updateDisplayString()
+            matrix.setDimensionsFor(buttonName, nRows: Int(brain.yRegister), nCols: Int(brain.xRegister!))
+            matrix.printMatrix(buttonName)
+            saveDefaults()
+        case .RCL_DIM:
+            // RCL DIM A-E - store number of rows in Y register and columns in X register, for matrix A-E
+            if userIsEnteringDigits { endDisplayEntry() }
+            let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
+            brain.pushOperand(Double(nRows))
+            brain.pushOperand(Double(nRows))  // push rows into X and Y registers
+            displayString = String(nCols)
+            endDisplayEntry()  // overwrite X register with cols
+            updateDisplayString()
+        case .MATRIX:
+            // MATRIX A-E - display dimensions of matrix A-E
+            if userIsEnteringDigits { endDisplayEntry() }
+            let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
+            displayString = String(format: "%@ %5d %2d", Matrix.label[buttonName]!, nRows, nCols)
         default:
             break
         }
@@ -660,9 +692,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // GTO-CHS - build-up to goto line number
             prefix = .GTO_CHS
             gotoLineNumberDigits = []
-        case .STO, .RCL:
+        case .STO:
             // ignore
             prefix = nil
+        case .RCL:
+            prefix = .MATRIX
         default:
             // GSB-CHS - perform operation (CHS) without prefix
             prefix = nil
@@ -784,8 +818,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             performOperationFor(buttonName)
         case .f:
             // "DIM" pressed
-            prefix = nil
-            print("TBD: DIM")
+            prefix = .DIM
+        case .RCL:
+            // RCL-DIM pressed
+            prefix = .RCL_DIM
         default:
             // clear prefix and re-run
             prefix = nil
@@ -1346,7 +1382,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         // if nil and !isProgramMode, user must have pressed a button while program running - return
         guard handleButton(sender) != nil || isProgramMode else { return }
         
+        switch prefix {
+        case .DIM, .RCL, .MATRIX:
+            break  // don't change prefix (ex. f-DIM-f-A => f-DIM-A, RCL-f-MATRIX-f-A => RCL-MATRIX-A)
+        default:
             prefix = .f
+        }
     }
     
     @IBAction func gButtonPressed(_ sender: UIButton) {

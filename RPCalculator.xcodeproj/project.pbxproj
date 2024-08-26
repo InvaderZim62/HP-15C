@@ -21,6 +21,7 @@
 		4AA20A8425D1124800012341 /* click.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4AA20A8325D1124800012341 /* click.wav */; };
 		4AAA223025E855C10035D219 /* DisplayFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAA222F25E855C10035D219 /* DisplayFormat.swift */; };
 		4AAA32CA2C758C9D001640EA /* DisplayUnitTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAA32C92C758C9D001640EA /* DisplayUnitTest.swift */; };
+		4AAA32CC2C7CF1AF001640EA /* Matrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAA32CB2C7CF1AF001640EA /* Matrix.swift */; };
 		4ADE1D7F2C504D7F00D47C9D /* RPCalculatorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D7E2C504D7F00D47C9D /* RPCalculatorUITests.swift */; };
 		4ADE1D812C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D802C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift */; };
 		4ADE1D9C2C51CBD500D47C9D /* ComplexUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D9B2C51CBD500D47C9D /* ComplexUnitTests.swift */; };
@@ -67,6 +68,7 @@
 		4AA20A8325D1124800012341 /* click.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = click.wav; sourceTree = "<group>"; };
 		4AAA222F25E855C10035D219 /* DisplayFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormat.swift; sourceTree = "<group>"; };
 		4AAA32C92C758C9D001640EA /* DisplayUnitTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayUnitTest.swift; sourceTree = "<group>"; };
+		4AAA32CB2C7CF1AF001640EA /* Matrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Matrix.swift; sourceTree = "<group>"; };
 		4ADE1D7C2C504D7F00D47C9D /* RPCalculatorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RPCalculatorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ADE1D7E2C504D7F00D47C9D /* RPCalculatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPCalculatorUITests.swift; sourceTree = "<group>"; };
 		4ADE1D802C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPCalculatorUITestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 				4A70BB5B2C346C51008EC0A6 /* Solve.swift */,
 				4AAA222F25E855C10035D219 /* DisplayFormat.swift */,
 				4AEBB0D72C17CDA50000D2AF /* Complex.swift */,
+				4AAA32CB2C7CF1AF001640EA /* Matrix.swift */,
 				4AF8E86C25D8955800C52D10 /* Views */,
 				4AA20A8325D1124800012341 /* click.wav */,
 				4AA20A7225CD0E4D00012341 /* Supporting Files */,
@@ -325,6 +328,7 @@
 				4AA20A6225CD0E2A00012341 /* CalculatorViewController.swift in Sources */,
 				4AA20A5E25CD0E2A00012341 /* AppDelegate.swift in Sources */,
 				4AA20A7A25CE5C1E00012341 /* ButtonCoverView.swift in Sources */,
+				4AAA32CC2C7CF1AF001640EA /* Matrix.swift in Sources */,
 				4AA20A7D25CF6DC400012341 /* DisplayView.swift in Sources */,
 				4AF8E86F25D895A500C52D10 /* CalculatorView.swift in Sources */,
 				4AA20A7625CDBBAF00012341 /* Brain.swift in Sources */,

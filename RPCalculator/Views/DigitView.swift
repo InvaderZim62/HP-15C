@@ -61,6 +61,10 @@ class DigitView: UIView {
         "8": [.upperCross, .upperLeft, .upperRight, .middleCross, .lowerLeft, .lowerRight, .lowerCross],
         "9": [.upperCross, .upperLeft, .upperRight, .middleCross, .lowerRight, .lowerCross],
         "-": [.middleCross],
+        "A": [.upperCross, .upperLeft, .upperRight, .middleCross, .lowerLeft, .lowerRight],
+        "B": [.upperLeft, .middleCross, .lowerLeft, .lowerRight, .lowerCross],  // small "b"
+        "C": [.upperCross, .upperLeft, .lowerLeft, .lowerCross],
+        "D": [.upperRight, .middleCross, .lowerLeft, .lowerRight, .lowerCross],  // small "d"
         "E": [.upperCross, .upperLeft, .middleCross, .lowerLeft, .lowerCross],
         "e": [.upperCross, .upperLeft, .middleCross, .lowerLeft, .lowerCross],  // swift uses "e" for exponent (ex. 1.234e-02)
         "r": [.middleCross, .lowerLeft],
