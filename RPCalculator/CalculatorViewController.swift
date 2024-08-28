@@ -58,7 +58,6 @@
 //
 //  Not implemented:
 //  - statistics function
-//  - matrices (see https://developer.apple.com/documentation/accelerate/working_with_matrices)
 //  - numerical integration
 //
 //  To do...
@@ -652,7 +651,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // DIM A-E - create matrix with dimensions in X and Y registers (Y rows, X cols)
             if userIsEnteringDigits { endDisplayEntry() }
             updateDisplayString()
-            matrix.setDimensionsFor(buttonName, nRows: Int(brain.yRegister), nCols: Int(brain.xRegister!))
+            matrix.setDimensionsFor(buttonName, rows: Int(brain.yRegister), cols: Int(brain.xRegister!))
             matrix.printMatrix(buttonName)
             saveDefaults()
         case .RCL_DIM:
@@ -669,6 +668,28 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if userIsEnteringDigits { endDisplayEntry() }
             let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
             displayString = String(format: "%@ %5d %2d", Matrix.labels[buttonName]!, nRows, nCols)
+        case .STO:
+            // STO A-E - store display to matrix A-E, at row = register 0, col = register 1
+            if userIsEnteringDigits { endDisplayEntry() }
+            updateDisplayString()
+            let row = Int(brain.valueFromStorageRegister("0")!)
+            let col = Int(brain.valueFromStorageRegister("1")!)
+            if !matrix.setValueFor(buttonName, row: row, col: col, to: displayStringNumber) {
+                setError(3)  // trying to set value in non-existent matrix, or outside matrix dimensions
+            }
+            matrix.printMatrix(buttonName)
+        case .RCL:
+            // RCL A-E - show element of matrix A-E, at row = register 0, col = register 1
+            if userIsEnteringDigits { endDisplayEntry() }
+            let row = Int(brain.valueFromStorageRegister("0")!)
+            let col = Int(brain.valueFromStorageRegister("1")!)
+            if let value = matrix.getValueFor(buttonName, row: row, col: col) {
+                brain.pushOperand(value)
+                updateDisplayString()
+            } else {
+                setError(3)  // trying to get value from non-existent matrix, or outside matrix dimensions
+            }
+            matrix.printMatrix(buttonName)
         default:
             break
         }

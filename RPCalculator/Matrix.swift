@@ -18,19 +18,46 @@ struct Matrix: Codable {
         "1/x": "E"
     ]
     
-    mutating func setDimensionsFor(_ name: String, nRows: Int, nCols: Int) {
-        if nRows > 0 && nCols > 0 {
-            matrices[name] = Array(repeating: Array(repeating: 0, count: nCols), count: nRows)
+    mutating func setDimensionsFor(_ name: String, rows: Int, cols: Int) {
+        if rows > 0 && cols > 0 {
+            matrices[name] = Array(repeating: Array(repeating: 0, count: cols), count: rows)
         } else {
             matrices[name] = nil
         }
     }
     
-    func getDimensionsFor(_ name: String) -> (row: Int, col: Int) {
+    func getDimensionsFor(_ name: String) -> (rows: Int, cols: Int) {
         guard let matrix = matrices[name] else { return(0, 0) }
-        return (row: matrix.count, col: matrix[0].count)
+        return getDimensionsFor(matrix)
     }
     
+    func getDimensionsFor(_ matrix: [[Double]]) -> (rows: Int, cols: Int) {
+        (rows: matrix.count, cols: matrix[0].count)
+    }
+    
+    // note: row and col are 1-based indices, matrices are 0-based
+    mutating func setValueFor(_ name: String, row: Int, col: Int, to value: Double) -> Bool {
+        guard let matrix = matrices[name] else { return false }  // note: matrix is a copy
+        let (rows, cols) = getDimensionsFor(matrix)
+        if row <= rows && col <= cols {
+            matrices[name]![row - 1][col - 1] = value
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    // note: row and col are 1-based indices, matrices are 0-based
+    func getValueFor(_ name: String, row: Int, col: Int) -> Double? {
+        guard let matrix = matrices[name] else { return nil }  // note: matrix is a copy
+        let (rows, cols) = getDimensionsFor(matrix)
+        if row <= rows && col <= cols {
+            return matrices[name]![row - 1][col - 1]
+        } else {
+            return nil
+        }
+    }
+
     func printMatrices() {
         for matrix in matrices {
             printMatrix(matrix.key)
