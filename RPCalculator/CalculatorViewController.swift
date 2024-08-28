@@ -669,40 +669,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
             displayString = String(format: "%@ %5d %2d", Matrix.labels[buttonName]!, nRows, nCols)
         case .STO:
-            // STO A-E - store value to matrix A-E, at row = register 0, col = register 1
-            if userIsEnteringDigits { endDisplayEntry() }
-            updateDisplayString()
-            let row = Int(brain.valueFromStorageRegister("0")!)
-            let col = Int(brain.valueFromStorageRegister("1")!)
-            if matrix.storeValueFor(buttonName, row: row, col: col, to: displayStringNumber) {
-                if isUserMode {
-                    // auto-increment row/col registers
-                    let (newRow, newCol) = matrix.incrementRowColFor(buttonName, row: row, col: col)
-                    _ = brain.storeValueInRegister("0", value: Double(newRow))
-                    _ = brain.storeValueInRegister("1", value: Double(newCol))
-                }
-            } else {
-                setError(3)  // trying to set value in non-existent matrix, or outside matrix dimensions
-            }
-            matrix.printMatrix(buttonName)
+            // STO A-E - store displayed value to matrix A-E, at row = register 0, col = register 1
+            storeDisplayToMatrix(buttonName)
         case .RCL:
             // RCL A-E - recall element of matrix A-E, at row = register 0, col = register 1
-            if userIsEnteringDigits { endDisplayEntry() }
-            let row = Int(brain.valueFromStorageRegister("0")!)
-            let col = Int(brain.valueFromStorageRegister("1")!)
-            if let value = matrix.recallValueFor(buttonName, row: row, col: col) {
-                brain.pushOperand(value)
-                updateDisplayString()
-                if isUserMode {
-                    // auto-increment row/col registers
-                    let (newRow, newCol) = matrix.incrementRowColFor(buttonName, row: row, col: col)
-                    _ = brain.storeValueInRegister("0", value: Double(newRow))
-                    _ = brain.storeValueInRegister("1", value: Double(newCol))
-                }
-            } else {
-                setError(3)  // trying to recall value from non-existent matrix, or outside matrix dimensions
-            }
-            matrix.printMatrix(buttonName)
+            recallValueFromMatrix(buttonName)
         default:
             break
         }
@@ -1933,6 +1904,50 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         brain.swapXWithRegister(registerName)
         updateDisplayString()
         brain.printMemory()
+    }
+    
+    // To do...
+    // During store and recall of matrix element, when label button is pressed, display matrix name, row, and col,
+    // until button is released (minimum of 0.3? seconds), then show value.  If button is held more than 3 seconds,
+    // display "null" and don't perform store or recall action.
+    
+    // store displayed value to matrix A-E, at row = register 0, col = register 1
+    private func storeDisplayToMatrix(_ buttonName: String) {
+        if userIsEnteringDigits { endDisplayEntry() }
+        updateDisplayString()
+        let row = Int(brain.valueFromStorageRegister("0")!)
+        let col = Int(brain.valueFromStorageRegister("1")!)
+        if matrix.storeValueFor(buttonName, row: row, col: col, to: displayStringNumber) {
+            if isUserMode {
+                // auto-increment row/col registers
+                let (newRow, newCol) = matrix.incrementRowColFor(buttonName, row: row, col: col)
+                _ = brain.storeValueInRegister("0", value: Double(newRow))
+                _ = brain.storeValueInRegister("1", value: Double(newCol))
+            }
+        } else {
+            setError(3)  // trying to set value in non-existent matrix, or outside matrix dimensions
+        }
+        matrix.printMatrix(buttonName)
+    }
+    
+    // recall element of matrix A-E, at row = register 0, col = register 1
+    private func recallValueFromMatrix(_ buttonName: String) {
+        if userIsEnteringDigits { endDisplayEntry() }
+        let row = Int(brain.valueFromStorageRegister("0")!)
+        let col = Int(brain.valueFromStorageRegister("1")!)
+        if let value = matrix.recallValueFor(buttonName, row: row, col: col) {
+            brain.pushOperand(value)
+            updateDisplayString()
+            if isUserMode {
+                // auto-increment row/col registers
+                let (newRow, newCol) = matrix.incrementRowColFor(buttonName, row: row, col: col)
+                _ = brain.storeValueInRegister("0", value: Double(newRow))
+                _ = brain.storeValueInRegister("1", value: Double(newCol))
+            }
+        } else {
+            setError(3)  // trying to recall value from non-existent matrix, or outside matrix dimensions
+        }
+        matrix.printMatrix(buttonName)
     }
 
     // MARK: - Simulated button
