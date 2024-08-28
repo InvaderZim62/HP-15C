@@ -45,13 +45,16 @@
 //    - to enter a complex number, enter <real part>-ENTER, <imaginary part>-f-I ("C" annunciator will show)
 //    - to see the imaginary part of a complex number, press and hold f-(i)
 //    - to exit complex mode, select g-CF-8
+//  - matrices
+//    - dimension matrix A to be 2 rows x 3 cols (filled with zeros): 2 ENTER 3 f DIM A
+//    - show dimensions of matrix A: RCL MATRIX A (displays: "A     2  3")
 //
 //  Useful memory functions:
-//    overwrite xRegister with display:    if userIsEnteringDigits { endDisplayEntry() }
-//                                         updateDisplayString()
-//    push display onto stack:             if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
-//    move display to memory stack before
-//      performing an operations:          prepStackForOperation()
+//    - overwrite xRegister with display:     if userIsEnteringDigits { endDisplayEntry() }
+//    - display xRegister formatted           updateDisplayString()
+//    - push display onto stack:              if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
+//    - move display to memory stack before
+//      performing an operations:             prepStackForOperation()
 //
 //  Not implemented:
 //  - statistics function
@@ -70,6 +73,12 @@
 //  - p.108 indirect branching
 //  - p.109 to label
 //  - p.109 to line number
+//  - need to handle these cases:
+//    - RCL f I     => RCL I (ie. remember RCL after entering f)
+//    - RCL I       => RCL I
+//    - RCL f FIX 5 => FIX 5 (ie. forget RCL after entering f)
+//    maybe create prefix = RCL_f; if next button isn't (i), I, MATRIX, or DIM, drop the pre-f part;
+//    also have var prefix's didSet set fLabel.alpha = 1, if prefix.last = "f" (small letter f)
 //
 
 import UIKit
@@ -89,7 +98,8 @@ enum Prefix: String {
     case GTO  // ex. GTO 5 (goto label 5)
     case GTO_DOT  // ex. GTO . 5 (goto label .5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
-    case MATRIX  // ex. RCL MATRIX A (display dimensions of matrix A)
+    case MATRIX  // ex. f MATRIX 1 (store beginning row and column numbers in registers 0 and 1, respectively)
+    case RCL_MATRIX  // ex. RCL MATRIX A (display dimensions of matrix A)
     case XSWAP  // ex. XSWAP 4 (swap X register with register 4)
     case XSWAP_DOT  // ex. XSWAP . 4 (swap X register with register .4)
     case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
@@ -654,11 +664,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             displayString = String(nCols)
             endDisplayEntry()  // overwrite X register with cols
             updateDisplayString()
-        case .MATRIX:
+        case .RCL_MATRIX:
             // MATRIX A-E - display dimensions of matrix A-E
             if userIsEnteringDigits { endDisplayEntry() }
             let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
-            displayString = String(format: "%@ %5d %2d", Matrix.label[buttonName]!, nRows, nCols)
+            displayString = String(format: "%@ %5d %2d", Matrix.labels[buttonName]!, nRows, nCols)
         default:
             break
         }
@@ -688,6 +698,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 return
             }  // else CHS pressed with existing number on display (push "nCHS" onto stack, below)
             performOperationFor(buttonName)
+        case .f:
+            prefix = .MATRIX
         case .GTO:
             // GTO-CHS - build-up to goto line number
             prefix = .GTO_CHS
@@ -696,7 +708,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // ignore
             prefix = nil
         case .RCL:
-            prefix = .MATRIX
+            prefix = .RCL_MATRIX
         default:
             // GSB-CHS - perform operation (CHS) without prefix
             prefix = nil
@@ -817,7 +829,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none, .g, .HYP, .HYP1:
             performOperationFor(buttonName)
         case .f:
-            // "DIM" pressed
+            // DIM pressed
             prefix = .DIM
         case .RCL:
             // RCL-DIM pressed
@@ -1382,19 +1394,14 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         // if nil and !isProgramMode, user must have pressed a button while program running - return
         guard handleButton(sender) != nil || isProgramMode else { return }
         
-        switch prefix {
-        case .DIM, .RCL, .MATRIX:
-            break  // don't change prefix (ex. f-DIM-f-A => f-DIM-A, RCL-f-MATRIX-f-A => RCL-MATRIX-A)
-        default:
-            prefix = .f
-        }
+        prefix = .f
     }
     
     @IBAction func gButtonPressed(_ sender: UIButton) {
         // if nil and !isProgramMode, user must have pressed a button while program running - return
         guard handleButton(sender) != nil || isProgramMode else { return }
         
-            prefix = .g
+        prefix = .g
     }
     
     @IBAction func stoButtonPressed(_ sender: UIButton) {
@@ -1634,6 +1641,18 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .ENG:
             prefix = nil
             setDisplayFormatTo(.engineering(min(Int(buttonName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+        case .MATRIX:
+            prefix = nil
+            switch buttonName {
+            case "1":
+                // f MATRIX 1 - store beginning row and column numbers in registers 0 and 1, respectively
+                _ = brain.storeValueInRegister("0", value: 1)
+                _ = brain.storeValueInRegister("1", value: 1)
+            case "0":
+                break  // HP-15C seems to ignore this
+            default:
+                setError(11)
+            }
         case .SOLVE:
             prefix = nil
             solveFrom(label: buttonName)

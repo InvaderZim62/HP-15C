@@ -8,10 +8,9 @@
 import Foundation
 
 struct Matrix: Codable {
-    var oneDs = [String: [Double]]()  // [array name: 1D array]
-    var twoDs = [String: [[Double]]]()  // [array name: 2D array]
+    var matrices = [String: [[Double]]]()  // [matrix name: 2D array], access using matrices[name][row][col]
     
-    static let label = [
+    static let labels = [
         "√x": "A",
         "ex": "B",
         "10x": "C",
@@ -20,26 +19,30 @@ struct Matrix: Codable {
     ]
     
     mutating func setDimensionsFor(_ name: String, nRows: Int, nCols: Int) {
-        twoDs[name] = Array(repeating: Array(repeating: 0, count: nCols), count: nRows)  // twoD[row][col]
+        if nRows > 0 && nCols > 0 {
+            matrices[name] = Array(repeating: Array(repeating: 0, count: nCols), count: nRows)
+        } else {
+            matrices[name] = nil
+        }
     }
     
     func getDimensionsFor(_ name: String) -> (row: Int, col: Int) {
-        guard let twoD = twoDs[name] else { return(0, 0) }
-        return (row: twoD.count, col: twoD[0].count)
+        guard let matrix = matrices[name] else { return(0, 0) }
+        return (row: matrix.count, col: matrix[0].count)
     }
     
     func printMatrices() {
-        for twoD in twoDs {
-            printMatrix(twoD.key)
+        for matrix in matrices {
+            printMatrix(matrix.key)
         }
     }
     
     func printMatrix(_ name: String) {
-        guard let twoD = twoDs[name] else { return }
-        print("matrix \(Matrix.label[name]!):")
-        for row in 0..<twoD.count {
-            for col in 0..<twoD[0].count {
-                print("\(twoDs[name]![row][col])", terminator: " ")
+        guard let matrix = matrices[name] else { return }
+        print("matrix \(Matrix.labels[name]!):")
+        for row in 0..<matrix.count {
+            for col in 0..<matrix[0].count {
+                print("\(matrices[name]![row][col])", terminator: " ")
             }
             print()
         }
