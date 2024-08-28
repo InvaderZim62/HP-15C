@@ -669,25 +669,38 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
             displayString = String(format: "%@ %5d %2d", Matrix.labels[buttonName]!, nRows, nCols)
         case .STO:
-            // STO A-E - store display to matrix A-E, at row = register 0, col = register 1
+            // STO A-E - store value to matrix A-E, at row = register 0, col = register 1
             if userIsEnteringDigits { endDisplayEntry() }
             updateDisplayString()
             let row = Int(brain.valueFromStorageRegister("0")!)
             let col = Int(brain.valueFromStorageRegister("1")!)
-            if !matrix.setValueFor(buttonName, row: row, col: col, to: displayStringNumber) {
+            if matrix.storeValueFor(buttonName, row: row, col: col, to: displayStringNumber) {
+                if isUserMode {
+                    // auto-increment row/col registers
+                    let (newRow, newCol) = matrix.incrementRowColFor(buttonName, row: row, col: col)
+                    _ = brain.storeValueInRegister("0", value: Double(newRow))
+                    _ = brain.storeValueInRegister("1", value: Double(newCol))
+                }
+            } else {
                 setError(3)  // trying to set value in non-existent matrix, or outside matrix dimensions
             }
             matrix.printMatrix(buttonName)
         case .RCL:
-            // RCL A-E - show element of matrix A-E, at row = register 0, col = register 1
+            // RCL A-E - recall element of matrix A-E, at row = register 0, col = register 1
             if userIsEnteringDigits { endDisplayEntry() }
             let row = Int(brain.valueFromStorageRegister("0")!)
             let col = Int(brain.valueFromStorageRegister("1")!)
-            if let value = matrix.getValueFor(buttonName, row: row, col: col) {
+            if let value = matrix.recallValueFor(buttonName, row: row, col: col) {
                 brain.pushOperand(value)
                 updateDisplayString()
+                if isUserMode {
+                    // auto-increment row/col registers
+                    let (newRow, newCol) = matrix.incrementRowColFor(buttonName, row: row, col: col)
+                    _ = brain.storeValueInRegister("0", value: Double(newRow))
+                    _ = brain.storeValueInRegister("1", value: Double(newCol))
+                }
             } else {
-                setError(3)  // trying to get value from non-existent matrix, or outside matrix dimensions
+                setError(3)  // trying to recall value from non-existent matrix, or outside matrix dimensions
             }
             matrix.printMatrix(buttonName)
         default:

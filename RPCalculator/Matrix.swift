@@ -36,7 +36,7 @@ struct Matrix: Codable {
     }
     
     // note: row and col are 1-based indices, matrices are 0-based
-    mutating func setValueFor(_ name: String, row: Int, col: Int, to value: Double) -> Bool {
+    mutating func storeValueFor(_ name: String, row: Int, col: Int, to value: Double) -> Bool {
         guard let matrix = matrices[name] else { return false }  // note: matrix is a copy
         let (rows, cols) = getDimensionsFor(matrix)
         if row <= rows && col <= cols {
@@ -48,7 +48,7 @@ struct Matrix: Codable {
     }
     
     // note: row and col are 1-based indices, matrices are 0-based
-    func getValueFor(_ name: String, row: Int, col: Int) -> Double? {
+    func recallValueFor(_ name: String, row: Int, col: Int) -> Double? {
         guard let matrix = matrices[name] else { return nil }  // note: matrix is a copy
         let (rows, cols) = getDimensionsFor(matrix)
         if row <= rows && col <= cols {
@@ -56,6 +56,26 @@ struct Matrix: Codable {
         } else {
             return nil
         }
+    }
+    
+    // wrap col, then row, then return to start for input matrix
+    // assumes matrices[name] exists and row and col are within its dimensions
+    // (ok, if called after storeValueFor or recallValueFor)
+    // note: row and col are 1-based indices, matrices are 0-based
+    func incrementRowColFor(_ name: String, row: Int, col: Int) -> (Int, Int) {
+        var nextRow = row
+        var nextCol = col
+        let (rows, cols) = getDimensionsFor(matrices[name]!)
+        if col < cols {
+            nextCol = col + 1
+        } else if row < rows {
+            nextRow = row + 1
+            nextCol = 1
+        } else {
+            nextRow = 1
+            nextCol = 1
+        }
+        return (nextRow, nextCol)
     }
 
     func printMatrices() {
