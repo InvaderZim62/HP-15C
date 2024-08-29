@@ -46,8 +46,23 @@
 //    - to see the imaginary part of a complex number, press and hold f-(i)
 //    - to exit complex mode, select g-CF-8
 //  - matrices
+//    - matrices are reference using 1-based indices
 //    - dimension matrix A to be 2 rows x 3 cols (filled with zeros): 2 ENTER 3 f DIM A
 //    - show dimensions of matrix A: RCL MATRIX A (displays: "A     2  3")
+//    - store an 8 in matrix A, row 3, col 4: 3 STO 0 (row), 4 STO 1 (col), 8 STO A
+//    - recall value in matrix A, row 3, col 4: 3 STO 0 (row), 4 STO 1 (col), RCL A
+//    - store all values in matrix A, while auto-sequencing columns and rows:
+//      - f MATRIX 1    start with 1 in storage register 0 and 1
+//      - f USER        enable auto-sequence
+//      - 1 STO A       store 1 in row 1, col 1, then increment value in register 1 (col)
+//      - 2 STO A       store 1 in row 1, col 2, then increment value in register 1 (col)
+//      - ...           when col = last col, go to next row; return to start after last element
+//    - recall all values in matrix A, while auto-sequencing columns and rows:
+//      - f MATRIX 1    start with 1 in storage register 0 and 1
+//      - f USER        enable auto-sequence
+//      - RCL A         recall row 1, col 1, then increment value in register 1 (col)
+//      - RCL A         recall row 1, col 2, then increment value in register 1 (col)
+//      - ...           when col = last col, go to next row; return to start after last element
 //
 //  Useful memory functions:
 //    - overwrite xRegister with display:     if userIsEnteringDigits { endDisplayEntry() }
@@ -668,6 +683,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if userIsEnteringDigits { endDisplayEntry() }
             let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
             displayString = String(format: "%@ %5d %2d", Matrix.labels[buttonName]!, nRows, nCols)
+            matrix.printMatrices()
         case .STO:
             // STO A-E - store displayed value to matrix A-E, at row = register 0, col = register 1
             storeDisplayToMatrix(buttonName)
