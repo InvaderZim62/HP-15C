@@ -5,12 +5,27 @@
 //  Created by Phil Stern on 8/26/24.
 //
 
-import Foundation
+import UIKit
 
-struct Matrix: Codable {
-    var matrices = [String: [[Double]]]()  // [matrix name: 2D array], access using matrices[name][row][col]
+class Matrix: Codable, CustomStringConvertible {
+    var name: String  // "A" - "E"
+    var values: [[Double]]
     
-    static let labels = [
+    init(name: String) {
+        self.name = name
+        self.values = [[Double]]()
+    }
+    
+    var rows: Int {
+        values.count
+    }
+    
+    var cols: Int {
+        guard rows > 0 else { return 0 }
+        return values[0].count
+    }
+    
+    static let names = [  // button title: matrix name
         "√x": "A",
         "ex": "B",
         "10x": "C",
@@ -18,29 +33,18 @@ struct Matrix: Codable {
         "1/x": "E"
     ]
     
-    mutating func setDimensionsFor(_ name: String, rows: Int, cols: Int) {
+    func setDimensions(rows: Int, cols: Int) {
         if rows > 0 && cols > 0 {
-            matrices[name] = Array(repeating: Array(repeating: 0, count: cols), count: rows)
+            values = Array(repeating: Array(repeating: 0, count: cols), count: rows)
         } else {
-            matrices[name] = nil
+            values = []
         }
     }
     
-    func getDimensionsFor(_ name: String) -> (rows: Int, cols: Int) {
-        guard let matrix = matrices[name] else { return(0, 0) }
-        return getDimensionsFor(matrix)
-    }
-    
-    func getDimensionsFor(_ matrix: [[Double]]) -> (rows: Int, cols: Int) {
-        (rows: matrix.count, cols: matrix[0].count)
-    }
-    
     // note: row and col are 1-based indices, matrices are 0-based
-    mutating func storeValueFor(_ name: String, row: Int, col: Int, to value: Double) -> Bool {
-        guard let matrix = matrices[name] else { return false }  // note: matrix is a copy
-        let (rows, cols) = getDimensionsFor(matrix)
+    func storeValue(_ value: Double, atRow row: Int, col: Int) -> Bool {
         if row <= rows && col <= cols {
-            matrices[name]![row - 1][col - 1] = value
+            values[row - 1][col - 1] = value
             return true
         } else {
             return false
@@ -48,11 +52,9 @@ struct Matrix: Codable {
     }
     
     // note: row and col are 1-based indices, matrices are 0-based
-    func recallValueFor(_ name: String, row: Int, col: Int) -> Double? {
-        guard let matrix = matrices[name] else { return nil }  // note: matrix is a copy
-        let (rows, cols) = getDimensionsFor(matrix)
+    func recallValue(atRow row: Int, col: Int) -> Double? {
         if row <= rows && col <= cols {
-            return matrices[name]![row - 1][col - 1]
+            return values[row - 1][col - 1]
         } else {
             return nil
         }
@@ -62,10 +64,9 @@ struct Matrix: Codable {
     // assumes matrices[name] exists and row and col are within its dimensions
     // (ok, if called after storeValueFor or recallValueFor)
     // note: row and col are 1-based indices, matrices are 0-based
-    func incrementRowColFor(_ name: String, row: Int, col: Int) -> (Int, Int) {
+    func incrementRowCol(row: Int, col: Int) -> (Int, Int) {
         var nextRow = row
         var nextCol = col
-        let (rows, cols) = getDimensionsFor(matrices[name]!)
         if col < cols {
             nextCol = col + 1
         } else if row < rows {
@@ -77,21 +78,15 @@ struct Matrix: Codable {
         }
         return (nextRow, nextCol)
     }
-
-    func printMatrices() {
-        for matrix in matrices {
-            printMatrix(matrix.key)
-        }
-    }
     
-    func printMatrix(_ name: String) {
-        guard let matrix = matrices[name] else { return }
-        print("matrix \(Matrix.labels[name]!):")
-        for row in 0..<matrix.count {
-            for col in 0..<matrix[0].count {
-                print("\(matrices[name]![row][col])", terminator: " ")
+    var description: String {
+        var descriptionString = "matrix \(name):\n"
+        for row in 0..<rows {
+            for col in 0..<cols {
+                descriptionString += " \(values[row][col])"
             }
-            print()
+            descriptionString += "\n"
         }
+        return descriptionString
     }
 }

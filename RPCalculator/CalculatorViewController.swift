@@ -166,7 +166,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var brain = Brain()
     var program = Program()
     var solve = Solve()
-    var matrix = Matrix()
+    var matrices: [String: Matrix] = [  // button name: matrix
+        "√x"  : Matrix(name: "A"),
+        "ex"  : Matrix(name: "B"),
+        "10x" : Matrix(name: "C"),
+        "yx"  : Matrix(name: "D"),
+        "1/x" : Matrix(name: "E")
+    ]
     var clickSoundPlayer: AVAudioPlayer?
     var displayString = "" {
         didSet {
@@ -400,8 +406,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if let data = try? JSONEncoder().encode(brain) {
                 defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to Brain.init and .encode
             }
-            if let data = try? JSONEncoder().encode(matrix) {
-                defaults.set(data, forKey: "matrix")
+            if let data = try? JSONEncoder().encode(matrices) {
+                defaults.set(data, forKey: "matrices")
             }
             defaults.set(isComplexMode, forKey: "isComplexMode")
             defaults.set(isUserMode, forKey: "isUserMode")
@@ -436,8 +442,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if let data = defaults.data(forKey: "brain") {
             brain = try! JSONDecoder().decode(Brain.self, from: data)
         }
-        if let data = defaults.data(forKey: "matrix") {
-            matrix = try! JSONDecoder().decode(Matrix.self, from: data)
+        if let data = defaults.data(forKey: "matrices") {
+            matrices = try! JSONDecoder().decode([String: Matrix].self, from: data)
         }
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
         isUserMode = defaults.bool(forKey: "isUserMode")
@@ -666,27 +672,29 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // DIM A-E - create matrix with dimensions in X and Y registers (Y rows, X cols)
             if userIsEnteringDigits { endDisplayEntry() }
             updateDisplayString()
-            matrix.setDimensionsFor(buttonName, rows: Int(brain.yRegister), cols: Int(brain.xRegister!))
-            matrix.printMatrix(buttonName)
+            let matrix = matrices[buttonName]!
+            matrix.setDimensions(rows: Int(brain.yRegister), cols: Int(brain.xRegister!))
+            print(matrix)
             saveDefaults()
         case .RCL_DIM:
             // RCL DIM A-E - store number of rows in Y register and columns in X register, for matrix A-E
             if userIsEnteringDigits { endDisplayEntry() }
-            let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
-            brain.pushOperand(Double(nRows))
-            brain.pushOperand(Double(nRows))  // push rows into X and Y registers
-            displayString = String(nCols)
+            let matrix = matrices[buttonName]!
+            brain.pushOperand(Double(matrix.rows))
+            brain.pushOperand(Double(matrix.rows))  // push rows into X and Y registers
+            displayString = String(matrix.cols)
             endDisplayEntry()  // overwrite X register with cols
             updateDisplayString()
         case .RCL_MATRIX:
             // MATRIX A-E - display dimensions of matrix A-E
             if userIsEnteringDigits { endDisplayEntry() }
-            let (nRows, nCols) = matrix.getDimensionsFor(buttonName)
-            displayString = String(format: "%@ %5d %2d", Matrix.labels[buttonName]!, nRows, nCols)
-            matrix.printMatrices()
+            let matrix = matrices[buttonName]!
+            displayString = String(format: "%@ %5d %2d", matrix.name, matrix.rows, matrix.cols)
+            print(matrix)
         case .STO:
             // STO A-E - store displayed value to matrix A-E, at row = register 0, col = register 1
             storeDisplayToMatrix(buttonName)
+            saveDefaults()
         case .RCL:
             // RCL A-E - recall element of matrix A-E, at row = register 0, col = register 1
             recallValueFromMatrix(buttonName)
@@ -1933,17 +1941,18 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         updateDisplayString()
         let row = Int(brain.valueFromStorageRegister("0")!)
         let col = Int(brain.valueFromStorageRegister("1")!)
-        if matrix.storeValueFor(buttonName, row: row, col: col, to: displayStringNumber) {
+        let matrix = matrices[buttonName]!
+        if matrix.storeValue(displayStringNumber, atRow: row, col: col) {
             if isUserMode {
                 // auto-increment row/col registers
-                let (newRow, newCol) = matrix.incrementRowColFor(buttonName, row: row, col: col)
+                let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
                 _ = brain.storeValueInRegister("0", value: Double(newRow))
                 _ = brain.storeValueInRegister("1", value: Double(newCol))
             }
         } else {
             setError(3)  // trying to set value in non-existent matrix, or outside matrix dimensions
         }
-        matrix.printMatrix(buttonName)
+        print(matrix)
     }
     
     // recall element of matrix A-E, at row = register 0, col = register 1
@@ -1951,19 +1960,20 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         if userIsEnteringDigits { endDisplayEntry() }
         let row = Int(brain.valueFromStorageRegister("0")!)
         let col = Int(brain.valueFromStorageRegister("1")!)
-        if let value = matrix.recallValueFor(buttonName, row: row, col: col) {
+        let matrix = matrices[buttonName]!
+        if let value = matrix.recallValue(atRow: row, col: col) {
             brain.pushOperand(value)
             updateDisplayString()
             if isUserMode {
                 // auto-increment row/col registers
-                let (newRow, newCol) = matrix.incrementRowColFor(buttonName, row: row, col: col)
+                let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
                 _ = brain.storeValueInRegister("0", value: Double(newRow))
                 _ = brain.storeValueInRegister("1", value: Double(newCol))
             }
         } else {
             setError(3)  // trying to recall value from non-existent matrix, or outside matrix dimensions
         }
-        matrix.printMatrix(buttonName)
+        print(matrix)
     }
 
     // MARK: - Simulated button
