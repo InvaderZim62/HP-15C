@@ -28,6 +28,19 @@ enum Error: Equatable, Codable {
     case none
 }
 
+enum Element: Codable {
+    case number(Double)
+    case matrix(String)  // name of matrix
+    
+    var number: Double? {
+        if case .number(let number) = self {
+            return number
+        } else {
+            return nil
+        }
+    }
+}
+
 class Brain: Codable {
     
     var trigUnits = TrigUnits.DEG
@@ -36,7 +49,7 @@ class Brain: Codable {
     var isConvertingPolar = false  // all complex trig functions are in radians, except conversions between rectangular and polar coordinates
     var isSolving = false  // use to disable printMemory while solving for root
 
-    var xRegister: Double? {
+    var xRegister: Element? {
         get {
             return realStack.last
         }
@@ -55,7 +68,7 @@ class Brain: Codable {
         }
     }
     
-    var yRegister: Double {
+    var yRegister: Element {
         realStack[2]
     }
     
@@ -91,13 +104,20 @@ class Brain: Codable {
 
     // mantissa (in this case) is all digits of displayed number, without punctuation ("-", "e", ".", ",")
     var displayMantissa: String {
-        var mantissa = String(abs(xRegister!))
-        if let ne = mantissa.firstIndex(of: "e") {
-            mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
+        switch xRegister {
+        case .number(let number):
+            var mantissa = String(abs(number))
+            if let ne = mantissa.firstIndex(of: "e") {
+                mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
+            }
+            mantissa = mantissa.replacingOccurrences(of: ".", with: "")
+            if mantissa.count < 10 { mantissa += repeatElement("0", count: 10 - mantissa.count) }
+            return mantissa
+        case .matrix(let matrix):
+            <#code#>
+        case nil:
+            <#code#>
         }
-        mantissa = mantissa.replacingOccurrences(of: ".", with: "")
-        if mantissa.count < 10 { mantissa += repeatElement("0", count: 10 - mantissa.count) }
-        return mantissa
     }
 
     var isComplexMode = false {
@@ -109,7 +129,7 @@ class Brain: Codable {
         }
     }
 
-    private var realStack = [Double](repeating: 0.0, count: Constants.stackSize) {  // T, Z, Y, X
+    private var realStack = [Element](repeating: Element.number(0), count: Constants.stackSize) {  // T, Z, Y, X
         didSet {
             // truncate stack to last 4 elements, then pad front with repeat of 0th element if size < 4
             realStack = realStack.suffix(Constants.stackSize)
@@ -124,11 +144,13 @@ class Brain: Codable {
             imagStack.insert(contentsOf: repeatElement(imagStack[0], count: Constants.stackSize - imagStack.count), at: 0)
         }
     }
+    
+    static let E0 = Element.number(0)
 
-    private var storageRegisters: [String: Double] = [  // [register name: number]
-         "I": 0,
-         "0": 0,  "1": 0,  "2": 0,  "3": 0,  "4": 0,  "5": 0,  "6": 0,  "7": 0,  "8": 0,  "9": 0,
-        ".0": 0, ".1": 0, ".2": 0, ".3": 0, ".4": 0, ".5": 0, ".6": 0, ".7": 0, ".8": 0, ".9": 0,
+    private var storageRegisters: [String: Element] = [  // [register name: number]
+        "I": E0,
+         "0": E0,  "1": E0,  "2": E0,  "3": E0,  "4": E0,  "5": E0,  "6": E0,  "7": E0,  "8": E0,  "9": E0,
+        ".0": E0, ".1": E0, ".2": E0, ".3": E0, ".4": E0, ".5": E0, ".6": E0, ".7": E0, ".8": E0, ".9": E0,
          // the remaining registers are not available on the HP-15C by default;
          // they can be accessed by reallocating memory using the DIM function
 //        "20": 0, "21": 0, "22": 0, "23": 0, "24": 0, "25": 0, "26": 0, "27": 0, "28": 0, "29": 0,
@@ -150,8 +172,8 @@ class Brain: Codable {
         self.lastXRegister = try container.decode(Double.self, forKey: .lastXRegister)
         self.error = try container.decode(Error.self, forKey: .error)
         self.isComplexMode = try container.decode(Bool.self, forKey: .isComplexMode)
-        self.xRegister = try container.decodeIfPresent(Double.self, forKey: .xRegister)
-        self.realStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .realStack)) as? [Double] ?? []
+        self.xRegister = try container.decode(Element.self, forKey: .xRegister)
+        self.realStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .realStack)) as? [Element] ?? []
         self.imagStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .imagStack)) as? [Double] ?? []
         self.storageRegisters = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .storageRegisters)) as? [String: Double] ?? [:]
     }
@@ -170,19 +192,23 @@ class Brain: Codable {
     
     // MARK: - Start of code
     
-    func pushOperand(_ operand: Double) {
+    func pushOperand(_ operand: Element) {
         realStack.append(operand)
         imagStack.append(0)
     }
     
     func pushOperand(_ operand: Complex) {
-        realStack.append(operand.real)
+        realStack.append(Element.number(operand.real))
         imagStack.append(operand.imag)
     }
     
     // remove and return end of stack (X register)
     func popOperand() -> Complex {
-        Complex(real: realStack.popLast()!, imag: imagStack.popLast()!)
+        Complex(real: realStack.popLast()!.number!, imag: imagStack.popLast()!)
+    }
+    
+    func popOperand() -> Element {
+        realStack.popLast()!
     }
     
     func pushXRegister() {
@@ -197,7 +223,7 @@ class Brain: Codable {
         printMemory()
     }
     
-    func fillRegistersWith(_ operand: Double) {
+    func fillRegistersWith(_ operand: Element) {
         pushOperand(operand)
         pushOperand(operand)
         pushOperand(operand)
@@ -205,9 +231,9 @@ class Brain: Codable {
     }
     
     func swapRealImag() {
-        let temp = imagStack.last
-        xRegisterImag = xRegister
-        xRegister = temp
+        let temp = imagStack.last!
+        xRegisterImag = xRegister?.number
+        xRegister = Element.number(temp)
     }
     
     func clearStorageRegisters() {
@@ -216,7 +242,7 @@ class Brain: Codable {
     }
     
     func clearRealStack() {
-        realStack = [Double](repeating: 0.0, count: Constants.stackSize)
+        realStack = [Element](repeating: Element.number(0), count: Constants.stackSize)
     }
     
     func clearImaginaryStack() {
