@@ -12,6 +12,10 @@
 
 import Foundation
 
+protocol Stackable: Codable { }
+
+extension Double: Stackable { }  // extend Double to also be of type "Stackable"
+
 struct Constants {
     static let stackSize = 4  // T, Z, Y, X
     static let D2R = Double.pi / 180
@@ -36,7 +40,7 @@ class Brain: Codable {
     var isConvertingPolar = false  // all complex trig functions are in radians, except conversions between rectangular and polar coordinates
     var isSolving = false  // use to disable printMemory while solving for root
 
-    var xRegister: Double? {
+    var xRegister: Stackable? {
         get {
             return realStack.last
         }
@@ -55,7 +59,7 @@ class Brain: Codable {
         }
     }
     
-    var yRegister: Double {
+    var yRegister: Stackable {
         realStack[2]
     }
     
@@ -65,7 +69,7 @@ class Brain: Codable {
     // 20: "20", 21: "21",... 29: "29"
     // ...
     var iRegisterName: String {
-        let registerNumber = min(Int(abs(storageRegisters["I"]!)), 65)
+        let registerNumber = min(Int(abs(storageRegisters["I"]! as! Double)), 65)  // will fail if register I contains a Matrix
         switch registerNumber {
         case 10...19:
             return String(String(format: "%.1f", (Double(registerNumber) - 10)/10).dropFirst())
@@ -91,7 +95,7 @@ class Brain: Codable {
 
     // mantissa (in this case) is all digits of displayed number, without punctuation ("-", "e", ".", ",")
     var displayMantissa: String {
-        var mantissa = String(abs(xRegister!))
+        var mantissa = String(abs(xRegister! as! Double))  // will fail, if xRegister contains a Matrix
         if let ne = mantissa.firstIndex(of: "e") {
             mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
         }
@@ -109,7 +113,7 @@ class Brain: Codable {
         }
     }
 
-    private var realStack = [Double](repeating: 0.0, count: Constants.stackSize) {  // T, Z, Y, X
+    private var realStack = [Stackable](repeating: 0.0, count: Constants.stackSize) {  // T, Z, Y, X
         didSet {
             // truncate stack to last 4 elements, then pad front with repeat of 0th element if size < 4
             realStack = realStack.suffix(Constants.stackSize)
@@ -125,8 +129,8 @@ class Brain: Codable {
         }
     }
 
-    private var storageRegisters: [String: Double] = [  // [register name: number]
-         "I": 0,
+    private var storageRegisters: [String: Stackable] = [  // [register name: number]
+        "I": 0.0,
          "0": 0,  "1": 0,  "2": 0,  "3": 0,  "4": 0,  "5": 0,  "6": 0,  "7": 0,  "8": 0,  "9": 0,
         ".0": 0, ".1": 0, ".2": 0, ".3": 0, ".4": 0, ".5": 0, ".6": 0, ".7": 0, ".8": 0, ".9": 0,
          // the remaining registers are not available on the HP-15C by default;
@@ -150,7 +154,7 @@ class Brain: Codable {
         self.lastXRegister = try container.decode(Double.self, forKey: .lastXRegister)
         self.error = try container.decode(Error.self, forKey: .error)
         self.isComplexMode = try container.decode(Bool.self, forKey: .isComplexMode)
-        self.xRegister = try container.decodeIfPresent(Double.self, forKey: .xRegister)
+//        self.xRegister = try container.decodeIfPresent(Double.self, forKey: .xRegister)
         self.realStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .realStack)) as? [Double] ?? []
         self.imagStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .imagStack)) as? [Double] ?? []
         self.storageRegisters = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .storageRegisters)) as? [String: Double] ?? [:]
@@ -162,7 +166,7 @@ class Brain: Codable {
         try container.encode(self.lastXRegister, forKey: .lastXRegister)
         try container.encode(self.error, forKey: .error)
         try container.encode(self.isComplexMode, forKey: .isComplexMode)
-        try container.encodeIfPresent(self.xRegister, forKey: .xRegister)
+//        try container.encodeIfPresent(self.xRegister, forKey: .xRegister)
         try container.encode(JSONSerialization.data(withJSONObject: realStack), forKey: .realStack)
         try container.encode(JSONSerialization.data(withJSONObject: imagStack), forKey: .imagStack)
         try container.encode(JSONSerialization.data(withJSONObject: storageRegisters), forKey: .storageRegisters)
@@ -180,9 +184,20 @@ class Brain: Codable {
         imagStack.append(operand.imag)
     }
     
+    func pushOperand(_ operand: Matrix) {
+        realStack.append(operand)
+        imagStack.append(0)
+    }
+
     // remove and return end of stack (X register)
-    func popOperand() -> Complex {
-        Complex(real: realStack.popLast()!, imag: imagStack.popLast()!)
+    func popOperand() -> Stackable {     // Complex or Matrix
+        let real = realStack.popLast()!  // Stackable => Double or Matrix
+        let imag = imagStack.popLast()!  // Double
+        if real is Double {
+            return Complex(real: real as! Double, imag: imag)
+        } else {
+            return real  // Matrix
+        }
     }
     
     func pushXRegister() {
@@ -206,7 +221,7 @@ class Brain: Codable {
     
     func swapRealImag() {
         let temp = imagStack.last
-        xRegisterImag = xRegister
+        xRegisterImag = xRegister as? Double  // will fail, if xRegister contains a Matrix
         xRegister = temp
     }
     
@@ -259,20 +274,20 @@ class Brain: Codable {
         }
     }
     
-    func valueFromStorageRegister(_ name: String) -> Double? {
+    func valueFromStorageRegister(_ name: String) -> Stackable? {
         storageRegisters[name]
     }
     
     func moveRealXToImagX() {
-        imagStack[2] = xRegister!
+        imagStack[2] = xRegister! as! Double  // will fail, if xRegister contains a Matrix
         popXRegister()
         printMemory()
     }
 
     func performOperation(_ prefixAndOperation: String) {
         let saveStack = realStack  // save in case of nan or inf
-        var result = Complex(real: 0, imag: 0)
-        var secondResult: Complex? = nil
+        var result: Stackable  // Complex or Matrix
+        var secondResult: Stackable? = nil
         
         let prefixKey = prefixAndOperation.first  // prefix is always one letter
         let operation = prefixAndOperation.dropFirst()
@@ -282,231 +297,246 @@ class Brain: Codable {
         switch prefixKey {
         case "n":  // none (primary button functions)
             switch operation {
-            case "÷":
-                let divisor = popOperand()
-                result = popOperand() / divisor  // let DisplayView handle divide by zero (result = "inf")
-            case "×":
-                result = popOperand() * popOperand()
-            case "–":
-                result = -popOperand() + popOperand()
+//            case "÷":
+//                let divisor = popOperand()
+//                result = popOperand() / divisor  // let DisplayView handle divide by zero (result = "inf")
+//            case "×":
+//                result = popOperand() * popOperand()
+//            case "–":
+//                result = -popOperand() + popOperand()
             case "+":
-                result = popOperand() + popOperand()
-            case "SIN":
-                result = (popOperand() * angleConversion).sine
-            case "COS":
-                result = (popOperand() * angleConversion).cosine
-            case "TAN":
-                result = (popOperand() * angleConversion).tangent
-            case "√x":
-                if isComplexMode {
-                    // both methods give same real answer for positive operands, but .squareRoot does not return
-                    // NaN, if operand is negative (it return a valid complex number); must use sqrt() to get NaN.
-                    result = popOperand().squareRoot
+                let operandA = popOperand()  // Complex or Matrix
+                let operandB = popOperand()  // "
+                if operandA is Complex {
+                    result = (popOperand() as! Complex) + (popOperand() as! Complex)
                 } else {
-                    result.real = sqrt(popOperand().real)
+                    result = (popOperand() as! Matrix) + (popOperand() as! Matrix)
                 }
-            case "ex":
-                result = popOperand().exponential
-            case "10x":
-                result = popOperand().tenToThePowerOf
-            case "yx":
-                let x = popOperand()
-                result = popOperand()^x
-            case "1/x":
-                result = popOperand().inverse
-            case "CHS":
-                // CHS only changes the sign of the real part of the imaginary number on the HP-15C
-                let term = popOperand()
-                result = Complex(real: -term.real, imag: term.imag)
+//            case "SIN":
+//                result = (popOperand() * angleConversion).sine
+//            case "COS":
+//                result = (popOperand() * angleConversion).cosine
+//            case "TAN":
+//                result = (popOperand() * angleConversion).tangent
+//            case "√x":
+//                if isComplexMode {
+//                    // both methods give same real answer for positive operands, but .squareRoot does not return
+//                    // NaN, if operand is negative (it return a valid complex number); must use sqrt() to get NaN.
+//                    result = popOperand().squareRoot
+//                } else {
+//                    result.real = sqrt(popOperand().real)
+//                }
+//            case "ex":
+//                result = popOperand().exponential
+//            case "10x":
+//                result = popOperand().tenToThePowerOf
+//            case "yx":
+//                let x = popOperand()
+//                result = popOperand()^x
+//            case "1/x":
+//                result = popOperand().inverse
+//            case "CHS":
+//                // CHS only changes the sign of the real part of the imaginary number on the HP-15C
+//                let term = popOperand()
+//                result = Complex(real: -term.real, imag: term.imag)
+//            default:
+//                break
+//            }
+//        case "f":  // functions above button (orange)
+//            switch operation {
+//            case "STO":
+//                // FRAC - decimal portion of number
+//                let number = popOperand()
+//                result.real = number.real - Double(Int(number.real))
+//                result.imag = number.imag
+//            case "1":
+//                // →R - convert polar coordinates to rectangular
+//                isConvertingPolar = true
+//                if isComplexMode {
+//                    let polar = popOperand()
+//                    let radius = polar.real
+//                    let angle = polar.imag
+//                    result.real = radius * cos(angle * angleConversion)  // x
+//                    result.imag = radius * sin(angle * angleConversion)  // y
+//                } else {
+//                    let radius = popOperand().real
+//                    let angle = popOperand().real
+//                    result.real = radius * cos(angle * angleConversion)  // x
+//                    secondResult = Complex(real: radius * sin(angle * angleConversion), imag: 0)  // y
+//                }
+//            case "2":
+//                // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
+//                let term = popOperand()
+//                let decimalHours = term.real
+//                let hours = Int(decimalHours)
+//                let minutes = Int((decimalHours - Double(hours)) * 60)
+//                let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
+//                result.real = Double(hours) + Double(minutes) / 100 + seconds / 10000
+//                result.imag = term.imag
+//            case "3":
+//                // →RAD - convert to radians
+//                let term = popOperand()
+//                result = Complex(real: term.real * Constants.D2R, imag: term.imag)  // only applies to the real portion
+//            default:
+//                break
+//            }
+//        case "g":  // functions below button (blue)
+//            switch operation {
+//            case "STO":
+//                // INT
+//                let term = popOperand()
+//                result = Complex(real: Double(Int(term.real)), imag: term.imag)
+//            case "SIN":
+//                // SIN-1 (arcsin)
+//                if isComplexMode {
+//                    // both methods give same real answer for abs(operands) < 1, but .arcsin does not return
+//                    // NaN, if abs(operand) > 1 (it returns a valid complex number); must use asin() to get NaN.
+//                    result = popOperand().arcsin
+//                } else {
+//                    result.real = asin(popOperand().real) / angleConversion
+//                }
+//            case "COS":
+//                // COS-1 (arccos)
+//                if isComplexMode {
+//                    // both methods give same real answer for abs(operands) < 1, but .arccos does not return
+//                    // NaN, if abs(operand) > 1 (it returns a valid complex number); must use acos() to get NaN.
+//                    result = popOperand().arccos
+//                } else {
+//                    result.real = acos(popOperand().real) / angleConversion
+//                }
+//            case "TAN":
+//                // TAN-1 (arctan)
+//                result = (popOperand() / angleConversion).arctan
+//            case "√x":
+//                // x²
+//                result = popOperand().squared
+//            case "ex":
+//                // LN (natural log)
+//                result = popOperand().naturalLog
+//            case "10x":
+//                // LOG (base 10)
+//                result = popOperand().logBase10
+//            case "yx":
+//                // %
+//                // Note: Owner's Handbook p.130 says "Any functions not mentioned below or in the rest of this section
+//                //       (Calculating With Complex Numbers) ignore the imaginary stack."  Percent seems to fall in this
+//                //       category, although (a + bi) ENTER (c + di) % gives a complex number answer.  I just use the
+//                //       real portion of the x value (c + 0i).
+//                let percent = popOperand().real * 0.01
+//                let baseNumber = popOperand()
+//                result.real = percent * baseNumber.real  // %
+//                secondResult = baseNumber
+//            case "1/x":
+//                // 𝝙% (delta %)
+//                let secondNumber = popOperand().real
+//                let baseNumber = popOperand()
+//                result.real = (secondNumber - baseNumber.real) / baseNumber.real * 100
+//                secondResult = baseNumber
+//            case "CHS":
+//                // ABS (absolute value)
+//                result = Complex(real: popOperand().mag, imag: 0)
+//            case "1":
+//                // →P - convert rectangular coordinates to polar
+//                isConvertingPolar = true
+//                if isComplexMode {
+//                    // rectangular coordinates (x and y) come from real and imaginary parts of complex number in X registers
+//                    let rectangular = popOperand()
+//                    let x = rectangular.real
+//                    let y = rectangular.imag
+//                    result.real = rectangular.mag  // radius
+//                    result.imag = atan2(y, x) / angleConversion  // angle
+//                } else {
+//                    // rectangular coordinate x comes from X register, y comes from Y register
+//                    let x = popOperand().real
+//                    let y = popOperand().real
+//                    result.real = sqrt(x * x + y * y)  // radius
+//                    secondResult = Complex(real: atan2(y, x) / angleConversion, imag: 0)  // angle
+//                }
+//            case "2":
+//                // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
+//                let term = popOperand()
+//                let hoursMinuteSeconds = term.real  // ex. hoursMinutesSeconds = 1.1404200
+//                let hours = Int(hoursMinuteSeconds)  // ex. hours = 1
+//                let decimal = Int(round((hoursMinuteSeconds - Double(hours)) * 10000000))  // ex. decimal = 1404200
+//                let minutes = Int(decimal / 100000)  // ex. minutes = 14
+//                let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
+//                result.real = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
+//                result.imag = term.imag
+//            case "3":
+//                // →DEG - convert to degrees
+//                let term = popOperand()
+//                result = Complex(real: term.real / Constants.D2R, imag: term.imag)  // only applies to the real portion
+//            default:
+//                break
+//            }
+//        case "H":  // hyperbolic trig functions
+//            // Note: Owner's Handbook p.26 says "The trigonometric functions operate in the trigonometric mode you select",
+//            //       but this does not appear to be true for the hyperbolic trig functions.  They all operate in radians
+//            //       for real and complex numbers.
+//            switch operation {
+//            case "SIN":
+//                // HYP SIN
+//                result = popOperand().sinhyp
+//            case "COS":
+//                // HYP COS
+//                result = popOperand().coshyp
+//            case "TAN":
+//                // HYP TAN
+//                result = popOperand().tanhyp
+//            default:
+//                break
+//            }
+//        case "h":  // inverse hyperbolic trig functions
+//            // See note above.  Inverse hyperbolic trig functions are all in radians.
+//            switch operation {
+//            case "SIN":
+//                // HYP-1 SIN
+//                result = popOperand().arcsinh
+//            case "COS":
+//                // HYP-1 COS
+//                if isComplexMode {
+//                    // both methods give same real answer for operands > 1, but .arccosh does not return
+//                    // NaN, if operand < 1 (it return a valid complex number); must use acosh() to get NaN.
+//                    result = popOperand().arccosh
+//                } else {
+//                    result.real = acosh(popOperand().real)
+//                }
+//            case "TAN":
+//                // HYP-1 TAN
+//                if isComplexMode {
+//                    // both methods give same real answer for abs(operands) < 1, but .arctanh does not return
+//                    // NaN, if abs(operand) > 1 (it return a valid complex number); must use atanh() to get NaN.
+//                    result = popOperand().arctanh
+//                } else {
+//                    result.real = atanh(popOperand().real)
+//                }
             default:
-                break
-            }
-        case "f":  // functions above button (orange)
-            switch operation {
-            case "STO":
-                // FRAC - decimal portion of number
-                let number = popOperand()
-                result.real = number.real - Double(Int(number.real))
-                result.imag = number.imag
-            case "1":
-                // →R - convert polar coordinates to rectangular
-                isConvertingPolar = true
-                if isComplexMode {
-                    let polar = popOperand()
-                    let radius = polar.real
-                    let angle = polar.imag
-                    result.real = radius * cos(angle * angleConversion)  // x
-                    result.imag = radius * sin(angle * angleConversion)  // y
-                } else {
-                    let radius = popOperand().real
-                    let angle = popOperand().real
-                    result.real = radius * cos(angle * angleConversion)  // x
-                    secondResult = Complex(real: radius * sin(angle * angleConversion), imag: 0)  // y
-                }
-            case "2":
-                // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
-                let term = popOperand()
-                let decimalHours = term.real
-                let hours = Int(decimalHours)
-                let minutes = Int((decimalHours - Double(hours)) * 60)
-                let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
-                result.real = Double(hours) + Double(minutes) / 100 + seconds / 10000
-                result.imag = term.imag
-            case "3":
-                // →RAD - convert to radians
-                let term = popOperand()
-                result = Complex(real: term.real * Constants.D2R, imag: term.imag)  // only applies to the real portion
-            default:
-                break
-            }
-        case "g":  // functions below button (blue)
-            switch operation {
-            case "STO":
-                // INT
-                let term = popOperand()
-                result = Complex(real: Double(Int(term.real)), imag: term.imag)
-            case "SIN":
-                // SIN-1 (arcsin)
-                if isComplexMode {
-                    // both methods give same real answer for abs(operands) < 1, but .arcsin does not return
-                    // NaN, if abs(operand) > 1 (it returns a valid complex number); must use asin() to get NaN.
-                    result = popOperand().arcsin
-                } else {
-                    result.real = asin(popOperand().real) / angleConversion
-                }
-            case "COS":
-                // COS-1 (arccos)
-                if isComplexMode {
-                    // both methods give same real answer for abs(operands) < 1, but .arccos does not return
-                    // NaN, if abs(operand) > 1 (it returns a valid complex number); must use acos() to get NaN.
-                    result = popOperand().arccos
-                } else {
-                    result.real = acos(popOperand().real) / angleConversion
-                }
-            case "TAN":
-                // TAN-1 (arctan)
-                result = (popOperand() / angleConversion).arctan
-            case "√x":
-                // x²
-                result = popOperand().squared
-            case "ex":
-                // LN (natural log)
-                result = popOperand().naturalLog
-            case "10x":
-                // LOG (base 10)
-                result = popOperand().logBase10
-            case "yx":
-                // %
-                // Note: Owner's Handbook p.130 says "Any functions not mentioned below or in the rest of this section
-                //       (Calculating With Complex Numbers) ignore the imaginary stack."  Percent seems to fall in this
-                //       category, although (a + bi) ENTER (c + di) % gives a complex number answer.  I just use the
-                //       real portion of the x value (c + 0i).
-                let percent = popOperand().real * 0.01
-                let baseNumber = popOperand()
-                result.real = percent * baseNumber.real  // %
-                secondResult = baseNumber
-            case "1/x":
-                // 𝝙% (delta %)
-                let secondNumber = popOperand().real
-                let baseNumber = popOperand()
-                result.real = (secondNumber - baseNumber.real) / baseNumber.real * 100
-                secondResult = baseNumber
-            case "CHS":
-                // ABS (absolute value)
-                result = Complex(real: popOperand().mag, imag: 0)
-            case "1":
-                // →P - convert rectangular coordinates to polar
-                isConvertingPolar = true
-                if isComplexMode {
-                    // rectangular coordinates (x and y) come from real and imaginary parts of complex number in X registers
-                    let rectangular = popOperand()
-                    let x = rectangular.real
-                    let y = rectangular.imag
-                    result.real = rectangular.mag  // radius
-                    result.imag = atan2(y, x) / angleConversion  // angle
-                } else {
-                    // rectangular coordinate x comes from X register, y comes from Y register
-                    let x = popOperand().real
-                    let y = popOperand().real
-                    result.real = sqrt(x * x + y * y)  // radius
-                    secondResult = Complex(real: atan2(y, x) / angleConversion, imag: 0)  // angle
-                }
-            case "2":
-                // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
-                let term = popOperand()
-                let hoursMinuteSeconds = term.real  // ex. hoursMinutesSeconds = 1.1404200
-                let hours = Int(hoursMinuteSeconds)  // ex. hours = 1
-                let decimal = Int(round((hoursMinuteSeconds - Double(hours)) * 10000000))  // ex. decimal = 1404200
-                let minutes = Int(decimal / 100000)  // ex. minutes = 14
-                let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
-                result.real = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
-                result.imag = term.imag
-            case "3":
-                // →DEG - convert to degrees
-                let term = popOperand()
-                result = Complex(real: term.real / Constants.D2R, imag: term.imag)  // only applies to the real portion
-            default:
-                break
-            }
-        case "H":  // hyperbolic trig functions
-            // Note: Owner's Handbook p.26 says "The trigonometric functions operate in the trigonometric mode you select",
-            //       but this does not appear to be true for the hyperbolic trig functions.  They all operate in radians
-            //       for real and complex numbers.
-            switch operation {
-            case "SIN":
-                // HYP SIN
-                result = popOperand().sinhyp
-            case "COS":
-                // HYP COS
-                result = popOperand().coshyp
-            case "TAN":
-                // HYP TAN
-                result = popOperand().tanhyp
-            default:
-                break
-            }
-        case "h":  // inverse hyperbolic trig functions
-            // See note above.  Inverse hyperbolic trig functions are all in radians.
-            switch operation {
-            case "SIN":
-                // HYP-1 SIN
-                result = popOperand().arcsinh
-            case "COS":
-                // HYP-1 COS
-                if isComplexMode {
-                    // both methods give same real answer for operands > 1, but .arccosh does not return
-                    // NaN, if operand < 1 (it return a valid complex number); must use acosh() to get NaN.
-                    result = popOperand().arccosh
-                } else {
-                    result.real = acosh(popOperand().real)
-                }
-            case "TAN":
-                // HYP-1 TAN
-                if isComplexMode {
-                    // both methods give same real answer for abs(operands) < 1, but .arctanh does not return
-                    // NaN, if abs(operand) > 1 (it return a valid complex number); must use atanh() to get NaN.
-                    result = popOperand().arctanh
-                } else {
-                    result.real = atanh(popOperand().real)
-                }
-            default:
-                break
+                result = Complex(real: 0, imag: 0)
             }
         default:
-            break
+            result = Complex(real: 0, imag: 0)
         }
         
-        if result.real.isNaN || result.imag.isNaN || result.real.isInfinite || result.imag.isInfinite {  // ex. sqrt(-1) = NaN, 1/0 = +Inf, -1/0 = -Inf
-            // restore stack to pre-error state
-            realStack = saveStack
-            error = .code(0)  // reset in CalculatorViewController.restoreFromError
-        } else if result.mag > Constants.maxValue {
-            error = result.real > 0 ? .overflow : .underflow  // pws: underflow should be a number less than 1E-99 (not neg overflow)
-        } else {
-            if secondResult != nil {
-                pushOperand(secondResult!)
+        if let complex = result as? Complex {
+            if complex.real.isNaN || complex.imag.isNaN || complex.real.isInfinite || complex.imag.isInfinite {  // ex. sqrt(-1) = NaN, 1/0 = +Inf, -1/0 = -Inf
+                // restore stack to pre-error state
+                realStack = saveStack
+                error = .code(0)  // reset in CalculatorViewController.restoreFromError
+            } else if complex.mag > Constants.maxValue {
+                error = complex.real > 0 ? .overflow : .underflow  // pws: underflow should be a number less than 1E-99 (not neg overflow)
+            } else {
+                if secondResult != nil {
+                    pushOperand(secondResult as! Complex)
+                }
+                pushOperand(complex)
             }
-            pushOperand(result)
+        } else if let matrix = result as? Matrix {
+            // TBD: handle error cases with matrix operations
+            
+            if secondResult != nil {
+                pushOperand(secondResult as! Matrix)
+            }
+            pushOperand(matrix)
         }
         printMemory()
     }
@@ -515,14 +545,14 @@ class Brain: Codable {
         guard !isSolving else { return }
         print("          Real         Imag")
         let labels = ["T", "Z", "Y", "X"]
-        for index in 0..<realStack.count {
-            let realString = String(format: "% 8f", realStack[index]).padding(toLength: 11, withPad: " ", startingAt: 0)
-            print(String(format: "   %@:  %@  % 8f", labels[index], realString, imagStack[index]))
-        }
-        print(String(format: "LSTx:  % 8f", lastXRegister))
-        print(String(format: "Reg  0: %8f   1: %8f   2: %8f   3: %8f   4: %8f", storageRegisters["0"]!, storageRegisters["1"]!, storageRegisters["2"]!, storageRegisters["3"]!, storageRegisters["4"]!))
-        print(String(format: "    .0: %8f  .1: %8f  .2: %8f  .3: %8f  .4: %8f", storageRegisters[".0"]!, storageRegisters[".1"]!, storageRegisters[".2"]!, storageRegisters[".3"]!, storageRegisters[".4"]!))
-        print(String(format: "     I: %8f", storageRegisters["I"]!))
+//        for index in 0..<realStack.count {
+//            let realString = String(format: "% 8f", realStack[index]).padding(toLength: 11, withPad: " ", startingAt: 0)
+//            print(String(format: "   %@:  %@  % 8f", labels[index], realString, imagStack[index]))
+//        }
+//        print(String(format: "LSTx:  % 8f", lastXRegister))
+//        print(String(format: "Reg  0: %8f   1: %8f   2: %8f   3: %8f   4: %8f", storageRegisters["0"]!, storageRegisters["1"]!, storageRegisters["2"]!, storageRegisters["3"]!, storageRegisters["4"]!))
+//        print(String(format: "    .0: %8f  .1: %8f  .2: %8f  .3: %8f  .4: %8f", storageRegisters[".0"]!, storageRegisters[".1"]!, storageRegisters[".2"]!, storageRegisters[".3"]!, storageRegisters[".4"]!))
+//        print(String(format: "     I: %8f", storageRegisters["I"]!))
         print("---------------------------------------------------------")
     }
 }

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class Matrix: Codable, CustomStringConvertible {
+class Matrix: Codable, Stackable, CustomStringConvertible {
     var name: String  // "A" - "E"
     var values: [[Double]]
     
@@ -16,6 +16,10 @@ class Matrix: Codable, CustomStringConvertible {
         self.values = [[Double]]()
     }
     
+    convenience init() {
+        self.init(name: "")
+    }
+
     var rows: Int {
         values.count
     }
@@ -88,5 +92,21 @@ class Matrix: Codable, CustomStringConvertible {
             descriptionString += "\n"
         }
         return descriptionString
+    }
+
+    //----------------------------
+    // math functions
+    //----------------------------
+
+    // (a + bi) - (c + di) = (a - c) + (b - d)i
+    static func +(lhs: Matrix, rhs: Matrix) -> Matrix {
+        var matrix = Matrix()
+        matrix.setDimensions(rows: lhs.rows, cols: lhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs.values[row][col] + rhs.values[row][col]
+            }
+        }
+        return matrix
     }
 }

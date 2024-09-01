@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Complex: Equatable {
+struct Complex: Equatable, Stackable {
     var real: Double
     var imag: Double
 
