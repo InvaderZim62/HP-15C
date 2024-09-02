@@ -122,30 +122,30 @@ class Program: Codable {
     //  5  x = y  11  x = 0
     func test(_ number: Int) -> Bool {
         switch number {
-        case 0:
-            return brain.xRegister! != 0
-        case 1:
-            return brain.xRegister! > 0
-        case 2:
-            return brain.xRegister! < 0
-        case 3:
-            return brain.xRegister! >= 0
-        case 4:
-            return brain.xRegister! <= 0
-        case 5:
-            return brain.xRegister! == brain.yRegister
-        case 6:
-            return brain.xRegister! != brain.yRegister
-        case 7:
-            return brain.xRegister! > brain.yRegister
-        case 8:
-            return brain.xRegister! < brain.yRegister
-        case 9:
-            return brain.xRegister! >= brain.yRegister
-        case 10:
-            return brain.xRegister! <= brain.yRegister
-        case 11:
-            return brain.xRegister! == 0
+//        case 0:
+//            return brain.xRegister! != 0
+//        case 1:
+//            return brain.xRegister! > 0
+//        case 2:
+//            return brain.xRegister! < 0
+//        case 3:
+//            return brain.xRegister! >= 0
+//        case 4:
+//            return brain.xRegister! <= 0
+//        case 5:
+//            return brain.xRegister! == brain.yRegister
+//        case 6:
+//            return brain.xRegister! != brain.yRegister
+//        case 7:
+//            return brain.xRegister! > brain.yRegister
+//        case 8:
+//            return brain.xRegister! < brain.yRegister
+//        case 9:
+//            return brain.xRegister! >= brain.yRegister
+//        case 10:
+//            return brain.xRegister! <= brain.yRegister
+//        case 11:
+//            return brain.xRegister! == 0
         default:
             return false
         }
@@ -156,30 +156,30 @@ class Program: Codable {
     // return true, if target (ttt) met
     // store updated control number (uuuuu.tttii) in register
     func loop(isDSE: Bool, registerName: String) -> Bool {
-        if let controlNumber = brain.valueFromStorageRegister(registerName) {  // ccccc.tttii
-            let counter = Int(controlNumber)  // ccccc
-            let xyDecimals = controlNumber - Double(counter)  // 0.tttii
-            let shifted = xyDecimals * 1000  // ttt.ii
-            let target = Int(shifted)  // xxx
-            let yDecimals = shifted - Double(target)  // 0.ii
-            var increment = Int(round(yDecimals * 100))  // ii
-            if increment == 0 { increment = 1 }  // can't be 0
-            var newCounter: Int
-            var isLoop: Bool
-            if isDSE {
-                newCounter = counter - increment
-                isLoop = newCounter <= target
-            } else {  // else ISG
-                newCounter = counter + increment
-                isLoop = newCounter > target
-            }
-            let updatedControlNumber = Double(newCounter) + xyDecimals
-            _ = brain.storeValueInRegister(registerName, value: updatedControlNumber)
-            return isLoop
-        } else {
-            delegate?.setError(3)
+//        if let controlNumber = brain.valueFromStorageRegister(registerName) {  // ccccc.tttii
+//            let counter = Int(controlNumber)  // ccccc
+//            let xyDecimals = controlNumber - Double(counter)  // 0.tttii
+//            let shifted = xyDecimals * 1000  // ttt.ii
+//            let target = Int(shifted)  // xxx
+//            let yDecimals = shifted - Double(target)  // 0.ii
+//            var increment = Int(round(yDecimals * 100))  // ii
+//            if increment == 0 { increment = 1 }  // can't be 0
+//            var newCounter: Int
+//            var isLoop: Bool
+//            if isDSE {
+//                newCounter = counter - increment
+//                isLoop = newCounter <= target
+//            } else {  // else ISG
+//                newCounter = counter + increment
+//                isLoop = newCounter > target
+//            }
+//            let updatedControlNumber = Double(newCounter) + xyDecimals
+//            _ = brain.storeValueInRegister(registerName, value: updatedControlNumber)
+//            return isLoop
+//        } else {
+//            delegate?.setError(3)
             return false
-        }
+//        }
     }
 
     // MARK: - Codable

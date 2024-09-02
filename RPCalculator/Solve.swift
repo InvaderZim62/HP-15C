@@ -45,7 +45,7 @@ class Solve {
             brain.isSolving = true  // suppress printMemory
             alpha = delegate!.displayStringNumber
             alphaPast = alpha
-            beta = brain.xRegister!
+            beta = brain.xRegister! as! Double
             // fill all registers with alpha, run program, store results f(alpha)
             brain.fillRegistersWith(alpha)
             program.runFrom(label: label) { [unowned self] in  // run first time to get initial falpha; results left in display

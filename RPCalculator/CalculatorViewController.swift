@@ -166,13 +166,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var brain = Brain()
     var program = Program()
     var solve = Solve()
-    var matrices: [String: Matrix] = [  // button name: matrix
-        "√x"  : Matrix(name: "A"),
-        "ex"  : Matrix(name: "B"),
-        "10x" : Matrix(name: "C"),
-        "yx"  : Matrix(name: "D"),
-        "1/x" : Matrix(name: "E")
-    ]
     var clickSoundPlayer: AVAudioPlayer?
     var displayString = "" {
         didSet {
@@ -406,9 +399,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if let data = try? JSONEncoder().encode(brain) {
                 defaults.set(data, forKey: "brain")  // note: variables added to brain must also be added to Brain.init and .encode
             }
-            if let data = try? JSONEncoder().encode(matrices) {
-                defaults.set(data, forKey: "matrices")
-            }
             defaults.set(isComplexMode, forKey: "isComplexMode")
             defaults.set(isUserMode, forKey: "isUserMode")
             defaults.set(liftStack, forKey: "liftStack")
@@ -441,9 +431,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         isProgramMode = false  // don't re-start in program mode
         if let data = defaults.data(forKey: "brain") {
             brain = try! JSONDecoder().decode(Brain.self, from: data)
-        }
-        if let data = defaults.data(forKey: "matrices") {
-            matrices = try! JSONDecoder().decode([String: Matrix].self, from: data)
         }
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
         isUserMode = defaults.bool(forKey: "isUserMode")
@@ -558,53 +545,57 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             break
         }
         //--------------------------------------
-        let numericalResult = brain.xRegister!
+        let xRegister = brain.xRegister!
         //--------------------------------------
-        var potentialDisplayString = String(format: displayFormat.string, numericalResult)
-        if displayFormat.decimals == 0 {
-            // HP-15C includes decimal point for FIX 0 and SCI 0
-            // format specifiers %.0f and %.0e remove decimal (ie. returns 123 instead of 123., and 1e+02 instead of 1.e+02)
-            if case .fixed = displayFormat {
-                potentialDisplayString += "."
-            } else if let eIndex = potentialDisplayString.range(of: "e")?.lowerBound {
-                potentialDisplayString.insert(".", at: eIndex)  // add decimal to left of "e"
+        if let numericResult = xRegister as? Double {
+            var potentialDisplayString = String(format: displayFormat.string, numericResult)
+            if displayFormat.decimals == 0 {
+                // HP-15C includes decimal point for FIX 0 and SCI 0
+                // format specifiers %.0f and %.0e remove decimal (ie. returns 123 instead of 123., and 1e+02 instead of 1.e+02)
+                if case .fixed = displayFormat {
+                    potentialDisplayString += "."
+                } else if let eIndex = potentialDisplayString.range(of: "e")?.lowerBound {
+                    potentialDisplayString.insert(".", at: eIndex)  // add decimal to left of "e"
+                }
             }
-        }
-        
-        // for engineering notation, adjust mantissa so that exponent is a factor of 3
-        if case .engineering(let additionalDigits) = displayFormat {
-            let components = potentialDisplayString.components(separatedBy: "e")
-            var mantissa = Double(components[0])!
-            var exponent = Int(components[1])!
-            while abs(exponent) % 3 > 0 {
-                mantissa *= 10
-                exponent -= 1
+            
+            // for engineering notation, adjust mantissa so that exponent is a factor of 3
+            if case .engineering(let additionalDigits) = displayFormat {
+                let components = potentialDisplayString.components(separatedBy: "e")
+                var mantissa = Double(components[0])!
+                var exponent = Int(components[1])!
+                while abs(exponent) % 3 > 0 {
+                    mantissa *= 10
+                    exponent -= 1
+                }
+                let digitsLeftOfDecimal = String(Int(mantissa)).count
+                let mantissaLength = max(additionalDigits + (potentialDisplayString.first == "-" ? 1 : 0) + 2, digitsLeftOfDecimal + 1)
+                let mantissaString = String(mantissa).padding(toLength: mantissaLength, withPad: "0", startingAt: 0)
+                potentialDisplayString = mantissaString + String(format: "e%+03d", exponent)  // 2-digit exponent, including sign
             }
-            let digitsLeftOfDecimal = String(Int(mantissa)).count
-            let mantissaLength = max(additionalDigits + (potentialDisplayString.first == "-" ? 1 : 0) + 2, digitsLeftOfDecimal + 1)
-            let mantissaString = String(mantissa).padding(toLength: mantissaLength, withPad: "0", startingAt: 0)
-            potentialDisplayString = mantissaString + String(format: "e%+03d", exponent)  // 2-digit exponent, including sign
-        }
-        var digitsLeftOfDecimal = potentialDisplayString.components(separatedBy: ".")[0].count
-        if potentialDisplayString.first != "-" {
-            digitsLeftOfDecimal += 1  // leave space in front of positive numbers
-        }
-        let displayConvertedBackToNumber = Double(potentialDisplayString)
-        if case .fixed(let decimalPlaces) = displayFormat {
-            // fixed format
-            if digitsLeftOfDecimal > displayView.numberOfDigits {
-                // doesn't fit, temporarily switch to scientific notation
-                displayString = String(format: DisplayFormat.scientific(decimalPlaces).string, numericalResult)
-            } else if displayConvertedBackToNumber == 0 && numericalResult != 0 {
-                // rounds to zero, temporarily switch to scientific notation
-                displayString = String(format: DisplayFormat.scientific(decimalPlaces).string, numericalResult)
+            var digitsLeftOfDecimal = potentialDisplayString.components(separatedBy: ".")[0].count
+            if potentialDisplayString.first != "-" {
+                digitsLeftOfDecimal += 1  // leave space in front of positive numbers
+            }
+            let displayConvertedBackToNumber = Double(potentialDisplayString)
+            if case .fixed(let decimalPlaces) = displayFormat {
+                // fixed format
+                if digitsLeftOfDecimal > displayView.numberOfDigits {
+                    // doesn't fit, temporarily switch to scientific notation
+                    displayString = String(format: DisplayFormat.scientific(decimalPlaces).string, numericResult)
+                } else if displayConvertedBackToNumber == 0 && numericResult != 0 {
+                    // rounds to zero, temporarily switch to scientific notation
+                    displayString = String(format: DisplayFormat.scientific(decimalPlaces).string, numericResult)
+                } else {
+                    // all good
+                    displayString = potentialDisplayString
+                }
             } else {
-                // all good
+                // scientific or engineering format
                 displayString = potentialDisplayString
             }
-        } else {
-            // scientific or engineering format
-            displayString = potentialDisplayString
+        } else if let matrixResult = xRegister as? Matrix {
+            displayString = matrixResult.descriptor
         }
         saveDefaults()
     }
@@ -672,14 +663,18 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // DIM A-E - create matrix with dimensions in X and Y registers (Y rows, X cols)
             if userIsEnteringDigits { endDisplayEntry() }
             updateDisplayString()
-            let matrix = matrices[buttonName]!
-            matrix.setDimensions(rows: Int(brain.yRegister), cols: Int(brain.xRegister!))
-            print(matrix)
-            saveDefaults()
+            let matrix = brain.matrices[buttonName]!
+            if let rows = brain.yRegister as? Double, let cols = brain.xRegister! as? Double {
+                matrix.setDimensions(rows: Int(rows), cols: Int(cols))
+                print(matrix)
+                saveDefaults()
+            } else {
+                setError(1)  // can't use matrix as a dimension
+            }
         case .RCL_DIM:
             // RCL DIM A-E - store number of rows in Y register and columns in X register, for matrix A-E
             if userIsEnteringDigits { endDisplayEntry() }
-            let matrix = matrices[buttonName]!
+            let matrix = brain.matrices[buttonName]!
             brain.pushOperand(Double(matrix.rows))
             brain.pushOperand(Double(matrix.rows))  // push rows into X and Y registers
             displayString = String(matrix.cols)
@@ -687,13 +682,24 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             updateDisplayString()
         case .RCL_MATRIX:
             // MATRIX A-E - display dimensions of matrix A-E
-            if userIsEnteringDigits { endDisplayEntry() }
-            let matrix = matrices[buttonName]!
-            displayString = String(format: "%@ %5d %2d", matrix.name, matrix.rows, matrix.cols)
+            let matrix = brain.matrices[buttonName]!
+            if userIsEnteringDigits {
+                brain.pushOperand(displayStringNumber)
+                brain.pushOperand(matrix)
+            } else {
+                brain.xRegister = matrix
+            }
+            updateDisplayString()
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
             print(matrix)
         case .STO:
             // STO A-E - store displayed value to matrix A-E, at row = register 0, col = register 1
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
             storeDisplayToMatrix(buttonName)
+            updateDisplayString()
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
             saveDefaults()
         case .RCL:
             // RCL A-E - recall element of matrix A-E, at row = register 0, col = register 1
@@ -919,26 +925,42 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             isComplexMode = true
             prepStackForOperation()
-            //----------------------
-            brain.moveRealXToImagX()
-            //----------------------
-            displayString = String(brain.xRegister!)  // show real part
-            updateDisplayString()
+            if brain.xRegister! is Double {
+                //----------------------
+                brain.moveRealXToImagX()
+                //----------------------
+//                displayString = String(brain.xRegister!)  // show real part  // pws: not necessary?
+                updateDisplayString()
+            } else { 
+                setError(1)
+            }
         case .FIX:
             // f-FIX-I (use value in register I to set display format)
             prefix = nil
-            let decimalPlaces = Int(abs(brain.valueFromStorageRegister("I")!))
-            setDisplayFormatTo(.fixed(decimalPlaces))
+            if let number = brain.valueFromStorageRegister("I") as? Double {
+                let decimalPlaces = Int(abs(number))
+                setDisplayFormatTo(.fixed(decimalPlaces))
+            } else {
+                setError(1)
+            }
         case .SCI:
             // f-SCI-I (use value in register I to set display format)
             prefix = nil
-            let decimalPlaces = Int(abs(brain.valueFromStorageRegister("I")!))
-            setDisplayFormatTo(.scientific(min(decimalPlaces, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+            if let number = brain.valueFromStorageRegister("I") as? Double {
+                let decimalPlaces = Int(abs(number))
+                setDisplayFormatTo(.scientific(min(decimalPlaces, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+            } else {
+                setError(1)
+            }
         case .ENG:
             // f-ENG-I (use value in register I to set display format)
             prefix = nil
-            let additionalDigits = Int(abs(brain.valueFromStorageRegister("I")!))
-            setDisplayFormatTo(.engineering(min(additionalDigits, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+            if let number = brain.valueFromStorageRegister("I") as? Double {
+                let additionalDigits = Int(abs(number))
+                setDisplayFormatTo(.engineering(min(additionalDigits, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
+            } else {
+                setError(1)
+            }
         case .XSWAP:
             prefix = nil
             swapDisplayWithRegister("I")
@@ -964,16 +986,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             handleDigitEntry(buttonName: buttonName)
         case .f:
-            // "I" pressed (imaginary number entered)
+            // "RESULT" pressed
             prefix = nil
-            isComplexMode = true
-            prepStackForOperation()
-            //----------------------
-            brain.moveRealXToImagX()
-            //----------------------
-            displayString = String(brain.xRegister!)  // show real part
-            updateDisplayString()
-            brain.printMemory()
+            print("TBD: RESULT")
         case .g:
             // pi pressed
             prefix = nil
@@ -1307,11 +1322,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             liftStack = true
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            if var number = brain.xRegister {
+            if var number = brain.xRegister as? Double {
                 number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
                 seed = Int(number * Double(Int32.max))
             } else {
-                return
+                setError(1)
             }
         case .RCL:
             // RCL RAN# pressed (recall last random number)
@@ -1854,12 +1869,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     private func recallRegister(_ registerName: String) {
         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
         if let value = brain.valueFromStorageRegister(registerName) {
-            displayString = String(value)
-            brain.pushOperand(displayStringNumber)
-            updateDisplayString()
-            brain.printMemory()
+            if let number = value as? Double {
+                displayString = String(number)
+                brain.pushOperand(displayStringNumber)
+                updateDisplayString()
+                brain.printMemory()
+            } else {
+                setError(1)  // register contains matrix
+            }
         } else {
-            setError(3)
+            setError(3)  // invalid registerName
         }
     }
     
@@ -1871,16 +1890,20 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringExponent = false
         }
         if let value = brain.valueFromStorageRegister(registerName) {
-            let result = operation(value, brain.xRegister!)
-            if result.isNaN || result.isInfinite {
-                displayString = "nan"  // triggers displayView to show "  Error  0"
+            if let storageNumber = value as? Double, let xRegisterNumber = brain.xRegister! as? Double {
+                let result = operation(storageNumber, xRegisterNumber)
+                if result.isNaN || result.isInfinite {
+                    displayString = "nan"  // triggers displayView to show "  Error  0"
+                } else {
+                    _ = brain.storeValueInRegister(registerName, value: result)
+                    updateDisplayString()
+                }
+                brain.printMemory()
             } else {
-                _ = brain.storeValueInRegister(registerName, value: result)
-                updateDisplayString()
+                setError(1)  // register contains matrix
             }
-            brain.printMemory()
         } else {
-            setError(3)
+            setError(3)  // invalid registerName
         }
     }
     
@@ -1892,16 +1915,20 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringExponent = false
         }
         if let value = brain.valueFromStorageRegister(registerName) {
-            let result = operation(brain.xRegister!, value)
-            if result.isNaN || result.isInfinite {
-                displayString = "nan"  // triggers displayView to show "  Error  0"
+            if let storageNumber = value as? Double, let xRegisterNumber = brain.xRegister! as? Double {
+                let result = operation(xRegisterNumber, storageNumber)
+                if result.isNaN || result.isInfinite {
+                    displayString = "nan"  // triggers displayView to show "  Error  0"
+                } else {
+                    brain.xRegister = result
+                    updateDisplayString()
+                }
+                brain.printMemory()
             } else {
-                brain.xRegister = result
-                updateDisplayString()
+                setError(1)  // register contains matrix
             }
-            brain.printMemory()
         } else {
-            setError(3)
+            setError(3)  // invalid registerName
         }
     }
     
@@ -1937,43 +1964,52 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     // store displayed value to matrix A-E, at row = register 0, col = register 1
     private func storeDisplayToMatrix(_ buttonName: String) {
-        if userIsEnteringDigits { endDisplayEntry() }
-        updateDisplayString()
-        let row = Int(brain.valueFromStorageRegister("0")!)
-        let col = Int(brain.valueFromStorageRegister("1")!)
-        let matrix = matrices[buttonName]!
-        if matrix.storeValue(displayStringNumber, atRow: row, col: col) {
-            if isUserMode {
-                // auto-increment row/col registers
-                let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
-                _ = brain.storeValueInRegister("0", value: Double(newRow))
-                _ = brain.storeValueInRegister("1", value: Double(newCol))
+        if let number = brain.xRegister! as? Double,
+           let storage0 = brain.valueFromStorageRegister("0")! as? Double,
+           let storage1 = brain.valueFromStorageRegister("1")! as? Double {
+            let row = Int(storage0)
+            let col = Int(storage1)
+            let matrix = brain.matrices[buttonName]!
+            if matrix.storeValue(number, atRow: row, col: col) {
+                if isUserMode {
+                    // auto-increment row/col registers
+                    let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
+                    _ = brain.storeValueInRegister("0", value: Double(newRow))
+                    _ = brain.storeValueInRegister("1", value: Double(newCol))
+                }
+                print(matrix)
+            } else {
+                setError(3)  // trying to set value outside matrix dimensions
             }
         } else {
-            setError(3)  // trying to set value in non-existent matrix, or outside matrix dimensions
+            setError(1)  // display or registers 0 or 1 contain matrix
         }
-        print(matrix)
     }
     
     // recall element of matrix A-E, at row = register 0, col = register 1
     private func recallValueFromMatrix(_ buttonName: String) {
         if userIsEnteringDigits { endDisplayEntry() }
-        let row = Int(brain.valueFromStorageRegister("0")!)
-        let col = Int(brain.valueFromStorageRegister("1")!)
-        let matrix = matrices[buttonName]!
-        if let value = matrix.recallValue(atRow: row, col: col) {
-            brain.pushOperand(value)
-            updateDisplayString()
-            if isUserMode {
-                // auto-increment row/col registers
-                let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
-                _ = brain.storeValueInRegister("0", value: Double(newRow))
-                _ = brain.storeValueInRegister("1", value: Double(newCol))
+        if let storage0 = brain.valueFromStorageRegister("0")! as? Double,
+           let storage1 = brain.valueFromStorageRegister("1")! as? Double {
+            let row = Int(storage0)
+            let col = Int(storage1)
+            let matrix = brain.matrices[buttonName]!
+            if let value = matrix.recallValue(atRow: row, col: col) {
+                brain.pushOperand(value)
+                updateDisplayString()
+                if isUserMode {
+                    // auto-increment row/col registers
+                    let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
+                    _ = brain.storeValueInRegister("0", value: Double(newRow))
+                    _ = brain.storeValueInRegister("1", value: Double(newCol))
+                }
+                print(matrix)
+            } else {
+                setError(3)  // trying to recall value outside matrix dimensions
             }
         } else {
-            setError(3)  // trying to recall value from non-existent matrix, or outside matrix dimensions
+            setError(1)  // registers 0 or 1 contain matrix
         }
-        print(matrix)
     }
 
     // MARK: - Simulated button

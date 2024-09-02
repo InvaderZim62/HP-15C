@@ -35,12 +35,12 @@ enum Error: Equatable, Codable {
 class Brain: Codable {
     
     var trigUnits = TrigUnits.DEG
-    var lastXRegister = 0.0
+    var lastXRegister: Stackable = 0.0
     var error = Error.none
     var isConvertingPolar = false  // all complex trig functions are in radians, except conversions between rectangular and polar coordinates
     var isSolving = false  // use to disable printMemory while solving for root
 
-    var xRegister: Stackable? {
+    var xRegister: Stackable? {  // Double or Matrix
         get {
             return realStack.last
         }
@@ -129,7 +129,7 @@ class Brain: Codable {
         }
     }
 
-    private var storageRegisters: [String: Stackable] = [  // [register name: number]
+    private var storageRegisters: [String: Stackable] = [  // [register name: number or matrix]
         "I": 0.0,
          "0": 0,  "1": 0,  "2": 0,  "3": 0,  "4": 0,  "5": 0,  "6": 0,  "7": 0,  "8": 0,  "9": 0,
         ".0": 0, ".1": 0, ".2": 0, ".3": 0, ".4": 0, ".5": 0, ".6": 0, ".7": 0, ".8": 0, ".9": 0,
@@ -141,23 +141,39 @@ class Brain: Codable {
 //        "50": 0, "51": 0, "52": 0, "53": 0, "54": 0, "55": 0, "56": 0, "57": 0, "58": 0, "59": 0,
 //        "60": 0, "61": 0, "62": 0, "63": 0, "64": 0, "65": 0
         ]
+    
+    var matrices: [String: Matrix] = [  // button name: matrix
+        "√x"  : Matrix(name: "A"),
+        "ex"  : Matrix(name: "B"),
+        "10x" : Matrix(name: "C"),
+        "yx"  : Matrix(name: "D"),
+        "1/x" : Matrix(name: "E")
+    ]
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, error, isComplexMode, xRegister, realStack, imagStack, storageRegisters }
+    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, error, isComplexMode, realStack, imagStack, storageRegisters, matrices }
     
     init() { }
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.trigUnits = try container.decode(TrigUnits.self, forKey: .trigUnits)
-        self.lastXRegister = try container.decode(Double.self, forKey: .lastXRegister)
+        if let decoded = try? container.decode(AnyDecodable.self, forKey: .lastXRegister) {
+            self.lastXRegister = decoded.item as! Stackable
+        }
         self.error = try container.decode(Error.self, forKey: .error)
         self.isComplexMode = try container.decode(Bool.self, forKey: .isComplexMode)
-//        self.xRegister = try container.decodeIfPresent(Double.self, forKey: .xRegister)
-        self.realStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .realStack)) as? [Double] ?? []
+        if let decoded = try? container.decode([AnyDecodable].self, forKey: .realStack) {
+            // convert from [AnyDecodable] to [Stackable]
+            self.realStack = decoded.map { $0.item as! Stackable }
+        }
         self.imagStack = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .imagStack)) as? [Double] ?? []
-        self.storageRegisters = try JSONSerialization.jsonObject(with: container.decode(Data.self, forKey: .storageRegisters)) as? [String: Double] ?? [:]
+        if let decoded = try? container.decode([String: AnyDecodable].self, forKey: .storageRegisters) {
+            // convert from [String: AnyDecodable] to [String: Stackable]
+            self.storageRegisters = decoded.mapValues { $0.item as! Stackable }
+        }
+        self.matrices = try container.decode([String: Matrix].self, forKey: .matrices)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -166,15 +182,41 @@ class Brain: Codable {
         try container.encode(self.lastXRegister, forKey: .lastXRegister)
         try container.encode(self.error, forKey: .error)
         try container.encode(self.isComplexMode, forKey: .isComplexMode)
-//        try container.encodeIfPresent(self.xRegister, forKey: .xRegister)
-        try container.encode(JSONSerialization.data(withJSONObject: realStack), forKey: .realStack)
+        try container.encode(self.realStack.map { AnyEncodable(item: $0) }, forKey: .realStack)
         try container.encode(JSONSerialization.data(withJSONObject: imagStack), forKey: .imagStack)
-        try container.encode(JSONSerialization.data(withJSONObject: storageRegisters), forKey: .storageRegisters)
+        try container.encode(self.storageRegisters.mapValues { AnyEncodable(item: $0) }, forKey: .storageRegisters)
+        try container.encode(self.matrices, forKey: .matrices)
     }
-    
+
+    // trick to encode items conforming to protocol Stackable
+    // from: https://stackoverflow.com/a/78279115/2526464
+    struct AnyEncodable: Encodable {
+        let item: any Encodable
+        
+        func encode(to encoder: any Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.item)
+        }
+    }
+
+    struct AnyDecodable: Decodable {
+        let item: any Decodable
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if let value = try? container.decode(Double.self) {
+                self.item = value
+            } else if let value = try? container.decode(Matrix.self) {
+                self.item = value
+            } else {
+                self.item = 0
+            }
+        }
+    }
+
     // MARK: - Start of code
     
-    func pushOperand(_ operand: Double) {
+    func pushOperand(_ operand: Stackable) {
         realStack.append(operand)
         imagStack.append(0)
     }
@@ -182,11 +224,6 @@ class Brain: Codable {
     func pushOperand(_ operand: Complex) {
         realStack.append(operand.real)
         imagStack.append(operand.imag)
-    }
-    
-    func pushOperand(_ operand: Matrix) {
-        realStack.append(operand)
-        imagStack.append(0)
     }
 
     // remove and return end of stack (X register)
@@ -265,7 +302,7 @@ class Brain: Codable {
     }
     
     // store value in register, if it exists, else return false
-    func storeValueInRegister(_ name: String, value: Double) -> Bool {
+    func storeValueInRegister(_ name: String, value: Stackable) -> Bool {
         if let _ = storageRegisters[name] {
             storageRegisters[name] = value
             return true
@@ -286,7 +323,7 @@ class Brain: Codable {
 
     func performOperation(_ prefixAndOperation: String) {
         let saveStack = realStack  // save in case of nan or inf
-        var result: Stackable  // Complex or Matrix
+        var result: Stackable?  // Complex or Matrix
         var secondResult: Stackable? = nil
         
         let prefixKey = prefixAndOperation.first  // prefix is always one letter
@@ -307,10 +344,18 @@ class Brain: Codable {
             case "+":
                 let operandA = popOperand()  // Complex or Matrix
                 let operandB = popOperand()  // "
-                if operandA is Complex {
-                    result = (popOperand() as! Complex) + (popOperand() as! Complex)
-                } else {
-                    result = (popOperand() as! Matrix) + (popOperand() as! Matrix)
+                if let complexA = operandA as? Complex {
+                    if let complexB = operandB as? Complex {
+                        result = complexA + complexB
+                    } else if let matrixB = operandB as? Matrix {
+                        result = matrixB + complexA.real
+                    }
+                } else if let matrixA = operandA as? Matrix {
+                    if let matrixB = operandB as? Matrix {
+                        result = matrixA + matrixB
+                    } else if let complexB = operandB as? Complex {
+                        result = matrixA + complexB.real
+                    }
                 }
 //            case "SIN":
 //                result = (popOperand() * angleConversion).sine
@@ -530,9 +575,12 @@ class Brain: Codable {
                 }
                 pushOperand(complex)
             }
+        } else if result == nil {
+            error = .code(11)
         } else if let matrix = result as? Matrix {
             // TBD: handle error cases with matrix operations
-            
+            matrix.name = "B"
+            matrices["ex"] = matrix  // pws: hard-code to B, for now (should be the designate RESULT matrix)
             if secondResult != nil {
                 pushOperand(secondResult as! Matrix)
             }

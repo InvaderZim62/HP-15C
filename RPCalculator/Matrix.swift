@@ -20,6 +20,22 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         self.init(name: "")
     }
 
+//    // MARK: - Codable
+//
+//    private enum CodingKeys: String, CodingKey { case name, values }
+//
+//    required init(from decoder: Decoder) throws {
+//        let container = try decoder.container(keyedBy: CodingKeys.self)
+//        self.name = try container.decode(String.self, forKey: .name)
+//        self.values = try container.decode([[Double]].self, forKey: .values)
+//    }
+//    
+//    func encode(to encoder: Encoder) throws {
+//        var container = encoder.container(keyedBy: CodingKeys.self)
+//        try container.encode(self.name, forKey: .name)
+//        try container.encode(self.values, forKey: .values)
+//    }
+
     var rows: Int {
         values.count
     }
@@ -27,6 +43,10 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     var cols: Int {
         guard rows > 0 else { return 0 }
         return values[0].count
+    }
+    
+    var descriptor: String {
+        String(format: "%@ %5d %2d", name, rows, cols)
     }
     
     static let names = [  // button title: matrix name
@@ -98,13 +118,24 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     // math functions
     //----------------------------
 
-    // (a + bi) - (c + di) = (a - c) + (b - d)i
-    static func +(lhs: Matrix, rhs: Matrix) -> Matrix {
-        var matrix = Matrix()
+    static func +(lhs: Matrix, rhs: Matrix) -> Matrix? {
+        guard lhs.rows == rhs.rows && lhs.cols == rhs.cols else { return nil }
+        let matrix = Matrix()
         matrix.setDimensions(rows: lhs.rows, cols: lhs.cols)
         for row in 0..<matrix.rows {
             for col in 0..<matrix.cols {
                 matrix.values[row][col] = lhs.values[row][col] + rhs.values[row][col]
+            }
+        }
+        return matrix
+    }
+
+    static func +(lhs: Matrix, rhs: Double) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: lhs.rows, cols: lhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs.values[row][col] + rhs
             }
         }
         return matrix
