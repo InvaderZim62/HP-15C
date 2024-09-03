@@ -1689,7 +1689,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 _ = brain.storeValueInRegister("0", value: 1)
                 _ = brain.storeValueInRegister("1", value: 1)
             case "0":
-                break  // HP-15C seems to ignore this
+                // f MATRIX 0 - clear all matrices
+                brain.clearMatrices()
             default:
                 setError(11)
             }

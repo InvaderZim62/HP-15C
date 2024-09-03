@@ -274,6 +274,10 @@ class Brain: Codable {
     func clearImaginaryStack() {
         imagStack = [Double](repeating: 0.0, count: Constants.stackSize)
     }
+    
+    func clearMatrices() {
+        matrices.values.forEach { $0.setDimensions(rows: 0, cols: 0) }
+    }
 
     func swapXyRegisters() {
         realStack.swapAt(Constants.stackSize - 1, Constants.stackSize - 2)  // swap last two elements
