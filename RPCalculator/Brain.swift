@@ -338,9 +338,30 @@ class Brain: Codable {
         switch prefixKey {
         case "n":  // none (primary button functions)
             switch operation {
-//            case "÷":
-//                let divisor = popOperand()
-//                result = popOperand() / divisor  // let DisplayView handle divide by zero (result = "inf")
+            case "÷":
+                let operandB = popOperand()  // Complex or Matrix
+                let operandA = popOperand()  // "
+                if let complexA = operandA as? Complex {
+                    if let complexB = operandB as? Complex {
+                        result = complexA / complexB  // let DisplayView handle divide by zero (result = "inf")
+                    } else if let matrixB = operandB as? Matrix {
+                        if let inverseB = matrixB.inverse {
+                            result = complexA.real * inverseB
+                        } else {
+                            error = .code(11)
+                        }
+                    }
+                } else if let matrixA = operandA as? Matrix {
+                    if let complexB = operandB as? Complex {
+                        result = matrixA / complexB.real
+                    } else if let matrixB = operandB as? Matrix {
+                        if let inverseB = matrixB.inverse {
+                            result = matrixA * inverseB
+                        } else {
+                            error = .code(11)
+                        }
+                    }
+                }
             case "×":
                 let operandB = popOperand()  // Complex or Matrix
                 let operandA = popOperand()  // "
@@ -410,8 +431,13 @@ class Brain: Codable {
 //            case "yx":
 //                let x = popOperand()
 //                result = popOperand()^x
-//            case "1/x":
-//                result = popOperand().inverse
+            case "1/x":
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex.inverse
+                } else if let matrix = operand as? Matrix {
+                    result = matrix.inverse
+                }
 //            case "CHS":
 //                // CHS only changes the sign of the real part of the imaginary number on the HP-15C
 //                let term = popOperand()

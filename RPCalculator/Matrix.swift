@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import simd  // for simd_doubleNxM...
 
 class Matrix: Codable, Stackable, CustomStringConvertible {
     var name: String  // "A" - "E"
@@ -208,6 +209,65 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         for row in 0..<matrix.rows {
             for col in 0..<matrix.cols {
                 matrix.values[row][col] = lhs * rhs.values[row][col]
+            }
+        }
+        return matrix
+    }
+    
+    //----------------------------------------------------------------------------------
+    
+    var inverse: Matrix? {
+        guard rows <= 4 && cols <= 4 else { return nil }  // max dimension for simd is 4
+        var matrix = Matrix()
+        switch rows {
+        case 2:
+            let simdSelf = simd_double2x2(values.map { simd_double2($0) })
+            let simdInverse = simdSelf.inverse
+            matrix.values = (0..<2).map { [simdInverse[$0].x, simdInverse[$0].y] }
+        case 3:
+            let simdSelf = simd_double3x3(values.map { simd_double3($0) })
+            let simdInverse = simdSelf.inverse
+            matrix.values = (0..<3).map { [simdInverse[$0].x, simdInverse[$0].y, simdInverse[$0].z] }
+        case 4:
+            let simdSelf = simd_double4x4(values.map { simd_double4($0) })
+            let simdInverse = simdSelf.inverse
+            matrix.values = (0..<4).map { [simdInverse[$0].x, simdInverse[$0].y, simdInverse[$0].z, simdInverse[$0].w] }
+        default:
+            return nil
+        }
+        return matrix
+    }
+
+    static func /(lhs: Matrix, rhs: Double) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: lhs.rows, cols: lhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs.values[row][col] / rhs
+            }
+        }
+        return matrix
+    }
+
+    static func /(lhs: Double, rhs: Matrix) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: rhs.rows, cols: rhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs / rhs.values[row][col]
+            }
+        }
+        return matrix
+    }
+
+    //----------------------------------------------------------------------------------
+
+    var transpose: Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: cols, cols: rows)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = values[col][row]
             }
         }
         return matrix
