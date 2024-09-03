@@ -348,7 +348,9 @@ class Brain: Codable {
                         if let inverseB = matrixB.inverse {
                             result = complexA.real * inverseB
                         } else {
+                            realStack = saveStack  // restore stack to pre-error state
                             error = .code(11)
+                            return
                         }
                     }
                 } else if let matrixA = operandA as? Matrix {
@@ -358,7 +360,9 @@ class Brain: Codable {
                         if let inverseB = matrixB.inverse {
                             result = matrixA * inverseB
                         } else {
+                            realStack = saveStack  // restore stack to pre-error state
                             error = .code(11)
+                            return
                         }
                     }
                 }
@@ -410,12 +414,33 @@ class Brain: Codable {
                         result = matrixA + matrixB
                     }
                 }
-//            case "SIN":
-//                result = (popOperand() * angleConversion).sine
-//            case "COS":
-//                result = (popOperand() * angleConversion).cosine
-//            case "TAN":
-//                result = (popOperand() * angleConversion).tangent
+            case "SIN":
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = (complex * angleConversion).sine
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "COS":
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = (complex * angleConversion).cosine
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "TAN":
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = (complex * angleConversion).tangent
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
 //            case "√x":
 //                if isComplexMode {
 //                    // both methods give same real answer for positive operands, but .squareRoot does not return
@@ -622,10 +647,10 @@ class Brain: Codable {
         
         if let complex = result as? Complex {
             if complex.real.isNaN || complex.imag.isNaN || complex.real.isInfinite || complex.imag.isInfinite {  // ex. sqrt(-1) = NaN, 1/0 = +Inf, -1/0 = -Inf
-                // restore stack to pre-error state
-                realStack = saveStack
+                realStack = saveStack  // restore stack to pre-error state
                 error = .code(0)  // reset in CalculatorViewController.restoreFromError
             } else if complex.mag > Constants.maxValue {
+                realStack = saveStack  // restore stack to pre-error state
                 error = complex.real > 0 ? .overflow : .underflow  // pws: underflow should be a number less than 1E-99 (not neg overflow)
             } else {
                 if secondResult != nil {
@@ -635,6 +660,7 @@ class Brain: Codable {
             }
             printMemory()
         } else if result == nil {
+            realStack = saveStack  // restore stack to pre-error state
             error = .code(11)
         } else if let matrix = result as? Matrix {
             // TBD: handle error cases with matrix operations
