@@ -140,4 +140,42 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         }
         return matrix
     }
+
+    static func -(lhs: Matrix, rhs: Matrix) -> Matrix? {
+        guard lhs.rows == rhs.rows && lhs.cols == rhs.cols else { return nil }
+        let matrix = Matrix()
+        matrix.setDimensions(rows: lhs.rows, cols: lhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs.values[row][col] - rhs.values[row][col]
+            }
+        }
+        return matrix
+    }
+
+    static func -(lhs: Matrix, rhs: Double) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: lhs.rows, cols: lhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs.values[row][col] - rhs
+            }
+        }
+        return matrix
+    }
+    
+    //----------------------------
+    // unary operator
+    //----------------------------
+
+    static prefix func -(rhs: Matrix) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: rhs.rows, cols: rhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = -rhs.values[row][col]
+            }
+        }
+        return matrix
+    }
 }

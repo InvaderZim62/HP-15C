@@ -339,8 +339,22 @@ class Brain: Codable {
 //                result = popOperand() / divisor  // let DisplayView handle divide by zero (result = "inf")
 //            case "×":
 //                result = popOperand() * popOperand()
-//            case "–":
-//                result = -popOperand() + popOperand()
+            case "–":
+                let operandA = popOperand()  // Complex or Matrix
+                let operandB = popOperand()  // "
+                if let complexA = operandA as? Complex {
+                    if let complexB = operandB as? Complex {
+                        result = complexB - complexA
+                    } else if let matrixB = operandB as? Matrix {
+                        result = matrixB - complexA.real
+                    }
+                } else if let matrixA = operandA as? Matrix {
+                    if let matrixB = operandB as? Matrix {
+                        result = matrixB - matrixA
+                    } else if let complexB = operandB as? Complex {
+                        result = -matrixA + complexB.real
+                    }
+                }
             case "+":
                 let operandA = popOperand()  // Complex or Matrix
                 let operandB = popOperand()  // "
@@ -575,6 +589,7 @@ class Brain: Codable {
                 }
                 pushOperand(complex)
             }
+            printMemory()
         } else if result == nil {
             error = .code(11)
         } else if let matrix = result as? Matrix {
@@ -585,8 +600,8 @@ class Brain: Codable {
                 pushOperand(secondResult as! Matrix)
             }
             pushOperand(matrix)
+            print(matrix)
         }
-        printMemory()
     }
     
     func printMemory() {
@@ -606,7 +621,7 @@ class Brain: Codable {
         if let number = lastXRegister as? Double {
             print(String(format: "LSTx:  % 8f", number))
         } else if let matrix = lastXRegister as? Matrix {
-            print(String(format: "LSTx:     %@", matrix.name))
+            print(String(format: "LSTx:      %@", matrix.name))
         }
         // print storage register 0-4 and .0-.4
         print("Reg", terminator: "")
