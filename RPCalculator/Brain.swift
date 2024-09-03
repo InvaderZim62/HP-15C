@@ -337,27 +337,41 @@ class Brain: Codable {
 //            case "÷":
 //                let divisor = popOperand()
 //                result = popOperand() / divisor  // let DisplayView handle divide by zero (result = "inf")
-//            case "×":
-//                result = popOperand() * popOperand()
-            case "–":
-                let operandA = popOperand()  // Complex or Matrix
-                let operandB = popOperand()  // "
+            case "×":
+                let operandB = popOperand()  // Complex or Matrix
+                let operandA = popOperand()  // "
                 if let complexA = operandA as? Complex {
                     if let complexB = operandB as? Complex {
-                        result = complexB - complexA
+                        result = complexA * complexB
                     } else if let matrixB = operandB as? Matrix {
-                        result = matrixB - complexA.real
+                        result = complexA.real * matrixB
                     }
                 } else if let matrixA = operandA as? Matrix {
                     if let complexB = operandB as? Complex {
-                        result = complexB.real - matrixA
+                        result = matrixA * complexB.real
                     } else if let matrixB = operandB as? Matrix {
-                        result = matrixB - matrixA
+                        result = matrixA * matrixB
+                    }
+                }
+            case "–":
+                let operandB = popOperand()  // Complex or Matrix
+                let operandA = popOperand()  // "
+                if let complexA = operandA as? Complex {
+                    if let complexB = operandB as? Complex {
+                        result = complexA - complexB
+                    } else if let matrixB = operandB as? Matrix {
+                        result = complexA.real - matrixB
+                    }
+                } else if let matrixA = operandA as? Matrix {
+                    if let complexB = operandB as? Complex {
+                        result = matrixA - complexB.real
+                    } else if let matrixB = operandB as? Matrix {
+                        result = matrixA - matrixB
                     }
                 }
             case "+":
-                let operandA = popOperand()  // Complex or Matrix
-                let operandB = popOperand()  // "
+                let operandB = popOperand()  // Complex or Matrix
+                let operandA = popOperand()  // "
                 if let complexA = operandA as? Complex {
                     if let complexB = operandB as? Complex {
                         result = complexA + complexB

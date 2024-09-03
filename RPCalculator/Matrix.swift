@@ -20,22 +20,6 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         self.init(name: "")
     }
 
-//    // MARK: - Codable
-//
-//    private enum CodingKeys: String, CodingKey { case name, values }
-//
-//    required init(from decoder: Decoder) throws {
-//        let container = try decoder.container(keyedBy: CodingKeys.self)
-//        self.name = try container.decode(String.self, forKey: .name)
-//        self.values = try container.decode([[Double]].self, forKey: .values)
-//    }
-//    
-//    func encode(to encoder: Encoder) throws {
-//        var container = encoder.container(keyedBy: CodingKeys.self)
-//        try container.encode(self.name, forKey: .name)
-//        try container.encode(self.values, forKey: .values)
-//    }
-
     var rows: Int {
         values.count
     }
@@ -151,7 +135,9 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         }
         return matrix
     }
-
+    
+    //----------------------------------------------------------------------------------
+    
     static func -(lhs: Matrix, rhs: Matrix) -> Matrix? {
         guard lhs.rows == rhs.rows && lhs.cols == rhs.cols else { return nil }
         let matrix = Matrix()
@@ -181,6 +167,47 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         for row in 0..<matrix.rows {
             for col in 0..<matrix.cols {
                 matrix.values[row][col] = lhs - rhs.values[row][col]
+            }
+        }
+        return matrix
+    }
+    
+    //----------------------------------------------------------------------------------
+
+    static func *(lhs: Matrix, rhs: Matrix) -> Matrix? {
+        guard lhs.rows == rhs.cols && lhs.cols == rhs.rows else { return nil }
+        let resultSize = lhs.rows
+        let matrix = Matrix()
+        matrix.setDimensions(rows: resultSize, cols: resultSize)
+        for resultRow in 0..<resultSize {
+            for resultCol in 0..<resultSize {
+                var total = 0.0
+                for i in 0..<lhs.cols {
+                    total += lhs.values[resultRow][i] * rhs.values[i][resultCol]
+                }
+                matrix.values[resultRow][resultCol] = total
+            }
+        }
+        return matrix
+    }
+
+    static func *(lhs: Matrix, rhs: Double) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: lhs.rows, cols: lhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs.values[row][col] * rhs
+            }
+        }
+        return matrix
+    }
+
+    static func *(lhs: Double, rhs: Matrix) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: rhs.rows, cols: rhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs * rhs.values[row][col]
             }
         }
         return matrix

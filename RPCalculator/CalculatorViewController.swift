@@ -683,12 +683,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .RCL_MATRIX:
             // MATRIX A-E - display dimensions of matrix A-E
             let matrix = brain.matrices[buttonName]!
-            if userIsEnteringDigits {
-                brain.pushOperand(displayStringNumber)
-                brain.pushOperand(matrix)
-            } else {
-                brain.xRegister = matrix
-            }
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
+            brain.pushOperand(matrix)
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
