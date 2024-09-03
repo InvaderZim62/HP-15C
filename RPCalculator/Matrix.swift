@@ -141,6 +141,17 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         return matrix
     }
 
+    static func +(lhs: Double, rhs: Matrix) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: rhs.rows, cols: rhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs + rhs.values[row][col]
+            }
+        }
+        return matrix
+    }
+
     static func -(lhs: Matrix, rhs: Matrix) -> Matrix? {
         guard lhs.rows == rhs.rows && lhs.cols == rhs.cols else { return nil }
         let matrix = Matrix()
@@ -163,7 +174,18 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         }
         return matrix
     }
-    
+
+    static func -(lhs: Double, rhs: Matrix) -> Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: rhs.rows, cols: rhs.cols)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = lhs - rhs.values[row][col]
+            }
+        }
+        return matrix
+    }
+
     //----------------------------
     // unary operator
     //----------------------------

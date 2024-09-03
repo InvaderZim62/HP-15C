@@ -349,10 +349,10 @@ class Brain: Codable {
                         result = matrixB - complexA.real
                     }
                 } else if let matrixA = operandA as? Matrix {
-                    if let matrixB = operandB as? Matrix {
+                    if let complexB = operandB as? Complex {
+                        result = complexB.real - matrixA
+                    } else if let matrixB = operandB as? Matrix {
                         result = matrixB - matrixA
-                    } else if let complexB = operandB as? Complex {
-                        result = -matrixA + complexB.real
                     }
                 }
             case "+":
@@ -362,13 +362,13 @@ class Brain: Codable {
                     if let complexB = operandB as? Complex {
                         result = complexA + complexB
                     } else if let matrixB = operandB as? Matrix {
-                        result = matrixB + complexA.real
+                        result = complexA.real + matrixB
                     }
                 } else if let matrixA = operandA as? Matrix {
-                    if let matrixB = operandB as? Matrix {
-                        result = matrixA + matrixB
-                    } else if let complexB = operandB as? Complex {
+                    if let complexB = operandB as? Complex {
                         result = matrixA + complexB.real
+                    } else if let matrixB = operandB as? Matrix {
+                        result = matrixA + matrixB
                     }
                 }
 //            case "SIN":
