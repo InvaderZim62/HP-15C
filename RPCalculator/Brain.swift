@@ -591,16 +591,45 @@ class Brain: Codable {
     
     func printMemory() {
         guard !isSolving else { return }
+        // print memory registers
         print("          Real         Imag")
         let labels = ["T", "Z", "Y", "X"]
-//        for index in 0..<realStack.count {
-//            let realString = String(format: "% 8f", realStack[index]).padding(toLength: 11, withPad: " ", startingAt: 0)
-//            print(String(format: "   %@:  %@  % 8f", labels[index], realString, imagStack[index]))
-//        }
-//        print(String(format: "LSTx:  % 8f", lastXRegister))
-//        print(String(format: "Reg  0: %8f   1: %8f   2: %8f   3: %8f   4: %8f", storageRegisters["0"]!, storageRegisters["1"]!, storageRegisters["2"]!, storageRegisters["3"]!, storageRegisters["4"]!))
-//        print(String(format: "    .0: %8f  .1: %8f  .2: %8f  .3: %8f  .4: %8f", storageRegisters[".0"]!, storageRegisters[".1"]!, storageRegisters[".2"]!, storageRegisters[".3"]!, storageRegisters[".4"]!))
-//        print(String(format: "     I: %8f", storageRegisters["I"]!))
+        for index in 0..<realStack.count {
+            if let number = realStack[index] as? Double {
+                let realString = String(format: "% 8f", number).padding(toLength: 11, withPad: " ", startingAt: 0)
+                print(String(format: "   %@:  %@  % 8f", labels[index], realString, imagStack[index]))
+            } else if let matrix = realStack[index] as? Matrix {
+                print(String(format: "   %@:      %@", labels[index], matrix.name))
+            }
+        }
+        // print Last X
+        if let number = lastXRegister as? Double {
+            print(String(format: "LSTx:  % 8f", number))
+        } else if let matrix = lastXRegister as? Matrix {
+            print(String(format: "LSTx:     %@", matrix.name))
+        }
+        // print storage register 0-4 and .0-.4
+        print("Reg", terminator: "")
+        var dot = ""
+        for _ in 0..<2 {
+            for index in 0..<5 {
+                let registerName = "\(dot)\(index)"
+                let space = dot == "." ? "" : " "
+                if let number = storageRegisters[registerName]! as? Double {
+                    print(String(format: " %@%@: %8f ", space, registerName, number), terminator: "")
+                } else if let matrix = storageRegisters[registerName]! as? Matrix {
+                    print(String(format: " %@%@:    %@ ", space, registerName, matrix.name), terminator: "")
+                }
+            }
+            print("\n   ", terminator: "")
+            dot = "."
+        }
+        // print storage register I
+        if let number = storageRegisters["I"]! as? Double {
+            print(String(format: "  I: %8f", number))
+        } else if let matrix = storageRegisters["I"]! as? Matrix {
+            print(String(format: "  I:    %@", matrix.name))
+        }
         print("---------------------------------------------------------")
     }
 }
