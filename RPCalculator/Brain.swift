@@ -441,21 +441,49 @@ class Brain: Codable {
                     error = .code(1)
                     return
                 }
-//            case "√x":
-//                if isComplexMode {
-//                    // both methods give same real answer for positive operands, but .squareRoot does not return
-//                    // NaN, if operand is negative (it return a valid complex number); must use sqrt() to get NaN.
-//                    result = popOperand().squareRoot
-//                } else {
-//                    result.real = sqrt(popOperand().real)
-//                }
-//            case "ex":
-//                result = popOperand().exponential
-//            case "10x":
-//                result = popOperand().tenToThePowerOf
-//            case "yx":
-//                let x = popOperand()
-//                result = popOperand()^x
+            case "√x":
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    if isComplexMode {
+                        // both methods give same real answer for positive operands, but .squareRoot does not return
+                        // NaN, if operand is negative (it return a valid complex number); must use sqrt() to get NaN.
+                        result = complex.squareRoot
+                    } else {
+                        result = Complex(real: sqrt(complex.real), imag: 0)
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "ex":
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex.exponential
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "10x":
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex.tenToThePowerOf
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "yx":
+                let operandB = popOperand()
+                let operandA = popOperand()
+                if let complexA = operandA as? Complex, let complexB = operandB as? Complex {
+                    result = complexA^complexB
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
             case "1/x":
                 let operand = popOperand()
                 if let complex = operand as? Complex {
