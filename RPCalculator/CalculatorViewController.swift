@@ -129,6 +129,7 @@ enum Prefix: String {
     case HYP1 = "h"  // ex. g HYP1 SIN (inverse hyperbolic sine)
     case DIM  // ex. f DIM A (dimension matrix A to y rows and x cols)
     case RCL_DIM  // ex. RCL DIM A (place number of rows of matrix A in Y register and number of columns in X register)
+    case RESULT  // ex. f RESULT B (store results of matrix operation in matrix B)
     case SF  // ex. g SF 8 (set flag 8 - enable complex mode)
     case CF  // ex. g CF 8 (clear flag 8 - disable complex mode)
     case FQM  // ex. g F? 2 (test if flag 2 is set)
@@ -663,18 +664,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // DIM A-E - create matrix with dimensions in X and Y registers (Y rows, X cols)
             if userIsEnteringDigits { endDisplayEntry() }
             updateDisplayString()
-            let matrix = brain.matrices[buttonName]!
+            let matrix = brain.matrices[Matrix.names[buttonName]!]!
             if let rows = brain.yRegister as? Double, let cols = brain.xRegister! as? Double {
                 matrix.setDimensions(rows: Int(rows), cols: Int(cols))
                 print(matrix)
-                saveDefaults()
             } else {
                 setError(1)  // can't use matrix as a dimension
             }
         case .RCL_DIM:
             // RCL DIM A-E - store number of rows in Y register and columns in X register, for matrix A-E
             if userIsEnteringDigits { endDisplayEntry() }
-            let matrix = brain.matrices[buttonName]!
+            let matrix = brain.matrices[Matrix.names[buttonName]!]!
             brain.pushOperand(Double(matrix.rows))
             brain.pushOperand(Double(matrix.rows))  // push rows into X and Y registers
             displayString = String(matrix.cols)
@@ -682,13 +682,20 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             updateDisplayString()
         case .RCL_MATRIX:
             // MATRIX A-E - display dimensions of matrix A-E
-            let matrix = brain.matrices[buttonName]!
+            let matrix = brain.matrices[Matrix.names[buttonName]!]!
             if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
             brain.pushOperand(matrix)
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             print(matrix)
+        case .RESULT:
+            // RESULT A-E - designate matrix for storing results
+            if userIsEnteringDigits { endDisplayEntry() }
+            brain.resultMatrix = Matrix.names[buttonName]!
+            updateDisplayString()
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
         case .STO:
             // STO A-E - store displayed value to matrix A-E, at row = register 0, col = register 1
             if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
@@ -696,7 +703,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
-            saveDefaults()
         case .RCL:
             // RCL A-E - recall element of matrix A-E, at row = register 0, col = register 1
             recallValueFromMatrix(buttonName)
@@ -704,6 +710,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             break
         }
         prefix = nil
+        saveDefaults()
     }
     
     @IBAction func chsButtonPressed(_ sender: UIButton) {
@@ -983,8 +990,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             handleDigitEntry(buttonName: buttonName)
         case .f:
             // "RESULT" pressed
-            prefix = nil
-            print("TBD: RESULT")
+            prefix = .RESULT
         case .g:
             // pi pressed
             prefix = nil
@@ -1008,9 +1014,15 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prepStackForOperation()
             eexButtonPressed(sender)
         case .RCL:
+            // RCL RESULT - display results matrix
             prefix = nil
-            prepStackForOperation()
-            setError(99)  // pws: actually RCL EEX displays "A      0  0" (not sure what this is)
+            let matrix = brain.matrices[brain.resultMatrix]!
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
+            brain.pushOperand(matrix)
+            updateDisplayString()
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            print(matrix)
         default:
             // clear prefix and re-run
             prefix = nil
@@ -1966,7 +1978,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
            let storage1 = brain.valueFromStorageRegister("1")! as? Double {
             let row = Int(storage0)
             let col = Int(storage1)
-            let matrix = brain.matrices[buttonName]!
+            let matrix = brain.matrices[Matrix.names[buttonName]!]!
             if matrix.storeValue(number, atRow: row, col: col) {
                 if isUserMode {
                     // auto-increment row/col registers
@@ -1990,7 +2002,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
            let storage1 = brain.valueFromStorageRegister("1")! as? Double {
             let row = Int(storage0)
             let col = Int(storage1)
-            let matrix = brain.matrices[buttonName]!
+            let matrix = brain.matrices[Matrix.names[buttonName]!]!
             if let value = matrix.recallValue(atRow: row, col: col) {
                 brain.pushOperand(value)
                 updateDisplayString()

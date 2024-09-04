@@ -131,7 +131,7 @@ class Brain: Codable {
 
     private var storageRegisters: [String: Stackable] = [  // [register name: number or matrix]
         "I": 0.0,
-         "0": 0,  "1": 0,  "2": 0,  "3": 0,  "4": 0,  "5": 0,  "6": 0,  "7": 0,  "8": 0,  "9": 0,
+        "0": 0,  "1": 0,  "2": 0,  "3": 0,  "4": 0,  "5": 0,  "6": 0,  "7": 0,  "8": 0,  "9": 0,
         ".0": 0, ".1": 0, ".2": 0, ".3": 0, ".4": 0, ".5": 0, ".6": 0, ".7": 0, ".8": 0, ".9": 0,
          // the remaining registers are not available on the HP-15C by default;
          // they can be accessed by reallocating memory using the DIM function
@@ -143,16 +143,18 @@ class Brain: Codable {
         ]
     
     var matrices: [String: Matrix] = [  // button name: matrix
-        "√x"  : Matrix(name: "A"),
-        "ex"  : Matrix(name: "B"),
-        "10x" : Matrix(name: "C"),
-        "yx"  : Matrix(name: "D"),
-        "1/x" : Matrix(name: "E")
+        "A"  : Matrix(name: "A"),
+        "B"  : Matrix(name: "B"),
+        "C" : Matrix(name: "C"),
+        "D"  : Matrix(name: "D"),
+        "E" : Matrix(name: "E")
     ]
+    
+    var resultMatrix = "A"
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, error, isComplexMode, realStack, imagStack, storageRegisters, matrices }
+    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, error, isComplexMode, realStack, imagStack, storageRegisters, matrices, resultMatrix }
     
     init() { }
 
@@ -174,6 +176,7 @@ class Brain: Codable {
             self.storageRegisters = decoded.mapValues { $0.item as! Stackable }
         }
         self.matrices = try container.decode([String: Matrix].self, forKey: .matrices)
+        self.resultMatrix = try container.decode(String.self, forKey: .resultMatrix)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -186,6 +189,7 @@ class Brain: Codable {
         try container.encode(JSONSerialization.data(withJSONObject: imagStack), forKey: .imagStack)
         try container.encode(self.storageRegisters.mapValues { AnyEncodable(item: $0) }, forKey: .storageRegisters)
         try container.encode(self.matrices, forKey: .matrices)
+        try container.encode(self.resultMatrix, forKey: .resultMatrix)
     }
 
     // trick to encode items conforming to protocol Stackable
@@ -329,6 +333,7 @@ class Brain: Codable {
         let saveStack = realStack  // save in case of nan or inf
         var result: Stackable?  // Complex or Matrix
         var secondResult: Stackable? = nil
+        var overwriteMatrix: String? = nil
         
         let prefixKey = prefixAndOperation.first  // prefix is always one letter
         let operation = prefixAndOperation.dropFirst()
@@ -491,13 +496,18 @@ class Brain: Codable {
                 } else if let matrix = operand as? Matrix {
                     result = matrix.inverse
                 }
-//            case "CHS":
-//                // CHS only changes the sign of the real part of the imaginary number on the HP-15C
-//                let term = popOperand()
-//                result = Complex(real: -term.real, imag: term.imag)
-//            default:
-//                break
-//            }
+            case "CHS":
+                // CHS only changes the sign of the real part of the imaginary number on the HP-15C
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = Complex(real: -complex.real, imag: complex.imag)
+                } else if let matrix = operand as? Matrix {
+                    result = -1 * matrix
+                    overwriteMatrix = matrix.name  // overwrite original matrix
+                }
+            default:
+                break
+            }
 //        case "f":  // functions above button (orange)
 //            switch operation {
 //            case "STO":
@@ -666,9 +676,9 @@ class Brain: Codable {
 //                } else {
 //                    result.real = atanh(popOperand().real)
 //                }
-            default:
-                result = Complex(real: 0, imag: 0)
-            }
+//            default:
+//                result = Complex(real: 0, imag: 0)
+//            }
         default:
             result = Complex(real: 0, imag: 0)
         }
@@ -692,8 +702,12 @@ class Brain: Codable {
             error = .code(11)
         } else if let matrix = result as? Matrix {
             // TBD: handle error cases with matrix operations
-            matrix.name = "B"
-            matrices["ex"] = matrix  // pws: hard-code to B, for now (should be the designate RESULT matrix)
+            if let matrixName = overwriteMatrix {
+                matrix.name = matrixName
+            } else {
+                matrix.name = resultMatrix
+            }
+            matrices[matrix.name] = matrix
             if secondResult != nil {
                 pushOperand(secondResult as! Matrix)
             }
