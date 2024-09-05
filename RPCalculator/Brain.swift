@@ -660,56 +660,101 @@ class Brain: Codable {
                     error = .code(1)
                     return
                 }
-//            case "yx":
-//                // %
-//                // Note: Owner's Handbook p.130 says "Any functions not mentioned below or in the rest of this section
-//                //       (Calculating With Complex Numbers) ignore the imaginary stack."  Percent seems to fall in this
-//                //       category, although (a + bi) ENTER (c + di) % gives a complex number answer.  I just use the
-//                //       real portion of the x value (c + 0i).
-//                let percent = popOperand().real * 0.01
-//                let baseNumber = popOperand()
-//                result.real = percent * baseNumber.real  // %
-//                secondResult = baseNumber
-//            case "1/x":
-//                // 𝝙% (delta %)
-//                let secondNumber = popOperand().real
-//                let baseNumber = popOperand()
-//                result.real = (secondNumber - baseNumber.real) / baseNumber.real * 100
-//                secondResult = baseNumber
-//            case "CHS":
-//                // ABS (absolute value)
-//                result = Complex(real: popOperand().mag, imag: 0)
-//            case "1":
-//                // →P - convert rectangular coordinates to polar
-//                isConvertingPolar = true
-//                if isComplexMode {
-//                    // rectangular coordinates (x and y) come from real and imaginary parts of complex number in X registers
-//                    let rectangular = popOperand()
-//                    let x = rectangular.real
-//                    let y = rectangular.imag
-//                    result.real = rectangular.mag  // radius
-//                    result.imag = atan2(y, x) / angleConversion  // angle
-//                } else {
-//                    // rectangular coordinate x comes from X register, y comes from Y register
-//                    let x = popOperand().real
-//                    let y = popOperand().real
-//                    result.real = sqrt(x * x + y * y)  // radius
-//                    secondResult = Complex(real: atan2(y, x) / angleConversion, imag: 0)  // angle
-//                }
-//            case "2":
-//                // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
-//                let term = popOperand()
-//                let hoursMinuteSeconds = term.real  // ex. hoursMinutesSeconds = 1.1404200
-//                let hours = Int(hoursMinuteSeconds)  // ex. hours = 1
-//                let decimal = Int(round((hoursMinuteSeconds - Double(hours)) * 10000000))  // ex. decimal = 1404200
-//                let minutes = Int(decimal / 100000)  // ex. minutes = 14
-//                let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
-//                result.real = Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600
-//                result.imag = term.imag
-//            case "3":
-//                // →DEG - convert to degrees
-//                let term = popOperand()
-//                result = Complex(real: term.real / Constants.D2R, imag: term.imag)  // only applies to the real portion
+            case "yx":
+                // %
+                // Note: Owner's Handbook p.130 says "Any functions not mentioned below or in the rest of this section
+                //       (Calculating With Complex Numbers) ignore the imaginary stack."  Percent seems to fall in this
+                //       category, although (a + bi) ENTER (c + di) % gives a complex number answer.  I just use the
+                //       real portion of the x value (c + 0i).
+                let operandB = popOperand()
+                let operandA = popOperand()
+                if let baseNumber = operandA as? Complex, let complexB = operandB as? Complex {
+                    let percent = complexB.real * 0.01
+                    result = Complex(real: percent * baseNumber.real, imag: 0)  // %
+                    secondResult = baseNumber
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "1/x":
+                // 𝝙% (delta %)
+                let operandB = popOperand()
+                let operandA = popOperand()
+                if let baseNumber = operandA as? Complex, let complexB = operandB as? Complex {
+                    let secondNumber = complexB.real
+                    result = Complex(real: (secondNumber - baseNumber.real) / baseNumber.real * 100, imag: 0)
+                    secondResult = baseNumber
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "CHS":
+                // ABS (absolute value)
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    result = Complex(real: term.mag, imag: 0)
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "1":
+                // →P - convert rectangular coordinates to polar
+                isConvertingPolar = true
+                let operandB = popOperand()
+                if let complexB = operandB as? Complex {
+                    if isComplexMode {
+                        // rectangular coordinates (x and y) come from real and imaginary parts of complex number in X registers
+                        let rectangular = complexB
+                        let x = rectangular.real
+                        let y = rectangular.imag
+                        result = Complex(real: rectangular.mag,  // radians
+                                         imag: atan2(y, x) / angleConversion)  // angle
+                    } else {
+                        let operandA = popOperand()
+                        if let complexA = operandA as? Complex {
+                            let x = complexB.real
+                            let y = complexA.real
+                            result = Complex(real: sqrt(x * x + y * y), imag: 0)  // radians
+                            secondResult = Complex(real: atan2(y, x) / angleConversion, imag: 0)  // angle
+                        } else {
+                            realStack = saveStack  // restore stack to pre-error state
+                            error = .code(1)
+                            return
+                        }
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "2":
+                // →H convert hours-minutes-seconds-decimal seconds (H.MMSSsssss) to decimal hour
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    let hoursMinuteSeconds = term.real  // ex. hoursMinutesSeconds = 1.1404200
+                    let hours = Int(hoursMinuteSeconds)  // ex. hours = 1
+                    let decimal = Int(round((hoursMinuteSeconds - Double(hours)) * 10000000))  // ex. decimal = 1404200
+                    let minutes = Int(decimal / 100000)  // ex. minutes = 14
+                    let seconds = Double(decimal - minutes * 100000) / 1000  // ex. seconds = 4.2
+                    result = Complex(real: Double(hours) + Double(minutes) / 60 + Double(seconds) / 3600, imag: term.imag)
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "3":
+                // →DEG - convert to degrees
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    result = Complex(real: term.real / Constants.D2R, imag: term.imag)  // only applies to the real portion
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
 //            default:
 //                break
 //            }
