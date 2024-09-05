@@ -508,44 +508,74 @@ class Brain: Codable {
             default:
                 break
             }
-//        case "f":  // functions above button (orange)
-//            switch operation {
-//            case "STO":
-//                // FRAC - decimal portion of number
-//                let number = popOperand()
-//                result.real = number.real - Double(Int(number.real))
-//                result.imag = number.imag
-//            case "1":
-//                // →R - convert polar coordinates to rectangular
-//                isConvertingPolar = true
-//                if isComplexMode {
-//                    let polar = popOperand()
-//                    let radius = polar.real
-//                    let angle = polar.imag
-//                    result.real = radius * cos(angle * angleConversion)  // x
-//                    result.imag = radius * sin(angle * angleConversion)  // y
-//                } else {
-//                    let radius = popOperand().real
-//                    let angle = popOperand().real
-//                    result.real = radius * cos(angle * angleConversion)  // x
-//                    secondResult = Complex(real: radius * sin(angle * angleConversion), imag: 0)  // y
-//                }
-//            case "2":
-//                // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
-//                let term = popOperand()
-//                let decimalHours = term.real
-//                let hours = Int(decimalHours)
-//                let minutes = Int((decimalHours - Double(hours)) * 60)
-//                let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
-//                result.real = Double(hours) + Double(minutes) / 100 + seconds / 10000
-//                result.imag = term.imag
-//            case "3":
-//                // →RAD - convert to radians
-//                let term = popOperand()
-//                result = Complex(real: term.real * Constants.D2R, imag: term.imag)  // only applies to the real portion
-//            default:
-//                break
-//            }
+        case "f":  // functions above button (orange)
+            switch operation {
+            case "STO":
+                // FRAC - decimal portion of number
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = Complex(real: complex.real - Double(Int(complex.real)), imag: complex.imag)
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "1":
+                // →R - convert polar coordinates to rectangular
+                isConvertingPolar = true
+                let operandB = popOperand()
+                if let complexB = operandB as? Complex {
+                    if isComplexMode {
+                        let polar = complexB
+                        let radius = polar.real
+                        let angle = polar.imag
+                        result = Complex(real: radius * cos(angle * angleConversion),  // x
+                                         imag: radius * sin(angle * angleConversion))  // y
+                    } else {
+                        let operandA = popOperand()
+                        if let complexA = operandA as? Complex {
+                            let radius = complexB.real
+                            let angle = complexA.real
+                            result = Complex(real: radius * cos(angle * angleConversion), imag: 0)  // x
+                            secondResult = Complex(real: radius * sin(angle * angleConversion), imag: 0)  // y
+                        } else {
+                            realStack = saveStack  // restore stack to pre-error state
+                            error = .code(1)
+                            return
+                        }
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "2":
+                // →H.MS - convert decimal hours to hours-minutes-seconds-decimal seconds (H.MMSSsssss)
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    let decimalHours = term.real
+                    let hours = Int(decimalHours)
+                    let minutes = Int((decimalHours - Double(hours)) * 60)
+                    let seconds = (decimalHours - Double(hours) - Double(minutes) / 60) * 3600
+                    result = Complex(real: Double(hours) + Double(minutes) / 100 + seconds / 10000, imag: term.imag)
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "3":
+                // →RAD - convert to radians
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    result = Complex(real: term.real * Constants.D2R, imag: term.imag)  // only applies to the real portion
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            default:
+                break
+            }
 //        case "g":  // functions below button (blue)
 //            switch operation {
 //            case "STO":
@@ -676,9 +706,9 @@ class Brain: Codable {
 //                } else {
 //                    result.real = atanh(popOperand().real)
 //                }
-//            default:
-//                result = Complex(real: 0, imag: 0)
-//            }
+            default:
+                result = Complex(real: 0, imag: 0)
+            }
         default:
             result = Complex(real: 0, imag: 0)
         }

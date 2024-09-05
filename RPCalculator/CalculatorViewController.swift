@@ -74,6 +74,8 @@
 //  Not implemented:
 //  - statistics function
 //  - numerical integration
+//  - matrix inversion greater than 4x4
+//  - complex number matrices
 //
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
