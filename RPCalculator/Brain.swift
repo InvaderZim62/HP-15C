@@ -576,42 +576,90 @@ class Brain: Codable {
             default:
                 break
             }
-//        case "g":  // functions below button (blue)
-//            switch operation {
-//            case "STO":
-//                // INT
-//                let term = popOperand()
-//                result = Complex(real: Double(Int(term.real)), imag: term.imag)
-//            case "SIN":
-//                // SIN-1 (arcsin)
-//                if isComplexMode {
-//                    // both methods give same real answer for abs(operands) < 1, but .arcsin does not return
-//                    // NaN, if abs(operand) > 1 (it returns a valid complex number); must use asin() to get NaN.
-//                    result = popOperand().arcsin
-//                } else {
-//                    result.real = asin(popOperand().real) / angleConversion
-//                }
-//            case "COS":
-//                // COS-1 (arccos)
-//                if isComplexMode {
-//                    // both methods give same real answer for abs(operands) < 1, but .arccos does not return
-//                    // NaN, if abs(operand) > 1 (it returns a valid complex number); must use acos() to get NaN.
-//                    result = popOperand().arccos
-//                } else {
-//                    result.real = acos(popOperand().real) / angleConversion
-//                }
-//            case "TAN":
-//                // TAN-1 (arctan)
-//                result = (popOperand() / angleConversion).arctan
-//            case "√x":
-//                // x²
-//                result = popOperand().squared
-//            case "ex":
-//                // LN (natural log)
-//                result = popOperand().naturalLog
-//            case "10x":
-//                // LOG (base 10)
-//                result = popOperand().logBase10
+        case "g":  // functions below button (blue)
+            switch operation {
+            case "STO":
+                // INT
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    result = Complex(real: Double(Int(term.real)), imag: term.imag)
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "SIN":
+                // SIN-1 (arcsin)
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    if isComplexMode {
+                        // both methods give same real answer for abs(operands) < 1, but .arcsin does not return
+                        // NaN, if abs(operand) > 1 (it returns a valid complex number); must use asin() to get NaN.
+                        result = complex.arcsin
+                    } else {
+                        result = Complex(real: asin(complex.real) / angleConversion, imag: 0)
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "COS":
+                // COS-1 (arccos)
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    if isComplexMode {
+                        // both methods give same real answer for abs(operands) < 1, but .arccos does not return
+                        // NaN, if abs(operand) > 1 (it returns a valid complex number); must use acos() to get NaN.
+                        result = complex.arccos
+                    } else {
+                        result = Complex(real: acos(complex.real) / angleConversion, imag: 0)
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "TAN":
+                // TAN-1 (arctan)
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    result = (term / angleConversion).arctan
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "√x":
+                // x²
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    result = term.squared
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "ex":
+                // LN (natural log)
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    result = term.naturalLog
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "10x":
+                // LOG (base 10)
+                let operand = popOperand()
+                if let term = operand as? Complex {
+                    result = term.logBase10
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
 //            case "yx":
 //                // %
 //                // Note: Owner's Handbook p.130 says "Any functions not mentioned below or in the rest of this section
