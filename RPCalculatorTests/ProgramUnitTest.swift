@@ -35,6 +35,8 @@ class ProgramUnitTests: XCTestCase {
         cvc.beginAppearanceTransition(true, animated: false)  // run lifecycle, connect outlets
         cvc.endAppearanceTransition()
         continueAfterFailure = false  // stop existing test case from continuing after failure
+        
+        cvc.isUserMode = false
     }
     
     override func tearDownWithError() throws {
@@ -396,6 +398,7 @@ class ProgramUnitTests: XCTestCase {
     //
     // verify: display counts down from initial value to zero, stopping at each number
     func test07ConditionalTest() {
+        // enter program
         startNewProgram()
         // LBL A
         pressButton(title: "f")
@@ -421,6 +424,7 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "g")
         pressButton(title: "R/S")
         
+        // run program
         // set display to 4 digits fixed
         pressButton(title: "f")
         pressButton(title: "7")
@@ -1036,7 +1040,7 @@ class ProgramUnitTests: XCTestCase {
         let button = UIButton()
         button.setTitle(title, for: .normal)
         switch title {
-        case "√x", "ex", "10x", "yx", "1/x":
+        case "√x", "ex", "10x", "yx", "1/x":  // note: if cvc.isUserMode = true, these will be the non-f prefix versions
             cvc.aToEButtonPressed(button)
         case "CHS":
             cvc.chsButtonPressed(button)

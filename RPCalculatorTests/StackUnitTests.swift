@@ -33,6 +33,8 @@ class StackUnitTests: XCTestCase {
         pressButton(title: "f")
         pressButton(title: "7")  // f-7 = FIX
         pressButton(title: "4")
+        
+        cvc.isUserMode = false
     }
 
     override func tearDownWithError() throws {
@@ -65,7 +67,7 @@ class StackUnitTests: XCTestCase {
         verifyStack(x: 3.0000, y: 4.0000, z: 2.0000, t: 1.0000)
     }
     
-    // test that operations (ex. +, SQRT, SIN, →DEG) copy X register to Last X register,
+    // test operations (ex. +, SQRT, SIN, →DEG) copy X register to Last X register,
     // but entering numbers or rolling the stack does not; also, pressing LSTx pushes
     // the Last X register onto the stack
     //
@@ -279,7 +281,7 @@ class StackUnitTests: XCTestCase {
         let button = UIButton()
         button.setTitle(title, for: .normal)
         switch title {
-        case "√x", "ex", "10x", "yx", "1/x":
+        case "√x", "ex", "10x", "yx", "1/x":  // note: if cvc.isUserMode = true, these will be the non-f prefix versions
             cvc.aToEButtonPressed(button)
         case "CHS":
             cvc.chsButtonPressed(button)

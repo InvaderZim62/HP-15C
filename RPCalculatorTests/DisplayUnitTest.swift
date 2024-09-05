@@ -268,7 +268,7 @@ class DisplayUnitTest: XCTestCase {
         let button = UIButton()
         button.setTitle(title, for: .normal)
         switch title {
-        case "√x", "ex", "10x", "yx", "1/x":
+        case "√x", "ex", "10x", "yx", "1/x":  // note: if cvc.isUserMode = true, these will be the non-f prefix versions
             cvc.aToEButtonPressed(button)
         case "CHS":
             cvc.chsButtonPressed(button)

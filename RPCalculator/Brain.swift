@@ -129,7 +129,7 @@ class Brain: Codable {
         }
     }
 
-    private var storageRegisters: [String: Stackable] = [  // [register name: number or matrix]
+    private var storageRegisters: [String: Stackable] = [  // [register name: double or matrix]
         "I": 0.0,
         "0": 0,  "1": 0,  "2": 0,  "3": 0,  "4": 0,  "5": 0,  "6": 0,  "7": 0,  "8": 0,  "9": 0,
         ".0": 0, ".1": 0, ".2": 0, ".3": 0, ".4": 0, ".5": 0, ".6": 0, ".7": 0, ".8": 0, ".9": 0,

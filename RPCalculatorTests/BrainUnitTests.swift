@@ -16,6 +16,14 @@ final class BrainUnitTests: XCTestCase {
     
     let brain = Brain()
     var difference = 0.0
+    var xRegister: Double {
+        get {
+            return brain.xRegister as! Double
+        }
+        set {
+            brain.xRegister = Complex(real: newValue, imag: 0)
+        }
+    }
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -45,37 +53,37 @@ final class BrainUnitTests: XCTestCase {
         brain.trigUnits = TrigUnits.RAD
 
         // sin(π/2) = 1.0000
-        brain.xRegister = .pi / 2
+        xRegister = .pi / 2
         brain.performOperation("nSIN")
-        difference = brain.xRegister! - 1.0000
+        difference = xRegister - 1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Sine of number in radians is not correct")
         // cos(π) = -1.0000
-        brain.xRegister = .pi
+        xRegister = .pi
         brain.performOperation("nCOS")
-        difference = brain.xRegister! - -1.0000
+        difference = xRegister - -1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Cosine of number in radians is not correct")
         // tan(π/4) = 1.0000
-        brain.xRegister = .pi / 4
+        xRegister = .pi / 4
         brain.performOperation("nTAN")
-        difference = brain.xRegister! - 1.0000
+        difference = xRegister - 1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Tangent of number in radians is not correct")
         
         brain.trigUnits = TrigUnits.DEG
 
         // sin(30) = 0.5000
-        brain.xRegister = 30
+        xRegister = 30
         brain.performOperation("nSIN")
-        difference = brain.xRegister! - 0.5000
+        difference = xRegister - 0.5000
         XCTAssertLessThan(abs(difference), Test.threshold, "Sine of number in degrees is not correct")
         // cos(30) = 0.8660
-        brain.xRegister = 30
+        xRegister = 30
         brain.performOperation("nCOS")
-        difference = brain.xRegister! - 0.8660
+        difference = xRegister - 0.8660
         XCTAssertLessThan(abs(difference), Test.threshold, "Cosine of number in degrees is not correct")
         // tan(45) = 1.0000
-        brain.xRegister = 45
+        xRegister = 45
         brain.performOperation("nTAN")
-        difference = brain.xRegister! - 1.0000
+        difference = xRegister - 1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Tangent of number in degrees is not correct")
     }
     
@@ -95,49 +103,49 @@ final class BrainUnitTests: XCTestCase {
         brain.trigUnits = TrigUnits.RAD
         
         // sinh(1) = 1.1752
-        brain.xRegister = 1
+        xRegister = 1
         brain.performOperation("HSIN")
-        difference = brain.xRegister! - 1.1752
+        difference = xRegister - 1.1752
         XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic sine of number in radians is not correct")
         // sinh-1() = 1.0
         brain.performOperation("hSIN")
-        difference = brain.xRegister! - 1.000
+        difference = xRegister - 1.000
         XCTAssertLessThan(abs(difference), Test.threshold, "Inverse hyperbolic sine of number in radians is not correct")
         // cosh(1) = 1.5431
-        brain.xRegister = 1
+        xRegister = 1
         brain.performOperation("HCOS")
-        difference = brain.xRegister! - 1.5431
+        difference = xRegister - 1.5431
         XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic cosine of number in radians is not correct")
         // cosh-1() = 1.0
         brain.performOperation("hCOS")
-        difference = brain.xRegister! - 1.0000
+        difference = xRegister - 1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Inverse hyperbolic cosine of number in radians is not correct")
         // tanh(1) = 0.7616
-        brain.xRegister = 1
+        xRegister = 1
         brain.performOperation("HTAN")
-        difference = brain.xRegister! - 0.7616
+        difference = xRegister - 0.7616
         XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic tangent of number in radians is not correct")
         // tanh-1() = 1.0
         brain.performOperation("hTAN")
-        difference = brain.xRegister! - 1.0000
+        difference = xRegister - 1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Inverse hyperbolic tangent of number in radians is not correct")
 
         brain.trigUnits = TrigUnits.DEG
         
         // sinh(1) = 1.1752
-        brain.xRegister = 1
+        xRegister = 1
         brain.performOperation("HSIN")
-        difference = brain.xRegister! - 1.1752
+        difference = xRegister - 1.1752
         XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic sine of number in degrees is not correct")
         // cosh(1) = 1.5431
-        brain.xRegister = 1
+        xRegister = 1
         brain.performOperation("HCOS")
-        difference = brain.xRegister! - 1.5431
+        difference = xRegister - 1.5431
         XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic cosine of number in degrees is not correct")
         // tanh(1) = 0.7616
-        brain.xRegister = 1
+        xRegister = 1
         brain.performOperation("HTAN")
-        difference = brain.xRegister! - 0.7616
+        difference = xRegister - 0.7616
         XCTAssertLessThan(abs(difference), Test.threshold, "Hyperbolic tangent of number in degrees is not correct")
     }
 }
