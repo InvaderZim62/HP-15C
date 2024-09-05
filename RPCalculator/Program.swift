@@ -121,34 +121,47 @@ class Program: Codable {
     //  4  x ≤ 0  10  x ≤ y
     //  5  x = y  11  x = 0
     func test(_ number: Int) -> Bool {
-        switch number {
-//        case 0:
-//            return brain.xRegister! != 0
-//        case 1:
-//            return brain.xRegister! > 0
-//        case 2:
-//            return brain.xRegister! < 0
-//        case 3:
-//            return brain.xRegister! >= 0
-//        case 4:
-//            return brain.xRegister! <= 0
-//        case 5:
-//            return brain.xRegister! == brain.yRegister
-//        case 6:
-//            return brain.xRegister! != brain.yRegister
-//        case 7:
-//            return brain.xRegister! > brain.yRegister
-//        case 8:
-//            return brain.xRegister! < brain.yRegister
-//        case 9:
-//            return brain.xRegister! >= brain.yRegister
-//        case 10:
-//            return brain.xRegister! <= brain.yRegister
-//        case 11:
-//            return brain.xRegister! == 0
-        default:
-            return false
+        if let xRegister = brain.xRegister as? Double {
+            switch number {
+            case 0:
+                return xRegister != 0
+            case 1:
+                return xRegister > 0
+            case 2:
+                return xRegister < 0
+            case 3:
+                return xRegister >= 0
+            case 4:
+                return xRegister <= 0
+            case 11:
+                return xRegister == 0
+            default:
+                break
+            }
+            if let yRegister = brain.yRegister as? Double {
+                switch number {
+                case 5:
+                    return xRegister == yRegister
+                case 6:
+                    return xRegister != yRegister
+                case 7:
+                    return xRegister > yRegister
+                case 8:
+                    return xRegister < yRegister
+                case 9:
+                    return xRegister >= yRegister
+                case 10:
+                    return xRegister <= yRegister
+                default:
+                    break
+                }
+            } else {
+                delegate?.setError(1)
+            }
+        } else {
+            delegate?.setError(1)
         }
+        return false
     }
     
     // using control number (ccccc.tttii) from storage resister

@@ -393,7 +393,7 @@ class ProgramUnitTests: XCTestCase {
     //   -
     //   R/S
     //   g TEST 1
-    //   GTO 1
+    //   GTO A
     //   99 ENTER
     //
     // verify: display counts down from initial value to zero, stopping at each number

@@ -218,7 +218,7 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     
     var inverse: Matrix? {
         guard rows <= 4 && cols <= 4 else { return nil }  // max dimension for simd is 4
-        var matrix = Matrix()
+        let matrix = Matrix()
         switch rows {
         case 2:
             let simdSelf = simd_double2x2(values.map { simd_double2($0) })
