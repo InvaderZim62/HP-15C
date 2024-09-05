@@ -755,50 +755,92 @@ class Brain: Codable {
                     error = .code(1)
                     return
                 }
-//            default:
-//                break
-//            }
-//        case "H":  // hyperbolic trig functions
-//            // Note: Owner's Handbook p.26 says "The trigonometric functions operate in the trigonometric mode you select",
-//            //       but this does not appear to be true for the hyperbolic trig functions.  They all operate in radians
-//            //       for real and complex numbers.
-//            switch operation {
-//            case "SIN":
-//                // HYP SIN
-//                result = popOperand().sinhyp
-//            case "COS":
-//                // HYP COS
-//                result = popOperand().coshyp
-//            case "TAN":
-//                // HYP TAN
-//                result = popOperand().tanhyp
-//            default:
-//                break
-//            }
-//        case "h":  // inverse hyperbolic trig functions
-//            // See note above.  Inverse hyperbolic trig functions are all in radians.
-//            switch operation {
-//            case "SIN":
-//                // HYP-1 SIN
-//                result = popOperand().arcsinh
-//            case "COS":
-//                // HYP-1 COS
-//                if isComplexMode {
-//                    // both methods give same real answer for operands > 1, but .arccosh does not return
-//                    // NaN, if operand < 1 (it return a valid complex number); must use acosh() to get NaN.
-//                    result = popOperand().arccosh
-//                } else {
-//                    result.real = acosh(popOperand().real)
-//                }
-//            case "TAN":
-//                // HYP-1 TAN
-//                if isComplexMode {
-//                    // both methods give same real answer for abs(operands) < 1, but .arctanh does not return
-//                    // NaN, if abs(operand) > 1 (it return a valid complex number); must use atanh() to get NaN.
-//                    result = popOperand().arctanh
-//                } else {
-//                    result.real = atanh(popOperand().real)
-//                }
+            default:
+                break
+            }
+        case "H":  // hyperbolic trig functions
+            // Note: Owner's Handbook p.26 says "The trigonometric functions operate in the trigonometric mode you select",
+            //       but this does not appear to be true for the hyperbolic trig functions.  They all operate in radians
+            //       for real and complex numbers.
+            switch operation {
+            case "SIN":
+                // HYP SIN
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex.sinhyp
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "COS":
+                // HYP COS
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex.coshyp
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "TAN":
+                // HYP TAN
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex.tanhyp
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            default:
+                break
+            }
+        case "h":  // inverse hyperbolic trig functions
+            // See note above.  Inverse hyperbolic trig functions are all in radians.
+            switch operation {
+            case "SIN":
+                // HYP-1 SIN
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex.arcsinh
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "COS":
+                // HYP-1 COS
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    if isComplexMode {
+                        // both methods give same real answer for operands > 1, but .arccosh does not return
+                        // NaN, if operand < 1 (it return a valid complex number); must use acosh() to get NaN.
+                        result = complex.arccosh
+                    } else {
+                        result = Complex(real: acosh(complex.real), imag: 0)
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
+            case "TAN":
+                // HYP-1 TAN
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    if isComplexMode {
+                        // both methods give same real answer for abs(operands) < 1, but .arctanh does not return
+                        // NaN, if abs(operand) > 1 (it return a valid complex number); must use atanh() to get NaN.
+                        result = complex.arctanh
+                    } else {
+                        result = Complex(real: atanh(complex.real), imag: 0)
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
             default:
                 result = Complex(real: 0, imag: 0)
             }
