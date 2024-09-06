@@ -11,6 +11,7 @@
 //  - test01MatrixEntryAndRecall
 //  - test02MatrixInversion
 //  - test03MatrixMultiplication
+//  - test04MatrixTimesScalar
 //
 
 import XCTest
@@ -40,24 +41,22 @@ class MatrixUnitTest: XCTestCase {
     // MARK: - Tests
     
     // test matrix entry and recall
+    // create 2 x 3 matrix
+    //   | 1 2 3 |
+    //   | 4 5 6 |
     // enter:
     //   2 STO 0 STO 1        set to known values before changing with next sequence
     //   f MATRIX 1           set matrix indices to 1, 1 (row, col) in storage registers 1 and 0
-    //   2 ENTER 3 f DIM A    set matrix A dimensions to 2 rows by 3 columns
-    //   1 STO A              set row 1, col 1 of MATRIX A to 1
-    //   2 STO A              set row 1, col 1 of MATRIX A to 2
-    //   3 STO A              set row 1, col 1 of MATRIX A to 3
-    //   4 STO A              set row 1, col 1 of MATRIX A to 4
-    //   5 STO A              set row 1, col 1 of MATRIX A to 5
-    //   6 STO A              set row 1, col 1 of MATRIX A to 6
-    //   RCL A                verify display show 1
-    //   RCL A                verify display show 2
-    //   RCL A                verify display show 3
-    //   RCL A                verify display show 4
-    //   RCL A                verify display show 5
-    //   RCL A                verify display show 6
+    //   create2x3MatrixA
+    //   RCL MATRIX A         verify display shows " A     2  3"
+    //   RCL A                verify display shows 1
+    //   RCL A                verify display shows 2
+    //   RCL A                verify display shows 3
+    //   RCL A                verify display shows 4
+    //   RCL A                verify display shows 5
+    //   RCL A                verify display shows 6
     func test01MatrixEntryAndRecall() {
-        // 2 STO 0
+        // 2 STO 0 STO 1
         pressButton(title: "2")
         pressButton(title: "STO")
         pressButton(title: "0")
@@ -69,43 +68,14 @@ class MatrixUnitTest: XCTestCase {
         pressButton(title: "1")
         XCTAssertEqual(cvc.brain.valueFromStorageRegister("0") as! Double, 1, "Storage register 0 is not correct")
         XCTAssertEqual(cvc.brain.valueFromStorageRegister("1") as! Double, 1, "Storage register 1 is not correct")
-        // 2 ENTER 3 f DIM A
-        pressButton(title: "2")
-        pressButton(title: "ENTER")
-        pressButton(title: "3")
-        pressButton(title: "f")
-        pressButton(title: "SIN")
-        pressButton(title: "√x")
+        // create matrix A
+        create2x3MatrixA()
         // RCL MATRIX A
         pressButton(title: "RCL")
         pressButton(title: "CHS")
         pressButton(title: "√x")
         // verify: " A     2  3"
         verifyDisplayView(" A     2  3")
-        // 1 STO A
-        pressButton(title: "1")
-        pressButton(title: "STO")
-        pressButton(title: "√x")
-        // 2 STO A
-        pressButton(title: "2")
-        pressButton(title: "STO")
-        pressButton(title: "√x")
-        // 3 STO A
-        pressButton(title: "3")
-        pressButton(title: "STO")
-        pressButton(title: "√x")
-        // 4 STO A
-        pressButton(title: "4")
-        pressButton(title: "STO")
-        pressButton(title: "√x")
-        // 5 STO A
-        pressButton(title: "5")
-        pressButton(title: "STO")
-        pressButton(title: "√x")
-        // 6 STO A
-        pressButton(title: "6")
-        pressButton(title: "STO")
-        pressButton(title: "√x")
         // RCL A
         pressButton(title: "RCL")
         pressButton(title: "√x")
@@ -133,12 +103,12 @@ class MatrixUnitTest: XCTestCase {
     }
     
     // test matrix inversion with results going to matrix B
-    //    matrix      inverse
-    //    3  0  1     1  1  0
-    //   -2  0 -1    -1  0  1
-    //    3  1  1    -2 -3  0
+    //     matrix        inverse
+    //  |  3  0  1 |  |  1  1  0 |
+    //  | -2  0 -1 |  | -1  0  1 |
+    //  |  3  1  1 |  | -2 -3  0 |
     func test02MatrixInversion() {
-        setupMatrix()
+        create3x3MatrixA()
         // f RESULT B
         pressButton(title: "f")
         pressButton(title: "EEX")
@@ -150,7 +120,7 @@ class MatrixUnitTest: XCTestCase {
         // verify: " A     3  3"
         verifyDisplayView(" A     3  3")
         // inverse
-        pressButton(title: "f")  // need f, since isUserMode = true
+        pressButton(title: "f")  // need "f", since isUserMode = true
         pressButton(title: "1/x")
         // verify matrix B
         // f MATRIX 1
@@ -196,8 +166,11 @@ class MatrixUnitTest: XCTestCase {
     }
     
     // verify A × inv(A) = identity
+    //  |  3  0  1 |   |  1  1  0 |   | 1  0  0 |
+    //  | -2  0 -1 | x | -1  0  1 | = | 0  1  0 |
+    //  |  3  1  1 |   | -2 -3  0 |   | 0  0  1 |
     func test03MatrixMultiplication() {
-        setupMatrix()
+        create3x3MatrixA()
         // f RESULT C
         pressButton(title: "f")
         pressButton(title: "EEX")
@@ -207,12 +180,13 @@ class MatrixUnitTest: XCTestCase {
         pressButton(title: "CHS")
         pressButton(title: "√x")
         // inverse
-        pressButton(title: "f")  // need f, since isUserMode = true
+        pressButton(title: "f")  // need "f", since isUserMode = true
         pressButton(title: "1/x")
-        // RCL MATRIX A RCL MATRIX C ×
+        // RCL MATRIX A
         pressButton(title: "RCL")
         pressButton(title: "CHS")
         pressButton(title: "√x")
+        // RCL MATRIX C ×
         pressButton(title: "RCL")
         pressButton(title: "CHS")
         pressButton(title: "10x")
@@ -260,11 +234,107 @@ class MatrixUnitTest: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 1, "matrix C(3,3) is not correct")
     }
     
-    //    matrix    has inverse
-    //    3  0  1     1  1  0
-    //   -2  0 -1    -1  0  1
-    //    3  1  1    -2 -3  0
-    func setupMatrix() {
+    // verify matrix x scalar
+    //  |  1  2  3 |       | 2  4  6 |
+    //  |  4  5  6 | x 2 = | 8 10 12 |
+    func test04MatrixTimesScalar() {
+        // f RESULT C
+        pressButton(title: "f")
+        pressButton(title: "EEX")
+        pressButton(title: "10x")
+        // create matrix A
+        create2x3MatrixA()
+        // RCL MATRIX A
+        pressButton(title: "RCL")
+        pressButton(title: "CHS")
+        pressButton(title: "√x")
+        // 2 ×
+        pressButton(title: "2")
+        pressButton(title: "×")
+        // verify matrix C
+        // RCL C
+        pressButton(title: "RCL")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.displayStringNumber, 2, "matrix C(1,1) is not correct")
+        // RCL C
+        pressButton(title: "RCL")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.displayStringNumber, 4, "matrix C(1,2) is not correct")
+        // RCL C
+        pressButton(title: "RCL")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.displayStringNumber, 6, "matrix C(1,3) is not correct")
+        // RCL C
+        pressButton(title: "RCL")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.displayStringNumber, 8, "matrix C(2,1) is not correct")
+        // RCL C
+        pressButton(title: "RCL")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.displayStringNumber, 10, "matrix C(2,2) is not correct")
+        // RCL C
+        pressButton(title: "RCL")
+        pressButton(title: "10x")
+        XCTAssertEqual(cvc.displayStringNumber, 12, "matrix C(2,3) is not correct")
+    }
+    
+    // MARK: - Utilities
+    
+    //      matrix A
+    //    |  1  2  3 |
+    //    |  4  5  6 |
+    //
+    //   f MATRIX 1           set matrix indices to 1, 1 (row, col) in storage registers 1 and 0
+    //   2 ENTER 3 f DIM A    set matrix A dimensions to 2 rows by 3 columns
+    //   1 STO A              set row 1, col 1 of MATRIX A to 1, and register 0 to 2
+    //   2 STO A              set row 1, col 2 of MATRIX A to 2, and register 0 to 3
+    //   3 STO A              set row 1, col 3 of MATRIX A to 3, and register 0 to 1, and register 1 to 2
+    //   4 STO A              set row 2, col 1 of MATRIX A to 4, and register 0 to 2
+    //   5 STO A              set row 2, col 2 of MATRIX A to 5, and register 0 to 3
+    //   6 STO A              set row 2, col 3 of MATRIX A to 6, and register 0 to 1, and register 1 to 1 (back to start)
+    func create2x3MatrixA() {
+        // f MATRIX 1
+        pressButton(title: "f")
+        pressButton(title: "CHS")
+        pressButton(title: "1")
+        // 2 ENTER 3 f DIM A
+        pressButton(title: "2")
+        pressButton(title: "ENTER")
+        pressButton(title: "3")
+        pressButton(title: "f")
+        pressButton(title: "SIN")
+        pressButton(title: "√x")
+        // 1 STO A
+        pressButton(title: "1")
+        pressButton(title: "STO")
+        pressButton(title: "√x")
+        // 2 STO A
+        pressButton(title: "2")
+        pressButton(title: "STO")
+        pressButton(title: "√x")
+        // 3 STO A
+        pressButton(title: "3")
+        pressButton(title: "STO")
+        pressButton(title: "√x")
+        // 4 STO A
+        pressButton(title: "4")
+        pressButton(title: "STO")
+        pressButton(title: "√x")
+        // 5 STO A
+        pressButton(title: "5")
+        pressButton(title: "STO")
+        pressButton(title: "√x")
+        // 6 STO A
+        pressButton(title: "6")
+        pressButton(title: "STO")
+        pressButton(title: "√x")
+    }
+    
+    //      matrix A
+    //    |  3  0  1 |
+    //    | -2  0 -1 |
+    //    |  3  1  1 |
+    func create3x3MatrixA() {
         // f MATRIX 1
         pressButton(title: "f")
         pressButton(title: "CHS")

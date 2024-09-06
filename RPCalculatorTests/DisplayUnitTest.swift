@@ -250,7 +250,9 @@ class DisplayUnitTest: XCTestCase {
         verifyDigitView(index: 9, digit: "0", trailingDecimal: false, trailingComma: false)
         verifyDigitView(index: 10, digit: "3", trailingDecimal: false, trailingComma: false)
     }
-    
+
+    // MARK: - Utilities
+
     func verifyDigitView(index: Int, digit: Character, trailingDecimal: Bool, trailingComma: Bool) {
         XCTAssertEqual(cvc.displayView.privateDigitViews[index].digit, digit, "digit \(index) is not correct")
         if trailingDecimal {

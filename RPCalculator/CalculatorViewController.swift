@@ -505,6 +505,27 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         return attributedString
     }
     
+    func prepStackForRecalledValue(_ value: Stackable) {
+        if userIsEnteringDigits {
+            if liftStack {
+                brain.pushOperand(displayStringNumber)
+            } else {
+                endDisplayEntry()
+            }
+            brain.pushOperand(value)
+        } else {
+            if liftStack {
+                brain.pushOperand(value)
+            } else {
+                brain.xRegister = value
+            }
+        }
+        updateDisplayString()
+        userIsEnteringDigits = false
+        userIsEnteringExponent = false
+        liftStack = true
+    }
+
     // move display to memory stack before performing an operations (ex. +, -, x,
     // ÷, sin, cos,...); if user entering digits, behavior depends on liftStack
     func prepStackForOperation() {
@@ -685,11 +706,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .RCL_MATRIX:
             // MATRIX A-E - display dimensions of matrix A-E
             let matrix = brain.matrices[Matrix.names[buttonName]!]!
-            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
-            brain.pushOperand(matrix)
-            updateDisplayString()
-            userIsEnteringDigits = false
-            userIsEnteringExponent = false
+            prepStackForRecalledValue(matrix)
+            brain.printMemory()
             print(matrix)
         case .RESULT:
             // RESULT A-E - designate matrix for storing results
@@ -996,15 +1014,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .g:
             // pi pressed
             prefix = nil
-            if userIsEnteringDigits {
-                brain.pushOperand(displayStringNumber)
-                brain.pushOperand(Double.pi)  // 3.141592653589793
-            } else {
-                brain.xRegister = Double.pi
-            }
-            updateDisplayString()
-            userIsEnteringDigits = false
-            userIsEnteringExponent = false
+            prepStackForRecalledValue(Double.pi)  // 3.141592653589793
             brain.printMemory()
         case .STO:
             prefix = nil
@@ -1019,11 +1029,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // RCL RESULT - display results matrix
             prefix = nil
             let matrix = brain.matrices[brain.resultMatrix]!
-            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
-            brain.pushOperand(matrix)
-            updateDisplayString()
-            userIsEnteringDigits = false
-            userIsEnteringExponent = false
+            prepStackForRecalledValue(matrix)
+            brain.printMemory()
             print(matrix)
         default:
             // clear prefix and re-run
@@ -1646,6 +1653,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         brain.performOperation(oneLetterPrefix + buttonName)
         //-------------------------------------------------
         updateDisplayString()
+        brain.printMemory()
     }
     
     private func runProgramFrom(label: String) {
