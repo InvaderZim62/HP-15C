@@ -88,6 +88,12 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         return (nextRow, nextCol)
     }
     
+    func copy() -> Matrix {
+        let matrix = Matrix(name: self.name)
+        matrix.values = self.values
+        return matrix
+    }
+
     var description: String {
         var descriptionString = "matrix \(name):\n"
         for row in 0..<rows {

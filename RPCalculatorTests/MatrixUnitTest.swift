@@ -9,9 +9,10 @@
 //
 //  Test cases:
 //  - test01MatrixEntryAndRecall
-//  - test02MatrixInversion
-//  - test03MatrixMultiplication
-//  - test04MatrixTimesScalar
+//  - test02CopyThenClearMatrices
+//  - test03MatrixInversion
+//  - test04MatrixMultiplication
+//  - test05MatrixTimesScalar
 //
 
 import XCTest
@@ -102,12 +103,81 @@ class MatrixUnitTest: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 6, "matrix A(2,3) is not correct")
     }
     
+    // test copying a matrix, then clearing all matrices using f MATRIX 0
+    // enter:
+    //   create matrix A
+    //   RCL MATRIX A         put matrix A in display
+    //   STO MATRIX D         copy matrix A to matrix D
+    //   f MATRIX 0           clear all matrices
+    func test02CopyThenClearMatrices() {
+        create2x3MatrixA()
+        // RCL MATRIX A
+        pressButton(title: "RCL")
+        pressButton(title: "CHS")
+        pressButton(title: "√x")
+        // STO MATRIX D
+        pressButton(title: "STO")
+        pressButton(title: "CHS")
+        pressButton(title: "yx")
+        // RCL MATRIX D
+        pressButton(title: "RCL")
+        pressButton(title: "CHS")
+        pressButton(title: "yx")
+        // verify dimensions
+        verifyDisplayView(" D     2  3")
+        // verify elements
+        // f MATRIX 1
+        pressButton(title: "f")
+        pressButton(title: "CHS")
+        pressButton(title: "1")
+        // RCL D
+        pressButton(title: "RCL")
+        pressButton(title: "yx")
+        XCTAssertEqual(cvc.displayStringNumber, 1, "matrix D(1,1) is not correct")
+        // RCL D
+        pressButton(title: "RCL")
+        pressButton(title: "yx")
+        XCTAssertEqual(cvc.displayStringNumber, 2, "matrix D(1,2) is not correct")
+        // RCL D
+        pressButton(title: "RCL")
+        pressButton(title: "yx")
+        XCTAssertEqual(cvc.displayStringNumber, 3, "matrix D(1,3) is not correct")
+        // RCL D
+        pressButton(title: "RCL")
+        pressButton(title: "yx")
+        XCTAssertEqual(cvc.displayStringNumber, 4, "matrix D(2,1) is not correct")
+        // RCL D
+        pressButton(title: "RCL")
+        pressButton(title: "yx")
+        XCTAssertEqual(cvc.displayStringNumber, 5, "matrix D(2,2) is not correct")
+        // RCL D
+        pressButton(title: "RCL")
+        pressButton(title: "yx")
+        XCTAssertEqual(cvc.displayStringNumber, 6, "matrix D(2,3) is not correct")
+        // f MATRIX 0
+        pressButton(title: "f")
+        pressButton(title: "CHS")
+        pressButton(title: "0")
+        // RCL MATRIX A
+        pressButton(title: "RCL")
+        pressButton(title: "CHS")
+        pressButton(title: "√x")
+        // verify dimensions
+        verifyDisplayView(" A     0  0")
+        // RCL MATRIX D
+        pressButton(title: "RCL")
+        pressButton(title: "CHS")
+        pressButton(title: "yx")
+        // verify dimensions
+        verifyDisplayView(" D     0  0")
+    }
+    
     // test matrix inversion with results going to matrix B
     //     matrix        inverse
     //  |  3  0  1 |  |  1  1  0 |
     //  | -2  0 -1 |  | -1  0  1 |
     //  |  3  1  1 |  | -2 -3  0 |
-    func test02MatrixInversion() {
+    func test03MatrixInversion() {
         create3x3MatrixA()
         // f RESULT B
         pressButton(title: "f")
@@ -169,7 +239,7 @@ class MatrixUnitTest: XCTestCase {
     //  |  3  0  1 |   |  1  1  0 |   | 1  0  0 |
     //  | -2  0 -1 | x | -1  0  1 | = | 0  1  0 |
     //  |  3  1  1 |   | -2 -3  0 |   | 0  0  1 |
-    func test03MatrixMultiplication() {
+    func test04MatrixMultiplication() {
         create3x3MatrixA()
         // f RESULT C
         pressButton(title: "f")
@@ -237,7 +307,7 @@ class MatrixUnitTest: XCTestCase {
     // verify matrix x scalar
     //  |  1  2  3 |       | 2  4  6 |
     //  |  4  5  6 | x 2 = | 8 10 12 |
-    func test04MatrixTimesScalar() {
+    func test05MatrixTimesScalar() {
         // f RESULT C
         pressButton(title: "f")
         pressButton(title: "EEX")

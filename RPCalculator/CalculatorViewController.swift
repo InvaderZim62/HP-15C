@@ -115,6 +115,7 @@ enum Prefix: String {
     case GTO_DOT  // ex. GTO . 5 (goto label .5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
     case MATRIX  // ex. f MATRIX 1 (store beginning row and column numbers in registers 0 and 1, respectively)
+    case STO_MATRIX  // ex. STO MATRIX B (copy displayed matrix to matrix B)
     case RCL_MATRIX  // ex. RCL MATRIX A (display dimensions of matrix A)
     case XSWAP  // ex. XSWAP 4 (swap X register with register 4)
     case XSWAP_DOT  // ex. XSWAP . 4 (swap X register with register .4)
@@ -703,8 +704,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             displayString = String(matrix.cols)
             endDisplayEntry()  // overwrite X register with cols
             updateDisplayString()
+        case .STO_MATRIX:
+            // STO MATRIX A-E - copy displayed matrix to matrix A-E
+            if let matrix = brain.xRegister as? Matrix {
+                let name = Matrix.names[buttonName]!
+                let matrixCopy = matrix.copy()
+                matrixCopy.name = name
+                brain.matrices[name]! = matrixCopy
+            }
         case .RCL_MATRIX:
-            // MATRIX A-E - display dimensions of matrix A-E
+            // RCL MATRIX A-E - display dimensions of matrix A-E
             let matrix = brain.matrices[Matrix.names[buttonName]!]!
             prepStackForRecalledValue(matrix)
             brain.printMemory()
@@ -763,8 +772,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = .GTO_CHS
             gotoLineNumberDigits = []
         case .STO:
-            // ignore
-            prefix = nil
+            // STO-MATRIX
+            prefix = .STO_MATRIX
         case .RCL:
             prefix = .RCL_MATRIX
         default:
