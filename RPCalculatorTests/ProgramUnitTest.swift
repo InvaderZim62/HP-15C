@@ -330,13 +330,13 @@ class ProgramUnitTests: XCTestCase {
     
     // test g 4 thru 6 followed by A - E, SIN, COS, TAN
     // verify:
-    // - g 4 A   => A
+    // - g 4 A   => A (ie. HP-15C ignores the g 4)
     // - g 5 B   => B
     // - g 6 C   => C
     // - g 4 SIN => SIN
     // - g 5 COS => COS
-    // - g 5 TAN => g 5 TAN
-    // - g 6 TAN => g 6 TAN
+    // - g 5 TAN => g 5 TAN (ie. clear flag number store in register I)
+    // - g 6 TAN => g 6 TAN (ie. test if flag number stored in register I is set)
     func test06F4Thru6LabelTrig() {
         startNewProgram()
         // g 4 A => A

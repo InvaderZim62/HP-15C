@@ -27,6 +27,8 @@ class DisplayUnitTest: XCTestCase {
         cvc.beginAppearanceTransition(true, animated: false)  // run lifecycle, connect outlets
         cvc.endAppearanceTransition()
         continueAfterFailure = false  // stop existing test case from continuing after failure
+        
+        cvc.isUserMode = true
     }
 
     override func tearDownWithError() throws {
