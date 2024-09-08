@@ -875,7 +875,7 @@ class ProgramUnitTests: XCTestCase {
     //   LBL A
     //   f PSE
     //   1 +
-    //   f DSE .3  <- use loop counter in storage register .3
+    //   f ISG .3  <- use loop counter in storage register .3
     //   GTO A
     //   g RTN
     // setup:
