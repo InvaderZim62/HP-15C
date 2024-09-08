@@ -106,6 +106,35 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     }
 
     //----------------------------
+    // matrix functions
+    //----------------------------
+
+    var transpose: Matrix {
+        let matrix = Matrix()
+        matrix.setDimensions(rows: cols, cols: rows)
+        for row in 0..<matrix.rows {
+            for col in 0..<matrix.cols {
+                matrix.values[row][col] = values[col][row]
+            }
+        }
+        return matrix
+    }
+    
+    // sum absolute values of elements in each row
+    // return max of the sums
+    var rowNorm: Double {
+        var maxSum = 0.0
+        for row in 0..<self.values.count {
+            var sum = 0.0
+            for col in 0..<self.values[0].count {
+                sum += abs(self.values[row][col])
+            }
+            maxSum = max(maxSum, sum)
+        }
+        return maxSum
+    }
+
+    //----------------------------
     // math functions
     //----------------------------
 
@@ -267,17 +296,6 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     }
 
     //----------------------------------------------------------------------------------
-
-    var transpose: Matrix {
-        let matrix = Matrix()
-        matrix.setDimensions(rows: cols, cols: rows)
-        for row in 0..<matrix.rows {
-            for col in 0..<matrix.cols {
-                matrix.values[row][col] = values[col][row]
-            }
-        }
-        return matrix
-    }
 
     //----------------------------
     // unary operator

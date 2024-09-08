@@ -858,7 +858,13 @@ class Brain: Codable {
                     return
                 }
             case "7":
-                print("TBD: row norm of matrix")
+                // MATRIX 7 - row norm
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex
+                } else if let matrix = operand as? Matrix {
+                    result = Complex(real: matrix.rowNorm, imag: 0)
+                }
             case "8":
                 print("TBD: Frobenius norm of matrix")
             case "9":
