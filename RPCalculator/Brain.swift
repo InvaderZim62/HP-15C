@@ -844,6 +844,28 @@ class Brain: Codable {
             default:
                 result = Complex(real: 0, imag: 0)
             }
+        case "M":  // Matrix function
+            switch operation {
+            case "4":
+                // MATRIX 4 - transpose
+                let operand = popOperand()
+                if let matrix = operand as? Matrix {
+                    result = matrix.transpose
+                    overwriteMatrix = matrix.name  // overwrite original matrix
+                } else {  // operand is Complex
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(11)
+                    return
+                }
+            case "7":
+                print("TBD: row norm of matrix")
+            case "8":
+                print("TBD: Frobenius norm of matrix")
+            case "9":
+                print("TBD: determinant norm of matrix")
+            default:
+                break
+            }
         default:
             result = Complex(real: 0, imag: 0)
         }

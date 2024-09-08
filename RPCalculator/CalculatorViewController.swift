@@ -114,7 +114,7 @@ enum Prefix: String {
     case GTO  // ex. GTO 5 (goto label 5)
     case GTO_DOT  // ex. GTO . 5 (goto label .5)
     case GTO_CHS  // ex. GTO CHS nnn (go to line nnn) - needs three digits
-    case MATRIX  // ex. f MATRIX 1 (store beginning row and column numbers in registers 0 and 1, respectively)
+    case MATRIX = "M"  // ex. f MATRIX 1 (store beginning row and column numbers in registers 0 and 1, respectively)
     case STO_MATRIX  // ex. STO MATRIX B (copy displayed matrix to matrix B)
     case RCL_MATRIX  // ex. RCL MATRIX A (display dimensions of matrix A)
     case XSWAP  // ex. XSWAP 4 (swap X register with register 4)
@@ -763,7 +763,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     displayString = "-" + displayString
                 }
                 return
-            }  // else CHS pressed with existing number on display (push "nCHS" onto stack, below)
+            }  // else CHS pressed with existing number on display
             performOperationFor(buttonName)
         case .f:
             prefix = .MATRIX
@@ -1656,7 +1656,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         prepStackForOperation()
         brain.lastXRegister = brain.xRegister!  // save xRegister before pushing operation onto stack
         
-        let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, or h
+        let oneLetterPrefix = (prefix?.rawValue ?? "n")  // n, f, g, H, h, or M
         prefix = nil  // must come after previous line
         //-------------------------------------------------
         brain.performOperation(oneLetterPrefix + buttonName)
@@ -1713,18 +1713,21 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             setDisplayFormatTo(.engineering(min(Int(buttonName)!, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
         case .MATRIX:
-            prefix = nil
             switch buttonName {
+            case "0":
+                // f MATRIX 0 - clear all matrices
+                brain.clearMatrices()
             case "1":
                 // f MATRIX 1 - store beginning row and column numbers in registers 0 and 1, respectively
                 _ = brain.storeValueInRegister("0", value: 1)
                 _ = brain.storeValueInRegister("1", value: 1)
-            case "0":
-                // f MATRIX 0 - clear all matrices
-                brain.clearMatrices()
+            case "4", "7", "8", "9":
+                // f MATRIX n (4: transpose, 7: row norm, 8: Frobenius norm, 9: determinant)
+                performOperationFor(buttonName)
             default:
                 setError(11)
             }
+            prefix = nil
         case .SOLVE:
             prefix = nil
             solveFrom(label: buttonName)
