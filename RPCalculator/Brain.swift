@@ -866,9 +866,28 @@ class Brain: Codable {
                     result = Complex(real: matrix.rowNorm, imag: 0)
                 }
             case "8":
-                print("TBD: Frobenius norm of matrix")
+                // MATRIX 8 - Euclidean norm
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex
+                } else if let matrix = operand as? Matrix {
+                    result = Complex(real: matrix.euclideanNorm, imag: 0)
+                }
             case "9":
-                print("TBD: determinant norm of matrix")
+                print("TBD: also need to store LU decomposition in RESULT matrix")
+                // MATRIX 9 - determinant
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex
+                } else if let matrix = operand as? Matrix {
+                    if let determinant = matrix.determinant {
+                        result = Complex(real: determinant, imag: 0)
+                    } else {
+                        realStack = saveStack  // restore stack to pre-error state
+                        error = .code(11)
+                        return
+                    }
+                }
             default:
                 break
             }

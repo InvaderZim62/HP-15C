@@ -108,6 +108,45 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     //----------------------------
     // matrix functions
     //----------------------------
+    
+    var inverse: Matrix? {
+        guard rows <= 4 && cols <= 4 else { return nil }  // max dimension for simd is 4 x 4
+        let matrix = Matrix()
+        switch rows {
+        case 2:
+            let simdSelf = simd_double2x2(values.map { simd_double2($0) })
+            let simdInverse = simdSelf.inverse
+            matrix.values = (0..<2).map { [simdInverse[$0].x, simdInverse[$0].y] }
+        case 3:
+            let simdSelf = simd_double3x3(values.map { simd_double3($0) })
+            let simdInverse = simdSelf.inverse
+            matrix.values = (0..<3).map { [simdInverse[$0].x, simdInverse[$0].y, simdInverse[$0].z] }
+        case 4:
+            let simdSelf = simd_double4x4(values.map { simd_double4($0) })
+            let simdInverse = simdSelf.inverse
+            matrix.values = (0..<4).map { [simdInverse[$0].x, simdInverse[$0].y, simdInverse[$0].z, simdInverse[$0].w] }
+        default:
+            return nil
+        }
+        return matrix
+    }
+    
+    var determinant: Double? {
+        guard rows <= 4 && cols <= 4 else { return nil }  // max dimension for simd is 4 x 4
+        switch rows {
+        case 2:
+            let simdSelf = simd_double2x2(values.map { simd_double2($0) })
+            return simdSelf.determinant
+        case 3:
+            let simdSelf = simd_double3x3(values.map { simd_double3($0) })
+            return simdSelf.determinant
+        case 4:
+            let simdSelf = simd_double4x4(values.map { simd_double4($0) })
+            return simdSelf.determinant
+        default:
+            return nil
+        }
+    }
 
     var transpose: Matrix {
         let matrix = Matrix()
@@ -132,6 +171,17 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
             maxSum = max(maxSum, sum)
         }
         return maxSum
+    }
+    
+    // square root of sum of squares of all elements
+    var euclideanNorm: Double {
+        var sumSquared = 0.0
+        for row in 0..<self.values.count {
+            for col in 0..<self.values[0].count {
+                sumSquared += pow(self.values[row][col], 2)
+            }
+        }
+        return sqrt(sumSquared)
     }
 
     //----------------------------
@@ -250,28 +300,6 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     }
     
     //----------------------------------------------------------------------------------
-    
-    var inverse: Matrix? {
-        guard rows <= 4 && cols <= 4 else { return nil }  // max dimension for simd is 4
-        let matrix = Matrix()
-        switch rows {
-        case 2:
-            let simdSelf = simd_double2x2(values.map { simd_double2($0) })
-            let simdInverse = simdSelf.inverse
-            matrix.values = (0..<2).map { [simdInverse[$0].x, simdInverse[$0].y] }
-        case 3:
-            let simdSelf = simd_double3x3(values.map { simd_double3($0) })
-            let simdInverse = simdSelf.inverse
-            matrix.values = (0..<3).map { [simdInverse[$0].x, simdInverse[$0].y, simdInverse[$0].z] }
-        case 4:
-            let simdSelf = simd_double4x4(values.map { simd_double4($0) })
-            let simdInverse = simdSelf.inverse
-            matrix.values = (0..<4).map { [simdInverse[$0].x, simdInverse[$0].y, simdInverse[$0].z, simdInverse[$0].w] }
-        default:
-            return nil
-        }
-        return matrix
-    }
 
     static func /(lhs: Matrix, rhs: Double) -> Matrix {
         let matrix = Matrix()
