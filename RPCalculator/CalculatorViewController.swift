@@ -705,12 +705,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             endDisplayEntry()  // overwrite X register with cols
             updateDisplayString()
         case .STO_MATRIX:
-            // STO MATRIX A-E - copy displayed matrix to matrix A-E
+            // STO MATRIX A-E - copy displayed matrix to matrix A-E, or store displayed number to all elements of matrix A-E
             if let matrix = brain.xRegister as? Matrix {
                 let name = Matrix.names[buttonName]!
                 let matrixCopy = matrix.copy()
                 matrixCopy.name = name
                 brain.matrices[name]! = matrixCopy
+            } else if let number = brain.xRegister as? Double {
+                if userIsEnteringDigits { endDisplayEntry() }
+                updateDisplayString()
+                let name = Matrix.names[buttonName]!
+                brain.matrices[name]?.storeValue(number)
             }
         case .RCL_MATRIX:
             // RCL MATRIX A-E - display dimensions of matrix A-E
@@ -721,7 +726,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .RESULT:
             // RESULT A-E - designate matrix for storing results
             if userIsEnteringDigits { endDisplayEntry() }
-            brain.resultMatrix = Matrix.names[buttonName]!
+            brain.resultMatrixName = Matrix.names[buttonName]!
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1037,7 +1042,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .RCL:
             // RCL RESULT - display results matrix
             prefix = nil
-            let matrix = brain.matrices[brain.resultMatrix]!
+            let matrix = brain.matrices[brain.resultMatrixName]!
             prepStackForRecalledValue(matrix)
             brain.printMemory()
             print(matrix)
@@ -1721,8 +1726,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // f MATRIX 1 - store beginning row and column numbers in registers 0 and 1, respectively
                 _ = brain.storeValueInRegister("0", value: 1)
                 _ = brain.storeValueInRegister("1", value: 1)
-            case "4", "7", "8", "9":
-                // f MATRIX n (4: transpose, 7: row norm, 8: Frobenius norm, 9: determinant)
+            case "4", "5", "6", "7", "8", "9":
+                // f MATRIX n (4: transpose, 5: Y_transpose * X, 6: residual, 7: row norm, 8: Frobenius norm, 9: determinant)
                 performOperationFor(buttonName)
             default:
                 setError(11)

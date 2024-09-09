@@ -60,6 +60,15 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
         }
     }
     
+    // store same value in all elements of matrix
+    func storeValue(_ value: Double) {
+        for row in 0..<rows {
+            for col in 0..<cols {
+                self.values[row][col] = value
+            }
+        }
+    }
+
     // note: row and col are 1-based indices, matrices are 0-based
     func recallValue(atRow row: Int, col: Int) -> Double? {
         if row <= rows && col <= cols {
@@ -134,6 +143,8 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     var determinant: Double? {
         guard rows <= 4 && cols <= 4 else { return nil }  // max dimension for simd is 4 x 4
         switch rows {
+        case 0:
+            return 1.0  // HP-15C returns 1.0
         case 2:
             let simdSelf = simd_double2x2(values.map { simd_double2($0) })
             return simdSelf.determinant
@@ -163,9 +174,9 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     // return max of the sums
     var rowNorm: Double {
         var maxSum = 0.0
-        for row in 0..<self.values.count {
+        for row in 0..<rows {
             var sum = 0.0
-            for col in 0..<self.values[0].count {
+            for col in 0..<cols {
                 sum += abs(self.values[row][col])
             }
             maxSum = max(maxSum, sum)
@@ -176,8 +187,8 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     // square root of sum of squares of all elements
     var euclideanNorm: Double {
         var sumSquared = 0.0
-        for row in 0..<self.values.count {
-            for col in 0..<self.values[0].count {
+        for row in 0..<rows {
+            for col in 0..<cols {
                 sumSquared += pow(self.values[row][col], 2)
             }
         }

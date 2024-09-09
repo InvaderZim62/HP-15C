@@ -150,11 +150,11 @@ class Brain: Codable {
         "E" : Matrix(name: "E")
     ]
     
-    var resultMatrix = "A"
+    var resultMatrixName = "A"
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, error, isComplexMode, realStack, imagStack, storageRegisters, matrices, resultMatrix }
+    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, error, isComplexMode, realStack, imagStack, storageRegisters, matrices, resultMatrixName }
     
     init() { }
 
@@ -176,7 +176,7 @@ class Brain: Codable {
             self.storageRegisters = decoded.mapValues { $0.item as! Stackable }
         }
         self.matrices = try container.decode([String: Matrix].self, forKey: .matrices)
-        self.resultMatrix = try container.decode(String.self, forKey: .resultMatrix)
+        self.resultMatrixName = try container.decode(String.self, forKey: .resultMatrixName)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -189,7 +189,7 @@ class Brain: Codable {
         try container.encode(JSONSerialization.data(withJSONObject: imagStack), forKey: .imagStack)
         try container.encode(self.storageRegisters.mapValues { AnyEncodable(item: $0) }, forKey: .storageRegisters)
         try container.encode(self.matrices, forKey: .matrices)
-        try container.encode(self.resultMatrix, forKey: .resultMatrix)
+        try container.encode(self.resultMatrixName, forKey: .resultMatrixName)
     }
 
     // trick to encode items conforming to protocol Stackable
@@ -857,6 +857,21 @@ class Brain: Codable {
                     error = .code(11)
                     return
                 }
+            case "5":
+                // MATRIX 6 - matrixY_transpose * matrixX
+                let operandB = popOperand()
+                let operandA = popOperand()
+                if let matrixA = operandA as? Matrix, let matrixB = operandB as? Matrix,
+                   resultMatrixName != matrixA.name, resultMatrixName != matrixB.name {  // can't store result in operand matrices
+                    result = matrixA.transpose * matrixB
+                } else {
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(11)
+                    return
+                }
+            case "6":
+                // MATRIX 6 - residual
+                print("TBD - residual")  // description on p.159 of Handbook not clear what it does
             case "7":
                 // MATRIX 7 - row norm
                 let operand = popOperand()
@@ -874,7 +889,7 @@ class Brain: Codable {
                     result = Complex(real: matrix.euclideanNorm, imag: 0)
                 }
             case "9":
-                print("TBD: also need to store LU decomposition in RESULT matrix")
+                print("pws TBD: also need to store LU decomposition in RESULT matrix")
                 // MATRIX 9 - determinant
                 let operand = popOperand()
                 if let complex = operand as? Complex {
@@ -917,7 +932,7 @@ class Brain: Codable {
             if let matrixName = overwriteMatrix {
                 matrix.name = matrixName
             } else {
-                matrix.name = resultMatrix
+                matrix.name = resultMatrixName
             }
             matrices[matrix.name] = matrix
             if secondResult != nil {
