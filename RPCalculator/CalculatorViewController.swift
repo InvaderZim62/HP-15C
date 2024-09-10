@@ -75,6 +75,7 @@
 //  - statistics function
 //  - numerical integration
 //  - matrix inversion greater than 4x4
+//  - matrix LU decomposition
 //  - complex number matrices
 //
 //  To do...
@@ -1515,8 +1516,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         guard let buttonName = handleButton(sender) else { return }
 
         let fAction = {
-            self.prefix = nil
-            print("TBD: x!")
+            // x!
+            self.performOperationFor(buttonName)
         }
         let gAction = {
             self.prefix = nil

@@ -520,6 +520,16 @@ class Brain: Codable {
                     error = .code(1)
                     return
                 }
+            case "0":
+                // x!
+                let operand = popOperand()
+                if let complex = operand as? Complex {
+                    result = complex.factorial
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(1)
+                    return
+                }
             case "1":
                 // →R - convert polar coordinates to rectangular
                 isConvertingPolar = true
