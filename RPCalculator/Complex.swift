@@ -60,27 +60,21 @@ struct Complex: Equatable, Stackable {
                 imag: pow(10, real) * sin(imag * log(10)))
     }
     
-    // factorial of decimal numbers is integral(t^d * e^-t * dt) as t goes from 0 -> inf.
-    // ie. area under plot of t^d * e^-t
-    // 0.5! = 0.886227
-    // dt      cnt     factorial
-    // 0.01    1993    0.886019
-    // 0.005   3985    0.886153
-    // 0.001   19918   0.886220
-    // 0.0005  39834   0.886225
-    // 0.0001  199166  0.886227
+    // factorial of decimal numbers (also integers) is the gamma function:
+    // d! = gamma(d + 1) = integral(t^d * e^-t * dt) as t goes from 0 -> inf (ie. area under plot of t^d * e^-t)
+    // note: factorials < 0.4 start to show differences with HP-15C in 6th decimal place
     var factorial: Complex {
-        let dt = 0.0005  // pws: make a function of self.real (smaller for smaller)
+        let dt = max(min(0.0001 * self.real, 0.01), 0.000001)  // smaller dt needed to for small decimal factorials
         var sum = 0.0
         var i = 0
         var gamma = 0.0
         repeat {
             let t = Double(i) * dt
             gamma = pow(t, real) * exp(-t)
-            sum += gamma * dt  // euler integration
+            sum += gamma * dt  // Euler integration for area under curve
             i += 1
-        } while i < 1000 || gamma > 1E-8
-        print("\n\(self.real) factorial = \(sum) (\(i) iterations)\n")
+        } while i < 1000 || gamma > 1E-8  // at least 1000 iterations needed, since gamma starts small and grows, before shrinking again
+        print("\n\(self.real) factorial = \(sum) (\(i) iterations), dt: \(dt)\n")
         return Complex(real: sum, imag: imag)
     }
 

@@ -562,7 +562,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             displayString = number < 10 ? "  Error  \(number)" :  "  Error \(number)"
             return
         case .overflow:
-            displayString = " 9.999999 99"
+            displayString = "9.999999 99"
             return
         case .underflow:
             displayString = "-9.999999 99"
