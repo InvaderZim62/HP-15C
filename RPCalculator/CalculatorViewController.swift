@@ -1599,14 +1599,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
 
         switch prefix {
         case .f:
-            // "Re≷Im" pressed (swap real and imaginary parts of complex number)
-            prefix = nil
-            isComplexMode = true
-            prepStackForOperation()
-            //------------------
-            brain.swapRealImag()
-            //------------------
-            updateDisplayString()
+            // "Py,x" pressed (permutation)
+            performOperationFor(buttonName)
         case .g:
             prefix = nil
             print("TBD: Py,x")

@@ -583,6 +583,28 @@ class Brain: Codable {
                     error = .code(1)
                     return
                 }
+            case "+":
+                // Py,x - permutations
+                let operandX = popOperand()
+                let operandY = popOperand()
+                if let complexX = operandX as? Complex, let complexY = operandY as? Complex {
+                    if floor(complexY.real) == complexY.real && floor(complexX.real) == complexX.real {
+                        // complexX.real and complexY.real are whole numbers
+                        let intX = Int(complexX.real)
+                        let intY = Int(complexY.real)
+                        result = Complex(real: Double(intY.factorial) / Double((intY - intX).factorial),
+                                         imag: complexY.imag)
+                    } else {
+                        // can't compute permutation of decimals
+                        realStack = saveStack  // restore stack to pre-error state
+                        error = .code(0)
+                        return
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(11)
+                    return
+                }
             default:
                 break
             }
@@ -995,5 +1017,17 @@ class Brain: Codable {
             print(String(format: "  I:    %@", matrix.name))
         }
         print("---------------------------------------------------------")
+    }
+}
+
+extension Int {
+    var factorial: Int {
+        var number = self
+        var product = 1
+        while number > 0 {
+            product *= number
+            number -= 1
+        }
+        return product
     }
 }
