@@ -1338,7 +1338,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             srand48(seed)  // re-seed each time, so a manually stored seed will generate the same sequence each time
             let number = drand48()
-            seed = Int(number * Double(Int32.max))  // regenerate my own seed to use next time (Note: Int.max gives same numbers for different seeds)
+            seed = Int(number * Double(Int32.max))  // number becomes next seed (note: Int.max gives same numbers for different seeds - bad)
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
             displayString = String(number)
             brain.pushOperand(number)
@@ -1350,18 +1350,19 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             brain.pushOperand(brain.lastXRegister)
             liftStack = true
         case .STO:
-            // STO RAN# pressed (store new seed)
+            // STO RAN# pressed (store display as new seed)
             prefix = nil
             liftStack = true
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
             if var number = brain.xRegister as? Double {
                 number = min(max(number, 0.0), 0.9999999999)  // limit 0.0 <= number < 1.0
                 seed = Int(number * Double(Int32.max))
+                lastRandomNumberGenerated = number
             } else {
                 setError(1)
             }
         case .RCL:
-            // RCL RAN# pressed (recall last random number)
+            // RCL RAN# pressed (recall current seed, which is based on last random number)
             prefix = nil
             brain.pushOperand(lastRandomNumberGenerated)
             liftStack = true
