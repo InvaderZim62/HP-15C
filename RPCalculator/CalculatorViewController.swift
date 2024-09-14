@@ -407,6 +407,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             defaults.set(isComplexMode, forKey: "isComplexMode")
             defaults.set(isUserMode, forKey: "isUserMode")
             defaults.set(liftStack, forKey: "liftStack")
+            defaults.set(seed, forKey: "seed")
+            defaults.set(lastRandomNumberGenerated, forKey: "lastRandomNumberGenerated")
             defaults.set(flags, forKey: "flags")
             saveProgram()
         }
@@ -440,6 +442,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         isComplexMode = defaults.bool(forKey: "isComplexMode")  // must get after brain, so isComplexMode.oldValue is correct
         isUserMode = defaults.bool(forKey: "isUserMode")
         liftStack = defaults.bool(forKey: "liftStack")
+        seed = defaults.integer(forKey: "seed")
+        lastRandomNumberGenerated = defaults.double(forKey: "lastRandomNumberGenerated")
         flags = defaults.array(forKey: "flags") as? [Bool] ?? [Bool](repeating: false, count: 8)
         if let data = defaults.data(forKey: "program") {
             program = try! JSONDecoder().decode(Program.self, from: data)
