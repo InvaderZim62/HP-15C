@@ -102,19 +102,23 @@ class DisplayView: UIView {
         }
         // add commas every three digits before decimal point (or end of number,
         // if no decimal point), except when displaying mantissa (PREFIX)
-        if !errorDisplayed && !isProgramMode && showCommas {
-            var endIndex: Int
-            if let i = modifiedDisplayString.firstIndex(of: ".") {
-                endIndex = modifiedDisplayString.distance(from: modifiedDisplayString.startIndex, to: i) - 1  // ex. "1234.0" -> "1,234.0"
-            } else if let i = modifiedDisplayString.dropFirst().firstIndex(of: " ") {
-                endIndex = modifiedDisplayString.distance(from: modifiedDisplayString.startIndex, to: i) - 1  // ex. "1234  05" -> "1,234  05"
-            } else {
-                endIndex = min(modifiedDisplayString.count - 1, numberOfDigits - 4)                           // ex. "1234" -> "1,234"
-            }
-            var commaIndex = endIndex - 3
-            while commaIndex > 0 {
-                digitViews[commaIndex].trailingComma = true
-                commaIndex -= 3
+        if !errorDisplayed && !isProgramMode {
+            if showCommas {
+                var endIndex: Int
+                if let i = modifiedDisplayString.firstIndex(of: ".") {
+                    endIndex = modifiedDisplayString.distance(from: modifiedDisplayString.startIndex, to: i) - 1  // ex. "1234.0" -> "1,234.0"
+                } else if let i = modifiedDisplayString.dropFirst().firstIndex(of: " ") {
+                    endIndex = modifiedDisplayString.distance(from: modifiedDisplayString.startIndex, to: i) - 1  // ex. "1234  05" -> "1,234  05"
+                } else {
+                    endIndex = min(modifiedDisplayString.count - 1, numberOfDigits - 4)                           // ex. "1234" -> "1,234"
+                }
+                var commaIndex = endIndex - 3
+                while commaIndex > 0 {
+                    digitViews[commaIndex].trailingComma = true
+                    commaIndex -= 3
+                }
+            } else {  // show mantissa
+                digitViews.forEach { $0.trailingDecimal = false }
             }
         }
     }

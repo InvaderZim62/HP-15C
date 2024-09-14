@@ -95,13 +95,19 @@ class Brain: Codable {
 
     // mantissa (in this case) is all digits of displayed number, without punctuation ("-", "e", ".", ",")
     var displayMantissa: String {
-        var mantissa = String(abs(xRegister! as! Double))  // will fail, if xRegister contains a Matrix
-        if let ne = mantissa.firstIndex(of: "e") {
-            mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
+        if let number = xRegister as? Double {
+            var mantissa = String(abs(number))
+            if let ne = mantissa.firstIndex(of: "e") {
+                mantissa = String(mantissa.prefix(upTo: ne))  // drop the exponent
+            }
+            mantissa = mantissa.replacingOccurrences(of: ".", with: "")
+            if mantissa.count < 10 { mantissa += repeatElement("0", count: 10 - mantissa.count) }
+            return mantissa
+        } else if let matrix = xRegister as? Matrix {
+            return matrix.descriptor
+        } else {
+            return ""  // shouldn't get here
         }
-        mantissa = mantissa.replacingOccurrences(of: ".", with: "")
-        if mantissa.count < 10 { mantissa += repeatElement("0", count: 10 - mantissa.count) }
-        return mantissa
     }
 
     var isComplexMode = false {
