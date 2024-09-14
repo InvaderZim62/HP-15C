@@ -584,15 +584,13 @@ class Brain: Codable {
                     return
                 }
             case "+":
-                // Py,x - permutations
+                // Py,x - permutations = y! / (y - x)!
                 let operandX = popOperand()
                 let operandY = popOperand()
                 if let complexX = operandX as? Complex, let complexY = operandY as? Complex {
                     if floor(complexY.real) == complexY.real && floor(complexX.real) == complexX.real {
                         // complexX.real and complexY.real are whole numbers
-                        let intX = Int(complexX.real)
-                        let intY = Int(complexY.real)
-                        result = Complex(real: Double(intY.factorial) / Double((intY - intX).factorial),
+                        result = Complex(real: floor(complexY.factorial.real / (complexY - complexX).factorial.real),
                                          imag: complexY.imag)
                     } else {
                         // can't compute permutation of decimals
@@ -785,6 +783,26 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    return
+                }
+            case "+":
+                // Cy,x - combinations = y! / x!(y - x)!
+                let operandX = popOperand()
+                let operandY = popOperand()
+                if let complexX = operandX as? Complex, let complexY = operandY as? Complex {
+                    if floor(complexY.real) == complexY.real && floor(complexX.real) == complexX.real {
+                        // complexX.real and complexY.real are whole numbers
+                        result = Complex(real: floor(complexY.factorial.real / (complexX.factorial.real * (complexY - complexX).factorial.real)),
+                                         imag: complexY.imag)
+                    } else {
+                        // can't compute combinations of decimals
+                        realStack = saveStack  // restore stack to pre-error state
+                        error = .code(0)
+                        return
+                    }
+                } else {  // operand is Matrix
+                    realStack = saveStack  // restore stack to pre-error state
+                    error = .code(11)
                     return
                 }
             default:
@@ -1017,17 +1035,5 @@ class Brain: Codable {
             print(String(format: "  I:    %@", matrix.name))
         }
         print("---------------------------------------------------------")
-    }
-}
-
-extension Int {
-    var factorial: Int {
-        var number = self
-        var product = 1
-        while number > 0 {
-            product *= number
-            number -= 1
-        }
-        return product
     }
 }

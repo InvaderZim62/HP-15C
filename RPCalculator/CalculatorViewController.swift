@@ -1602,8 +1602,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // "Py,x" pressed (permutation)
             performOperationFor(buttonName)
         case .g:
-            prefix = nil
-            print("TBD: Py,x")
+            // "Cy,x" pressed (combinations)
+            performOperationFor(buttonName)
         case .STO:
             prefix = .STO_ADD
         case .RCL:
