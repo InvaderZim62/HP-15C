@@ -184,6 +184,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var displayLabels = [UILabel]()
     var savedDisplayLabelAlphas = [CGFloat]()  // save for turning calculator Off/On
     var saveDisplayString = ""
+    var saveMatrix: Matrix?  // used for displaying imaginary part of matrix (ie. 0)
     var calculatorIsOn = true
     var liftStack = true  // false between pressing enter and an operation (determines overwriting or pushing xRegister)
     var userIsEnteringDigits = false
@@ -392,7 +393,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         createButtonCovers()  // pws: this will create duplicate buttonCoverViews, if this app ever returns from a segue
     }
 
-    private func saveDefaults() {  // pws: should I save seed and lastRandomNumberGenerated?
+    private func saveDefaults() {
         if !isGettingDefaults && !isProgramRunning {  // several variables save defaults in their didSet handlers; don't save everything else, while getting defaults
             let defaults = UserDefaults.standard
             if let data = try? JSONEncoder().encode(displayFormat) {
@@ -511,6 +512,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         return attributedString
     }
     
+    // used for RCL MATRIX n and pi
     func prepStackForRecalledValue(_ value: Stackable) {
         if userIsEnteringDigits {
             if liftStack {
@@ -929,9 +931,24 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             if isComplexMode {
                 // show imaginary part of number, until 1.2 sec after button is released
                 prefix = nil
-                if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-                brain.swapRealImag()
+                if userIsEnteringDigits {
+                    if liftStack {
+                        brain.pushOperand(displayStringNumber)
+                    } else {
+                        endDisplayEntry()
+                    }
+                }
+                if brain.xRegister is Double {
+                    brain.swapRealImag()
+                } else {
+                    // if display is matrix, save it and show 0.0, until button released
+                    saveMatrix = brain.xRegister as? Matrix
+                    brain.xRegister = 0
+                }
                 updateDisplayString()
+                userIsEnteringDigits = false
+                userIsEnteringExponent = false
+                liftStack = true
                 sender.addTarget(self, action: #selector(iButtonReleased), for: .touchUpInside)
                 return
             } else {
@@ -1864,10 +1881,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     private func operateOnStorageRegister(_ register: String) {
         switch prefix {
         case .STO, .STO_DOT:
-            // STO (i) - STO to register number stored in I (integer portion of absolute value of number stored in I)
             storeDisplayToRegister(register)
         case .RCL, .RCL_DOT:
-            // RCL (i) - RCL from register number stored in I (integer portion of absolute value of number stored in I)
             recallRegister(register)
         case .STO_ADD, .STO_ADD_DOT:
             applyDisplayToRegister(register, using: { $0 + $1 })
@@ -2071,7 +2086,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     @objc private func iButtonReleased(_ button: UIButton) {
         DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) {
             button.removeTarget(nil, action: nil, for: .touchUpInside)
-            self.brain.swapRealImag()
+            if let matrix = self.saveMatrix {
+                // undoing showing imaginary with matrix in display
+                self.brain.xRegister = matrix
+                self.saveMatrix = nil
+            } else {
+                self.brain.swapRealImag()
+            }
             self.updateDisplayString()
         }
     }
