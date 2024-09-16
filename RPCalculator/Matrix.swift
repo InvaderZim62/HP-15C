@@ -52,7 +52,7 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
     
     // note: row and col are 1-based indices, matrices are 0-based
     func storeValue(_ value: Double, atRow row: Int, col: Int) -> Bool {
-        if row <= rows && col <= cols {
+        if isInBounds(row: row, col: col) {
             values[row - 1][col - 1] = value
             return true
         } else {
