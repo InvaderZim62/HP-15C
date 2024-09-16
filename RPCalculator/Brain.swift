@@ -160,7 +160,7 @@ class Brain: Codable {
 
     // MARK: - Codable
 
-    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, error, isComplexMode, realStack, imagStack, storageRegisters, matrices, resultMatrixName }
+    private enum CodingKeys: String, CodingKey { case trigUnits, lastXRegister, isComplexMode, realStack, imagStack, storageRegisters, matrices, resultMatrixName }
     
     init() { }
 
@@ -170,7 +170,6 @@ class Brain: Codable {
         if let decoded = try? container.decode(AnyDecodable.self, forKey: .lastXRegister) {
             self.lastXRegister = decoded.item as! Stackable
         }
-        self.error = try container.decode(Error.self, forKey: .error)
         self.isComplexMode = try container.decode(Bool.self, forKey: .isComplexMode)
         if let decoded = try? container.decode([AnyDecodable].self, forKey: .realStack) {
             // convert from [AnyDecodable] to [Stackable]
@@ -189,7 +188,6 @@ class Brain: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.trigUnits, forKey: .trigUnits)
         try container.encode(self.lastXRegister, forKey: .lastXRegister)
-        try container.encode(self.error, forKey: .error)
         try container.encode(self.isComplexMode, forKey: .isComplexMode)
         try container.encode(self.realStack.map { AnyEncodable(item: $0) }, forKey: .realStack)
         try container.encode(JSONSerialization.data(withJSONObject: imagStack), forKey: .imagStack)

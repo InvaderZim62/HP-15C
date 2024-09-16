@@ -2012,6 +2012,9 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     // store displayed value to matrix A-E, at row = register 0, col = register 1
+    // show matrix name, row, and col (ex. "A  2,1") while button pressed
+    // show matrix element when button released (in storeMatrixButtonReleased), and increment registers
+    // if button pressed for more than 3 seconds, show "null" and don't increment registers
     private func storeDisplayToMatrix(_ button: UIButton) {
         if let (row, col) = currentMatrixRowCol() {
             let buttonName = buttonNameFromButton(button)
@@ -2034,9 +2037,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     // recall element of matrix A-E, at row = register 0, col = register 1
-    // show matrix name, row, and col (ex. "A  2,1") while button pressed
-    // show matrix element when button released (in matrixButtonReleased), and increment registers
-    // if button pressed for more than 3 seconds, show "null" and don't increment registers
     private func recallValueFromMatrix(_ button: UIButton) {
         if let (row, col) = currentMatrixRowCol() {
             let buttonName = buttonNameFromButton(button)
@@ -2116,14 +2116,18 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 updateDisplayString()
             } else {
                 button.removeTarget(nil, action: nil, for: .touchUpInside)
-                let (row, col) = currentMatrixRowCol()!
-                _ = matrix.storeValue(brain.xRegister as! Double, atRow: row, col: col)
-                updateDisplayString()
-                if isUserMode {
-                    // auto-increment row/col registers
-                    let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
-                    _ = brain.storeValueInRegister("0", value: Double(newRow))
-                    _ = brain.storeValueInRegister("1", value: Double(newCol))
+                if let number = brain.xRegister as? Double {
+                    let (row, col) = currentMatrixRowCol()!
+                    _ = matrix.storeValue(number, atRow: row, col: col)
+                    updateDisplayString()
+                    if isUserMode {
+                        // auto-increment row/col registers
+                        let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
+                        _ = brain.storeValueInRegister("0", value: Double(newRow))
+                        _ = brain.storeValueInRegister("1", value: Double(newCol))
+                    }
+                } else {
+                    setError(1)  // can't save matrix as an element of a matrix
                 }
             }
             brain.printMemory()
