@@ -71,11 +71,15 @@ class Matrix: Codable, Stackable, CustomStringConvertible {
 
     // note: row and col are 1-based indices, matrices are 0-based
     func recallValue(atRow row: Int, col: Int) -> Double? {
-        if row <= rows && col <= cols {
+        if isInBounds(row: row, col: col) {
             return values[row - 1][col - 1]
         } else {
             return nil
         }
+    }
+    
+    func isInBounds(row: Int, col: Int) -> Bool {
+        row <= rows && col <= cols
     }
     
     // wrap col, then row, then return to start for input matrix

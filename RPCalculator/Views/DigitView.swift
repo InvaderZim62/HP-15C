@@ -73,7 +73,10 @@ class DigitView: UIView {
         "u": [.middleCross, .upperLeft, .upperRight],
         "n": [.upperCross, .upperLeft, .upperRight],
         "i": [.upperRight],
-        "g": [.upperCross, .upperLeft, .upperRight, .middleCross, .lowerRight, .lowerCross]
+        "g": [.upperCross, .upperLeft, .upperRight, .middleCross, .lowerRight, .lowerCross],
+        "N": [.middleCross, .lowerLeft, .lowerRight],  // small "n" in middle of screen
+        "U": [.lowerLeft, .lowerRight, .lowerCross],  // small "u" in middle of screen
+        "L": [.upperRight, .lowerRight]  // small "l"
         // unlisted characters will appear as blanks
     ]
 

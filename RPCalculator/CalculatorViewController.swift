@@ -96,7 +96,7 @@
 //    - RCL f FIX 5 => FIX 5 (ie. forget RCL after entering f)
 //    maybe create prefix = RCL_f; if next button isn't (i), I, MATRIX, or DIM, drop the pre-f part;
 //    also have var prefix's didSet set fLabel.alpha = 1, if prefix.last = "f" (small letter f)
-//
+//  - show matrix row,col when storing and recalling matrix elements
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
@@ -192,6 +192,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var buttonCoverViews = [UIButton: ButtonCoverView]()  // overlays buttons to provide text above and inside buttons
     var seed = 0  // HP-15C initial random number seed is zero
     var lastRandomNumberGenerated = 0.0
+    var showMatrixElementTimer = Timer()
     var isGettingDefaults = false
     var useSimButton = true  // true: call simulatePressingButton to play click sound; set false in program before issuing button action
     var gotoLineNumberDigits = [Int]()
@@ -746,7 +747,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringExponent = false
         case .RCL:
             // RCL A-E - recall element of matrix A-E, at row = register 0, col = register 1
-            recallValueFromMatrix(buttonName)
+            recallValueFromMatrix(sender)
         default:
             break
         }
@@ -2038,28 +2039,41 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     // recall element of matrix A-E, at row = register 0, col = register 1
-    private func recallValueFromMatrix(_ buttonName: String) {
-        if userIsEnteringDigits { endDisplayEntry() }
-        if let storage0 = brain.valueFromStorageRegister("0")! as? Double,
-           let storage1 = brain.valueFromStorageRegister("1")! as? Double {
-            let row = Int(storage0)
-            let col = Int(storage1)
+    // show matrix name, row, and col (ex. "A  2,1") while button pressed
+    // show matrix element when button released (in matrixButtonReleased), and increment registers
+    // if button pressed for more than 3 seconds, show "null" and don't increment registers
+    private func recallValueFromMatrix(_ button: UIButton) {
+        if userIsEnteringDigits { endDisplayEntry() }  // pws: need to check listStack, here
+        if let (row, col) = matrixRowCol() {
+            let buttonName = buttonNameFromButton(button)
             let matrix = brain.matrices[Matrix.names[buttonName]!]!
-            if let value = matrix.recallValue(atRow: row, col: col) {
-                brain.pushOperand(value)
-                updateDisplayString()
-                if isUserMode {
-                    // auto-increment row/col registers
-                    let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
-                    _ = brain.storeValueInRegister("0", value: Double(newRow))
-                    _ = brain.storeValueInRegister("1", value: Double(newCol))
+            if matrix.isInBounds(row: row, col: col) {
+                let space = row > 9 ? " " : "  "
+                displayString = "\(matrix.name)\(space)\(row),\(col))"
+                button.addTarget(self, action: #selector(matrixButtonReleased), for: .touchUpInside)
+                // if user holds button down for more than 3 sec, display "null"
+                showMatrixElementTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] timer in
+                    self?.displayView.showCommas = false
+                    self?.displayString = "NULL"  // appears as small letters
                 }
-                print(matrix)
             } else {
                 setError(3)  // trying to recall value outside matrix dimensions
             }
         } else {
             setError(1)  // registers 0 or 1 contain matrix
+        }
+    }
+    
+    // return current matrix row and column from storage registers 0 and 1, respectively
+    // return nil, if either register contains a matrix, rather than a double
+    private func matrixRowCol() -> (Int, Int)? {
+        if let storage0 = brain.valueFromStorageRegister("0")! as? Double,
+           let storage1 = brain.valueFromStorageRegister("1")! as? Double {
+            let row = Int(storage0)
+            let col = Int(storage1)
+            return (row, col)
+        } else {
+            return nil
         }
     }
 
@@ -2094,6 +2108,34 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 self.brain.swapRealImag()
             }
             self.updateDisplayString()
+        }
+    }
+    
+    @objc private func matrixButtonReleased(_ button: UIButton) {
+        showMatrixElementTimer.invalidate()  // stop timer to display "null"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [unowned self] in
+            if displayString == "NULL" {
+                // user done holding button > 3 seconds, show prior display
+                displayView.showCommas = true
+                updateDisplayString()
+            } else {
+                button.removeTarget(nil, action: nil, for: .touchUpInside)
+                let (row, col) = matrixRowCol()!
+                let buttonName = buttonNameFromButton(button)
+                let matrix = brain.matrices[Matrix.names[buttonName]!]!
+                let value = matrix.recallValue(atRow: row, col: col)!
+                brain.pushOperand(value)
+                updateDisplayString()
+                if isUserMode {
+                    // auto-increment row/col registers
+                    let (newRow, newCol) = matrix.incrementRowCol(row: row, col: col)
+                    _ = brain.storeValueInRegister("0", value: Double(newRow))
+                    _ = brain.storeValueInRegister("1", value: Double(newCol))
+                }
+                updateDisplayString()
+                brain.printMemory()
+                print(matrix)
+            }
         }
     }
 
