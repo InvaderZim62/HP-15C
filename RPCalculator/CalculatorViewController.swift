@@ -740,13 +740,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringExponent = false
         case .STO:
             // STO A-E - store displayed value to matrix A-E, at row = register 0, col = register 1
-            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }  // pws: may need to check liftStack, here
+            prepStackForOperation()
             storeDisplayToMatrix(sender)
             userIsEnteringDigits = false
             userIsEnteringExponent = false
         case .RCL:
             // RCL A-E - recall element of matrix A-E, at row = register 0, col = register 1
-            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }  // pws: may need to check liftStack, here
+            if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }
             recallValueFromMatrix(sender)
             userIsEnteringDigits = false
             userIsEnteringExponent = false
