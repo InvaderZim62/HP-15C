@@ -14,6 +14,7 @@
 //    // wait before continuing test
 //    let exp = expectation(description: "Wait for results to display")
 //    _ = XCTWaiter.wait(for: [exp], timeout: 1.5)
+//    XCTAssertEqual(cvc.displayStringNumber, 2, "Display is not correct")
 //
 //  Test cases:
 //  - test01BasicArithmetic

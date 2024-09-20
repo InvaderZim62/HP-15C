@@ -12,6 +12,7 @@
 import XCTest
 @testable import RPCalculator
 
+// this test suite only uses class Brain, it doesn't need access to CalculatorViewController
 final class BrainUnitTests: XCTestCase {
     
     let brain = Brain()

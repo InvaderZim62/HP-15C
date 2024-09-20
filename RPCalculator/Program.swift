@@ -661,14 +661,14 @@ class Program: Codable {
                     self.delegate?.isProgramRunning = false  // removes "running" from display
                     self.isProgramPaused = true
                 }
-                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in
                     if !isAnyButtonPressed {
                         DispatchQueue.main.async {
                             self.delegate?.isProgramRunning = true  // show "running" when continuing after pause
                             self.isProgramPaused = false
                         }
                     }
-                    DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in
+                    DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in
                         _ = forwardStep()
                         runFromCurrentLine(completion: completion)
                     }

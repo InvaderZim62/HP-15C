@@ -102,7 +102,8 @@ import UIKit
 import AVFoundation  // needed for AVAudioPlayer
 
 struct Pause {
-    static let time = 1.2
+    static let running = 1.2  // delay to show "running"
+    static let matrix = 0.2  // delay to show matrix dimensions
 }
 
 enum Prefix: String {
@@ -1154,7 +1155,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // run program from current line, to end (vs. running from a label, to end)
                 isProgramRunning = true
                 program.isAnyButtonPressed = false
-                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in  // delay to show "running"
                     if program.currentLineNumber == 0 { program.incrementCurrentLine() }  // allows starting from line 0
                     program.runFromCurrentLine() {
                         DispatchQueue.main.async {
@@ -1694,7 +1695,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         isProgramRunning = true
         program.isAnyButtonPressed = false
         // run in background, so any button press is detected
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in  // delay to show "running"
             program.runFrom(label: label) {
                 DispatchQueue.main.async {
                     self.isProgramRunning = false
@@ -1705,7 +1706,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     private func solveFrom(label: String) {
         isProgramRunning = true
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.time) { [unowned self] in  // delay to show "running"
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in  // delay to show "running"
             solve.findRootOfEquationAt(label: label) {
                 DispatchQueue.main.async {
                     self.isProgramRunning = false
@@ -2092,7 +2093,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     @objc private func iButtonReleased(_ button: UIButton) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.running) {
             button.removeTarget(nil, action: nil, for: .touchUpInside)
             if let matrix = self.saveMatrix {
                 // undoing showing imaginary with matrix in display
@@ -2109,7 +2110,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         showMatrixElementTimer.invalidate()  // stop timer for displaying "null"
         let buttonName = buttonNameFromButton(button)
         let matrix = brain.matrices[Matrix.names[buttonName]!]!
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [unowned self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.matrix) { [unowned self] in
             if displayString == "NULL" {
                 // user done holding button > 3 seconds, show prior display
                 displayView.showCommas = true
@@ -2139,7 +2140,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         showMatrixElementTimer.invalidate()  // stop timer for displaying "null"
         let buttonName = buttonNameFromButton(button)
         let matrix = brain.matrices[Matrix.names[buttonName]!]!
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [unowned self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.matrix) { [unowned self] in
             if displayString == "NULL" {
                 // user done holding button > 3 seconds, show prior display
                 displayView.showCommas = true
@@ -2163,7 +2164,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
 
     @objc private func clearPrefixButtonReleased(_ button: UIButton) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.time) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Pause.running) {
             button.removeTarget(nil, action: nil, for: .touchUpInside)
             self.displayView.showCommas = true
             self.updateDisplayString()
@@ -2201,3 +2202,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
 }
+
+#if DEBUG  // ie. don't ship with production code
+extension CalculatorViewController {
+    // expose private func storeDisplayToMatrix and recallMatrixButtonReleased to unit test
+    // from: https://stackoverflow.com/a/50136916/2526464
+    public func privateStoreMatrixButtonReleased(_ button: UIButton) {
+        storeMatrixButtonReleased(button)
+    }
+    
+    public func privateRecallMatrixButtonReleased(_ button: UIButton) {
+        recallMatrixButtonReleased(button)
+    }
+}
+#endif

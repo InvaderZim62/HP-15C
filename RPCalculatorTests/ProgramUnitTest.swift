@@ -436,25 +436,25 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "√x")
         // verify display = 2.0000
         let exp1 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "2.0000", "Display is not correct")
         // continue
         pressButton(title: "R/S")
         // verify display = 1.0000
         let exp2 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "1.0000", "Display is not correct")
         // continue
         pressButton(title: "R/S")
         // verify display = 0.0000
         let exp3 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp3], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp3], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "0.0000", "Display is not correct")
         // continue
         pressButton(title: "R/S")
         // verify display = 99.0000
         let exp4 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp4], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp4], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "99.0000", "Display is not correct")
     }
 
@@ -562,31 +562,31 @@ class ProgramUnitTests: XCTestCase {
         // verify display = 2.0000
         let factor = 2.0  // found by trial and error (1.9 - 2.2 works, independent of device)
         let exp1 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp1], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp1], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "2.0000", "Display is not correct")
         // verify display = 84.0896
         let exp2 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp2], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp2], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "84.0896", "Display is not correct")
         // verify display = 5.0000
         let exp3 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp3], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp3], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "5.0000", "Display is not correct")
         // verify display = 64.8420
         let exp4 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp4], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp4], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "64.8420", "Display is not correct")
         // verify display = 8.0000
         let exp5 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp5], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp5], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "8.0000", "Display is not correct")
         // verify display = 50.0000
         let exp6 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp6], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp6], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "50.0000", "Display is not correct")
         // verify display = 50.0000
         let exp7 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp7], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp7], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "50.0000", "Display is not correct")
     }
 
@@ -653,7 +653,7 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "√x")
         // verify display = 4
         let exp1 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "4.0000", "Display is not correct")
         // clear flag 1
         pressButton(title: "g")
@@ -664,7 +664,7 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "√x")
         // verify display = 3
         let exp2 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "3.0000", "Display is not correct")
     }
     
@@ -770,7 +770,7 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "ex")
         // verify display = 10698.3049
         let exp1 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "10698.3048", "Display is not correct")  // s/b 10698.3049 (close enough)
         
         // setup
@@ -780,7 +780,7 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "1/x")
         // verify display = 10645.0795
         let exp2 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp2], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "10645.0794", "Display is not correct")  // s/b 10645.0795 (close enough)
     }
     
@@ -846,27 +846,27 @@ class ProgramUnitTests: XCTestCase {
         let factor = 2.0  // found by trial and error
         // verify display = 10
         let exp0 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp0], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp0], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "10.0000", "Display is not correct")
         // verify display = 9
         let exp1 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp1], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp1], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "9.0000", "Display is not correct")
         // verify display = 8
         let exp2 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp2], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp2], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "8.0000", "Display is not correct")
         // verify display = 7
         let exp3 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp3], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp3], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "7.0000", "Display is not correct")
         // verify display = 6
         let exp4 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp4], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp4], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "6.0000", "Display is not correct")
         // verify display = 5
         let exp5 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp5], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp5], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "5.0000", "Display is not correct")
     }
     
@@ -932,27 +932,27 @@ class ProgramUnitTests: XCTestCase {
         let factor = 2.0  // found by trial and error
         // verify display = 5
         let exp0 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp0], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp0], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "5.0000", "Display is not correct")
         // verify display = 6
         let exp1 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp1], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp1], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "6.0000", "Display is not correct")
         // verify display = 7
         let exp2 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp2], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp2], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "7.0000", "Display is not correct")
         // verify display = 8
         let exp3 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp3], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp3], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "8.0000", "Display is not correct")
         // verify display = 9
         let exp4 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp4], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp4], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "9.0000", "Display is not correct")
         // verify display = 10
         let exp5 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp5], timeout: factor * Pause.time)
+        _ = XCTWaiter.wait(for: [exp5], timeout: factor * Pause.running)
         XCTAssertEqual(cvc.displayString, "10.0000", "Display is not correct")
     }
 
@@ -998,7 +998,7 @@ class ProgramUnitTests: XCTestCase {
         pressButton(title: "√x")
         // verify display = 5.0000
         let exp1 = expectation(description: "Wait for results to display")
-        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.time)
+        _ = XCTWaiter.wait(for: [exp1], timeout: 1.1 * Pause.running)
         XCTAssertEqual(cvc.displayString, "5.0000", "Display is not correct")
     }
 

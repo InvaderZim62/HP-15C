@@ -15,6 +15,12 @@
 //    uncheck: Execute in parallel (if possible) | Save
 //  - test cases are run in alphabetic order
 //
+//  Test cases:
+//  - test01ComplexArithmetic
+//  - test02ComplexTrig
+//  - test03ComplexHyperbolicTrig
+//  - test04OtherComplexOperations
+//
 
 import XCTest
 @testable import RPCalculator
@@ -23,6 +29,7 @@ struct Test {
     static let threshold = 0.0001
 }
 
+// this test suite only uses class Complex, it doesn't need access to CalculatorViewController
 final class ComplexUnitTests: XCTestCase {
 
     let complexA = Complex(real: 1, imag: 2)  // 1 + 2i

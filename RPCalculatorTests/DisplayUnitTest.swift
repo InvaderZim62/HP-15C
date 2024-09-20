@@ -4,7 +4,7 @@
 //
 //  Created by Phil Stern on 8/20/24.
 //
-//  Note: Extension at bottom of DigitView file allows access to private var digitViews,
+//  Note: Extension at bottom of DisplayView file allows access to private var digitViews,
 //        using a trick from: https://stackoverflow.com/a/50136916/2526464
 //
 //  Test cases:
