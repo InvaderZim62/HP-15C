@@ -415,9 +415,10 @@ class CalculatorUnitTests: XCTestCase {
     
     // test entering and recalling a complex number
     // verify:
-    //   2 ENTER 3 I   enters complex number 2 + 3i, leaving real part of complex number in display
-    //   Re≷Im         swaps real and imaginary parts of complex number in display
-    //   (i)           briefly shows imaginary part of complex number, then returns to showing real part
+    //   2 ENTER 3 I                enters complex number 2 + 3i, leaving real part of complex number in display
+    //   Re≷Im                      swaps real and imaginary parts of complex number in display
+    //   (i)                        briefly shows imaginary part of complex number, then returns to showing real part
+    //   (i) outside complex mode   shows Error 3
     // note: more complex number tests are performed in ComplexUnitTests and RPCalculatorUITests
     func test13EnterAndRecallComplexNumber() {
         // 2 ENTER 3 I
@@ -433,11 +434,13 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "–")
         // verify 3
         XCTAssertEqual(cvc.displayStringNumber, 3, "Imaginary part of complex number is not correct")
+        
         // Re≷Im
         pressButton(title: "f")
         pressButton(title: "–")
         // verify 2
         XCTAssertEqual(cvc.displayStringNumber, 2, "Real part of complex number is not correct")
+        
         // (i)
         pressButton(title: "f")
         pressButton(title: "COS")
@@ -446,6 +449,17 @@ class CalculatorUnitTests: XCTestCase {
         releaseCurrentButton()  // needed, since (i) uses .touchUpInside to return to showing the real part of the complex number
         // verify 2
         XCTAssertEqual(cvc.displayStringNumber, 2, "Real part of complex number is not correct")
+        
+        // CF 8 (clear complex mode)
+        pressButton(title: "g")
+        pressButton(title: "5")
+        pressButton(title: "8")
+        // (i)
+        pressButton(title: "f")
+        pressButton(title: "COS")
+        XCTAssertEqual(cvc.displayString, "  Error  3", "Using (i) outside complex mode should show Error 3")
+        // clear error
+        pressButton(title: "ENTER")  // any button clears an error
     }
 
     // MARK: - Utilities

@@ -441,25 +441,60 @@ class MatrixUnitTests: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 12, "matrix C(2,3) is not correct")
     }
     
-//    func test06MatrixErrors() {
-//        // create matrix A
-//        create2x3MatrixA()
-//        // RCL MATRIX A
-//        pressButton(title: "RCL")
-//        pressButton(title: "CHS")
-//        pressButton(title: "√x")
-//        // STO MATRIX B
-//        pressButton(title: "STO")
-//        pressButton(title: "CHS")
-//        pressButton(title: "ex")
-//        // RCL MATRIX B
-//        pressButton(title: "RCL")
-//        pressButton(title: "CHS")
-//        pressButton(title: "ey")
-//        // STO A
-//        pressButton(title: "STO")
-//        pressButton(title: "√x")
-//    }
+    // test error cases
+    // verify
+    //   storing a matrix as an element of a matrix causes Error 1
+    //   indexing a matrix with a matrix causes Error 1
+    //   trying to access beyond matrix dimensions causes Error 3
+    func test06MatrixErrors() {
+        // setup
+        // create matrix A
+        create2x3MatrixA()
+        // RCL MATRIX A
+        pressButton(title: "RCL")
+        pressButton(title: "CHS")
+        pressButton(title: "√x")
+        // STO MATRIX B
+        pressButton(title: "STO")
+        pressButton(title: "CHS")
+        pressButton(title: "ex")
+        
+        // save matrix as an element of a matrix
+        // RCL MATRIX B
+        pressButton(title: "RCL")
+        pressButton(title: "CHS")
+        pressButton(title: "ey")
+        // STO A
+        pressButton(title: "STO")
+        pressButton(title: "√x")
+        releaseCurrentButton()  // needed, since STO <label> uses .touchUpInside to do the storing
+        XCTAssertEqual(cvc.displayString, "  Error  1", "Storing a matrix in a matrix should show Error 1")
+        // clear error
+        pressButton(title: "ENTER")  // any button clears an error
+        
+        // index a matrix with a matrix
+        // STO 0 (storage register 0 is the row index of a matrix)
+        pressButton(title: "STO")
+        pressButton(title: "0")
+        // RCL A
+        pressButton(title: "RCL")
+        pressButton(title: "√x")  // no need to "release button", since error is immediate (doesn't show matrix indices)
+        XCTAssertEqual(cvc.displayString, "  Error  1", "Indexing a matrix with a matrix should show Error 1")
+        // clear error
+        pressButton(title: "ENTER")
+
+        // access beyond matrix dimensions
+        // 3 STO 0 (row index, one more than dimension 2)
+        pressButton(title: "3")
+        pressButton(title: "STO")
+        pressButton(title: "0")
+        // RCL A
+        pressButton(title: "RCL")
+        pressButton(title: "√x")  // no need to "release button", since error is immediate (doesn't show matrix indices)
+        XCTAssertEqual(cvc.displayString, "  Error  3", "Indexing a matrix outside its dimensions should show Error 3")
+        // clear error
+        pressButton(title: "ENTER")
+    }
 
     // MARK: - Utilities
     
