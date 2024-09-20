@@ -27,6 +27,8 @@
 //  - test08PolarToRectangular
 //  - test09HourToHourMinSec
 //  - test10HoursMinSecToHours
+//  - test11Permutations
+//  - test12Combinations
 //
 
 import XCTest
@@ -385,6 +387,29 @@ class CalculatorUnitTests: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 10.5, "Conversion from hours.minutesSeconds to decimal hours is not correct")
     }
     
+    // test permutations
+    // verify 5 ENTER 3 Py,y = 60
+    func test11Permutations() {
+        pressButton(title: "5")
+        pressButton(title: "ENTER")
+        pressButton(title: "3")
+        pressButton(title: "f")
+        pressButton(title: "+")
+        XCTAssertEqual(cvc.displayStringNumber, 60.0, "Permutations are not correct")
+    }
+    
+    // test combinations
+    // verify 52 ENTER 4 Cy,y = 270,725
+    func test12Combinations() {
+        pressButton(title: "5")
+        pressButton(title: "2")
+        pressButton(title: "ENTER")
+        pressButton(title: "4")
+        pressButton(title: "g")
+        pressButton(title: "+")
+        XCTAssertEqual(cvc.displayStringNumber, 270725.0, "Combinations are not correct")
+    }
+
     // MARK: - Utilities
     
     // set stack to known condition
