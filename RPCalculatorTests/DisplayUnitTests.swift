@@ -1,5 +1,5 @@
 //
-//  DisplayUnitTest.swift
+//  DisplayUnitTests.swift
 //  RPCalculatorTests
 //
 //  Created by Phil Stern on 8/20/24.
@@ -15,7 +15,7 @@
 import XCTest
 @testable import RPCalculator
 
-class DisplayUnitTest: XCTestCase {
+class DisplayUnitTests: XCTestCase {
 
     var cvc: CalculatorViewController!
 

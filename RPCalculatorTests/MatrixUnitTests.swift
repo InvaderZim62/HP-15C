@@ -1,5 +1,5 @@
 //
-//  MatrixUnitTest.swift
+//  MatrixUnitTests.swift
 //  RPCalculatorTests
 //
 //  Created by Phil Stern on 9/5/24.
@@ -19,7 +19,7 @@
 import XCTest
 @testable import RPCalculator
 
-class MatrixUnitTest: XCTestCase {
+class MatrixUnitTests: XCTestCase {
 
     var cvc: CalculatorViewController!
     var button = UIButton()
