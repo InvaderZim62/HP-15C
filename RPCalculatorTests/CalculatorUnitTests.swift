@@ -29,6 +29,7 @@
 //  - test10HoursMinSecToHours
 //  - test11Permutations
 //  - test12Combinations
+//  - test13EnterAndRecallComplexNumber
 //
 
 import XCTest
@@ -37,6 +38,8 @@ import XCTest
 class CalculatorUnitTests: XCTestCase {
 
     var cvc: CalculatorViewController!
+    var button = UIButton()
+    var savePrefix: Prefix!
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -409,6 +412,41 @@ class CalculatorUnitTests: XCTestCase {
         pressButton(title: "+")
         XCTAssertEqual(cvc.displayStringNumber, 270725.0, "Combinations are not correct")
     }
+    
+    // test entering and recalling a complex number
+    // verify:
+    //   2 ENTER 3 I   enters complex number 2 + 3i, leaving real part of complex number in display
+    //   Re≷Im         swaps real and imaginary parts of complex number in display
+    //   (i)           briefly shows imaginary part of complex number, then returns to showing real part
+    // note: more complex number tests are performed in ComplexUnitTests and RPCalculatorUITests
+    func test13EnterAndRecallComplexNumber() {
+        // 2 ENTER 3 I
+        pressButton(title: "2")
+        pressButton(title: "ENTER")
+        pressButton(title: "3")
+        pressButton(title: "f")
+        pressButton(title: "TAN")
+        // verify 2
+        XCTAssertEqual(cvc.displayStringNumber, 2, "Real part of complex number is not correct")
+        // Re≷Im
+        pressButton(title: "f")
+        pressButton(title: "–")
+        // verify 3
+        XCTAssertEqual(cvc.displayStringNumber, 3, "Imaginary part of complex number is not correct")
+        // Re≷Im
+        pressButton(title: "f")
+        pressButton(title: "–")
+        // verify 2
+        XCTAssertEqual(cvc.displayStringNumber, 2, "Real part of complex number is not correct")
+        // (i)
+        pressButton(title: "f")
+        pressButton(title: "COS")
+        // verify 3
+        XCTAssertEqual(cvc.displayStringNumber, 3, "Imaginary part of complex number is not correct")
+        releaseCurrentButton()  // needed, since (i) uses .touchUpInside to return to showing the real part of the complex number
+        // verify 2
+        XCTAssertEqual(cvc.displayStringNumber, 2, "Real part of complex number is not correct")
+    }
 
     // MARK: - Utilities
     
@@ -449,7 +487,7 @@ class CalculatorUnitTests: XCTestCase {
 
     // create button with input title, and invoke the button action
     func pressButton(title: String) {
-        let button = UIButton()
+        savePrefix = cvc.prefix
         button.setTitle(title, for: .normal)
         switch title {
         case "√x", "ex", "10x", "yx", "1/x":  // note: if cvc.isUserMode = true, these will be the non-f prefix versions
@@ -520,6 +558,39 @@ class CalculatorUnitTests: XCTestCase {
             cvc.plusButtonPressed(button)
         case "ENTER":  // ENTER is written vertically on the button, but title is not used in enterButtonPressed(button)
             cvc.enterButtonPressed(button)
+        default:
+            break
+        }
+    }
+    
+    // use this for button actions that have a separate action for .touchUpInside to
+    // perform the actual action - ie. STO A-E, RCL A-E, SST, g-SST (BST), f-COS (i);
+    // must be called after pressButton, to store the prefix and button title
+    func releaseCurrentButton() {
+        switch button.currentTitle {
+        case "√x", "ex", "10x", "yx", "1/x":  // note: if cvc.isUserMode = true, these will be the non-f prefix versions
+            // in run mode, the appropriate _MatrixButtonReleased is called automatically;
+            // in test mode, _MatrixButtonReleased must be called manually;
+            // since aToEButtonPressed() clears the prefix, use a saved version to determine which to call
+            if savePrefix == .STO {
+                cvc.privateStoreMatrixButtonReleased(button)
+            } else if savePrefix == .RCL {
+                cvc.privateRecallMatrixButtonReleased(button)
+            }
+            let exp = expectation(description: "Wait for matrix dimensions to clear and matrix element to be stored or recalled")
+            _ = XCTWaiter.wait(for: [exp], timeout: 1.1 * Pause.matrix)
+        case "SST":
+            if savePrefix == .none {
+                cvc.privateSstButtonReleased(button)
+            } else if savePrefix == .g {
+                cvc.privateBstButtonReleased(button)
+            }
+        case "COS":
+            if savePrefix == .f {
+                cvc.privateIButtonReleased(button)
+                let exp = expectation(description: "Wait for imaginary part of complex number to be replaced by real part")
+                _ = XCTWaiter.wait(for: [exp], timeout: 1.1 * Pause.running)
+            }
         default:
             break
         }

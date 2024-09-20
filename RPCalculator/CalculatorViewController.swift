@@ -2205,14 +2205,22 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
 
 #if DEBUG  // ie. don't ship with production code
 extension CalculatorViewController {
-    // expose private func storeDisplayToMatrix and recallMatrixButtonReleased to unit test
+    // expose private functions to unit test
     // from: https://stackoverflow.com/a/50136916/2526464
+    public func privateIButtonReleased(_ button: UIButton) {
+        iButtonReleased(button)
+    }
     public func privateStoreMatrixButtonReleased(_ button: UIButton) {
         storeMatrixButtonReleased(button)
     }
-    
     public func privateRecallMatrixButtonReleased(_ button: UIButton) {
         recallMatrixButtonReleased(button)
+    }
+    public func privateSstButtonReleased(_ button: UIButton) {
+        sstButtonPressed(button)
+    }
+    public func privateBstButtonReleased(_ button: UIButton) {
+        bstButtonReleased(button)
     }
 }
 #endif

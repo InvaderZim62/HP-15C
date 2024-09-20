@@ -441,6 +441,26 @@ class MatrixUnitTest: XCTestCase {
         XCTAssertEqual(cvc.displayStringNumber, 12, "matrix C(2,3) is not correct")
     }
     
+//    func test06MatrixErrors() {
+//        // create matrix A
+//        create2x3MatrixA()
+//        // RCL MATRIX A
+//        pressButton(title: "RCL")
+//        pressButton(title: "CHS")
+//        pressButton(title: "√x")
+//        // STO MATRIX B
+//        pressButton(title: "STO")
+//        pressButton(title: "CHS")
+//        pressButton(title: "ex")
+//        // RCL MATRIX B
+//        pressButton(title: "RCL")
+//        pressButton(title: "CHS")
+//        pressButton(title: "ey")
+//        // STO A
+//        pressButton(title: "STO")
+//        pressButton(title: "√x")
+//    }
+
     // MARK: - Utilities
     
     //      matrix A
@@ -677,14 +697,20 @@ class MatrixUnitTest: XCTestCase {
             } else if savePrefix == .RCL {
                 cvc.privateRecallMatrixButtonReleased(button)
             }
-            // delay before continuing the test case, since storing and recalling matrix elements uses a
-            // delay to give time to show the matrix dimensions before performing the actual store or recall
             let exp = expectation(description: "Wait for matrix dimensions to clear and matrix element to be stored or recalled")
-            _ = XCTWaiter.wait(for: [exp], timeout: 1.1 * Pause.matrix)  // wait for previous button release to finish
+            _ = XCTWaiter.wait(for: [exp], timeout: 1.1 * Pause.matrix)
         case "SST":
-            cvc.sstButtonPressed(button)
+            if savePrefix == .none {
+                cvc.privateSstButtonReleased(button)
+            } else if savePrefix == .g {
+                cvc.privateBstButtonReleased(button)
+            }
         case "COS":
-            cvc.cosButtonPressed(button)
+            if savePrefix == .f {
+                cvc.privateIButtonReleased(button)
+                let exp = expectation(description: "Wait for imaginary part of complex number to be replaced by real part")
+                _ = XCTWaiter.wait(for: [exp], timeout: 1.1 * Pause.running)
+            }
         default:
             break
         }

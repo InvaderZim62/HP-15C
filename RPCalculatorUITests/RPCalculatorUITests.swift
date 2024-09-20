@@ -93,9 +93,9 @@ final class RPCalculatorUITests: XCTestCase {
     // verify:
     //   (1 + 2i) + (3 + 4i) = 4 + 6i
     //   f-I is used to enter imaginary part of complex number
-    //   f-(i) shows imaginary part of complex number
     //   f-Re≷Im swaps real and imaginary parts of complex number in display
-    // note: complex number operations are included in ComplexUnitTests
+    // note: more complex number tests are included in CalculatorUnitTests and ComplexUnitTests;
+    //       (i) could not be tested using UI, since there isn't a way to trigger .touchUpInside
     func test03ComplexMode() {
         // enter 1 + 2i
         app.buttons["1"].tapElement()
