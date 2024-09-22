@@ -72,7 +72,6 @@
 //      performing an operations:             prepStackForOperation()
 //
 //  Not implemented:
-//  - statistics function
 //  - numerical integration
 //  - matrix inversion greater than 4x4
 //  - matrix LU decomposition
@@ -1549,8 +1548,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // xbar (mean)
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsMean()
-            updateDisplayString()  // show mean of x data points (stored in X register)
+            brain.statisticsMean()  // puts mean of x data points in X register and mean of y data points in Y register
+            updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             liftStack = false
@@ -1567,14 +1566,22 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             handleDigitEntry(buttonName: buttonName)
         case .f:
+            // yhat,r (y-estimate for input x-value, using line fit)
             prefix = nil
-            print("TBD: yhat,r")
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.statisticsLinearEstimation()  // puts y-estimate in X register and correlation coefficient in Y register
+            updateDisplayString()
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            liftStack = false
+            saveDefaults()
+            brain.printMemory()
         case .g:
             // s (standard deviation)
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsStandardDeviation()
-            updateDisplayString()  // show standard deviation of x data points (stored in X register)
+            brain.statisticsStandardDeviation()  // puts standard deviation of x data points in x register and deviation of y points in y register
+            updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             liftStack = false
@@ -1626,8 +1633,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             // Σ+
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsAddRemovePoint(isAdd: true)
-            updateDisplayString()  // show number of data points (stored in X register)
+            brain.statisticsAddRemovePoint(isAdd: true)  // puts number of statistics data points in X register
+            updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             liftStack = false
@@ -1637,8 +1644,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // L.R. (linear regression) - line fit
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsFitLine()
-            updateDisplayString()  // show y-intercept of data points (stored in X register)
+            brain.statisticsLineFit()  // puts y-intercept of line in X register and slope of line in Y register
+            updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             liftStack = false
@@ -1648,8 +1655,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // Σ-
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsAddRemovePoint(isAdd: false)
-            updateDisplayString()  // show number of data points (stored in X register)
+            brain.statisticsAddRemovePoint(isAdd: false)  // puts number of statistics data points in X register
+            updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             liftStack = false

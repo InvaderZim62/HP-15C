@@ -1050,8 +1050,8 @@ class Brain: Codable {
             if n == 0 {
                 error = .code(2)
             } else {
-                pushOperand(sumY / n)
-                pushOperand(sumX / n)
+                pushOperand(sumY / n)  // mean of Y data points
+                pushOperand(sumX / n)  // mean of X data points
             }
         } else {
             // matrix stored in one of the statistics register
@@ -1072,8 +1072,8 @@ class Brain: Codable {
                 let M = n * sumX2 - sumX * sumX
                 let N = n * sumY2 - sumY * sumY
                 let den = n * (n - 1)
-                pushOperand(sqrt(N / den))
-                pushOperand(sqrt(M / den))
+                pushOperand(sqrt(N / den))  // std dev of Y data points
+                pushOperand(sqrt(M / den))  // std dev of X data points
             }
         } else {
             // matrix stored in one of the statistics register
@@ -1081,13 +1081,35 @@ class Brain: Codable {
         }
     }
     
-    func statisticsFitLine() {
+    func statisticsLineFit() {
         if let n = storageRegisters["2"] as? Double,
            let sumX = storageRegisters["3"] as? Double,
            let sumX2 = storageRegisters["4"] as? Double,
            let sumY = storageRegisters["5"] as? Double,
+           let sumXY = storageRegisters["7"] as? Double
+        {
+            if n <= 1 {
+                error = .code(2)
+            } else {
+                let P = n * sumXY - sumX * sumY
+                let M = n * sumX2 - sumX * sumX
+                pushOperand(P / M)  // slope of line
+                pushOperand((M * sumY - P * sumX) / n / M)  // y-intercept of line
+            }
+        } else {
+            // matrix stored in one of the statistics register
+            error = .code(1)
+        }
+    }
+    
+    func statisticsLinearEstimation() {
+        if let x = xRegister as? Double,
+           let n = storageRegisters["2"] as? Double,
+           let sumX = storageRegisters["3"] as? Double,
+           let sumX2 = storageRegisters["4"] as? Double,
+           let sumY = storageRegisters["5"] as? Double,
            let sumY2 = storageRegisters["6"] as? Double,
-            let sumXY = storageRegisters["7"] as? Double
+           let sumXY = storageRegisters["7"] as? Double
         {
             if n <= 1 {
                 error = .code(2)
@@ -1095,9 +1117,8 @@ class Brain: Codable {
                 let P = n * sumXY - sumX * sumY
                 let M = n * sumX2 - sumX * sumX
                 let N = n * sumY2 - sumY * sumY
-                let den = n * (n - 1)
-                pushOperand(P / M)  // slope
-                pushOperand((M * sumY - P * sumX) / n / M)  // y-intercept
+                pushOperand(P / sqrt(M * N))  // correlation coefficient of line (-1 < c < 1, -1: perfect neg correlation, 1: perfect pos correlation)
+                pushOperand((M * sumY + P * (n * x - sumX)) / n / M)  // y-estimate of point on line
             }
         } else {
             // matrix stored in one of the statistics register
