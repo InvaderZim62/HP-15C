@@ -52,17 +52,29 @@
 //    - store an 8 in matrix A, row 3, col 4: 3 STO 0 (row), 4 STO 1 (col), 8 STO A
 //    - recall value in matrix A, row 3, col 4: 3 STO 0 (row), 4 STO 1 (col), RCL A
 //    - store all values in matrix A, while auto-sequencing columns and rows:
-//      - f MATRIX 1    start with 1 in storage register 0 and 1
-//      - f USER        enable auto-sequence
-//      - 1 STO A       store 1 in row 1, col 1, then increment value in register 1 (col)
-//      - 2 STO A       store 1 in row 1, col 2, then increment value in register 1 (col)
-//      - ...           when col = last col, go to next row; return to start after last element
+//      - f MATRIX 1      start with 1 in storage register 0 and 1
+//      - f USER          enable auto-sequence
+//      - 1 STO A         store 1 in row 1, col 1, then increment value in register 1 (col)
+//      - 2 STO A         store 1 in row 1, col 2, then increment value in register 1 (col)
+//      - ...             when col = last col, go to next row; return to start after last element
 //    - recall all values in matrix A, while auto-sequencing columns and rows:
-//      - f MATRIX 1    start with 1 in storage register 0 and 1
-//      - f USER        enable auto-sequence
-//      - RCL A         recall row 1, col 1, then increment value in register 1 (col)
-//      - RCL A         recall row 1, col 2, then increment value in register 1 (col)
-//      - ...           when col = last col, go to next row; return to start after last element
+//      - f MATRIX 1      start with 1 in storage register 0 and 1
+//      - f USER          enable auto-sequence
+//      - RCL A           recall row 1, col 1, then increment value in register 1 (col)
+//      - RCL A           recall row 1, col 2, then increment value in register 1 (col)
+//      - ...             when col = last col, go to next row; return to start after last element
+//  - statistics
+//    - enter/remove data pints
+//      - y1 ENTER x1 Σ+  add data point (x1, y1) - display shows number of data point entered
+//      - y2 ENTER x2 Σ+  add data point (x2, y2)
+//      - y2 ENTER x3 Σ+  add data point (x3, y3)
+//      - ...
+//      - yn ENTER xn Σ-  remove data point (xn, yn)
+//    - compute statistics of entered data points
+//      - g xbar          puts mean of x values in X register and mean of y values in Y register
+//      - g s             puts standard deviation of x values in X register and deviation of y values in Y register
+//      - f L.R.          puts y-intercept of best-fit line in X register and slope of best-fit line in Y register
+//      - x f yhat,r      puts y-value of line corresponding to input x in X register and correlation coefficient of line in Y register
 //
 //  Useful memory functions:
 //    - overwrite xRegister with display:     if userIsEnteringDigits { endDisplayEntry() }
@@ -991,7 +1003,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 //----------------------
                 brain.moveRealXToImagX()
                 //----------------------
-//                displayString = String(brain.xRegister!)  // show real part  // pws: not necessary?
                 updateDisplayString()
             } else { 
                 setError(1)
@@ -1548,7 +1559,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // xbar (mean)
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsMean()  // puts mean of x data points in X register and mean of y data points in Y register
+            brain.statisticsMean()  // puts mean of x values in X register and mean of y values in Y register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1566,10 +1577,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             handleDigitEntry(buttonName: buttonName)
         case .f:
-            // yhat,r (y-estimate for input x-value, using line fit)
+            // yhat,r (y-value for input x-value, using line fit)
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsLinearEstimation()  // puts y-estimate in X register and correlation coefficient in Y register
+            brain.statisticsLinearEstimation()  // puts y-value in X register and correlation coefficient in Y register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1580,7 +1591,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // s (standard deviation)
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsStandardDeviation()  // puts standard deviation of x data points in x register and deviation of y points in y register
+            brain.statisticsStandardDeviation()  // puts standard deviation of x values in X register and deviation of y values in Y register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
