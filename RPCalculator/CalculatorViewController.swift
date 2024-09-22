@@ -1246,7 +1246,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // CLEAR REG key pressed (clear storage registers, not stack)
             prefix = nil
             if userIsEnteringDigits { brain.pushOperand(displayStringNumber) }  // push display onto stack
-            brain.clearStorageRegisters()
+            brain.clearAllStorageRegisters()
         case .g:
             prefix = nil
             print("TBD: RND")
@@ -1608,7 +1608,15 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
 
         switch prefix {
         case .none:
-            print("TBD: Σ+")
+            // Σ+
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.statisticsAddPoint()
+            updateDisplayString()  // show number of data points (stored in X register)
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            liftStack = false
+            brain.printMemory()
+            saveDefaults()
         case .f:
             prefix = nil
             print("TBD: L.R.")
