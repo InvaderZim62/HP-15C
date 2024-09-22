@@ -1621,8 +1621,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             print("TBD: L.R.")
         case .g:
+            // Σ-
             prefix = nil
-            print("TBD: Σ-")
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.statisticsRemovePoint()
+            updateDisplayString()  // show number of data points (stored in X register)
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            liftStack = false
+            brain.printMemory()
+            saveDefaults()
         default:
             break  // TBD
         }
