@@ -1187,7 +1187,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // Σ pressed
             // clear statistics storage registers, memory stack, and display
             prefix = nil
-            // TBD: clear statistics storage registers
+            brain.clearStatisticsRegisters()
             brain.clearRealStack()
             brain.clearImaginaryStack()
             clearDisplayAndXRegister()

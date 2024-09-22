@@ -275,6 +275,16 @@ class Brain: Codable {
         printMemory()
     }
     
+    func clearStatisticsRegisters() {
+        storageRegisters["2"] = 0
+        storageRegisters["3"] = 0
+        storageRegisters["4"] = 0
+        storageRegisters["5"] = 0
+        storageRegisters["6"] = 0
+        storageRegisters["7"] = 0
+        printMemory()
+    }
+
     func clearRealStack() {
         realStack = [Double](repeating: 0.0, count: Constants.stackSize)
     }
