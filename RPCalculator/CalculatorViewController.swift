@@ -1610,7 +1610,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             // Σ+
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsAddPoint()
+            brain.statisticsAddRemovePoint(isAdd: true)
             updateDisplayString()  // show number of data points (stored in X register)
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1624,7 +1624,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // Σ-
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsRemovePoint()
+            brain.statisticsAddRemovePoint(isAdd: false)
             updateDisplayString()  // show number of data points (stored in X register)
             userIsEnteringDigits = false
             userIsEnteringExponent = false

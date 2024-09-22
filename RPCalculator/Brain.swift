@@ -1009,7 +1009,7 @@ class Brain: Codable {
     
     // MARK: - Statistics
     
-    func statisticsAddPoint() {
+    func statisticsAddRemovePoint(isAdd: Bool) {
         if let x = xRegister as? Double,
            let y = yRegister as? Double,
            let register2 = storageRegisters["2"] as? Double,
@@ -1019,36 +1019,21 @@ class Brain: Codable {
            let register6 = storageRegisters["6"] as? Double,
            let register7 = storageRegisters["7"] as? Double
         {
-            storageRegisters["2"] = register2 + 1
-            storageRegisters["3"] = register3 + x
-            storageRegisters["4"] = register4 + x * x
-            storageRegisters["5"] = register5 + y
-            storageRegisters["6"] = register6 + y * y
-            storageRegisters["7"] = register7 + x * y
-            lastXRegister = x
-            xRegister = storageRegisters["2"]  // leave number of data points in X register to be displayed
-        } else {
-            // matrix stored in X or Y register, or one of the statistics registers (bad)
-            error = .code(1)
-        }
-    }
-    
-    func statisticsRemovePoint() {
-        if let x = xRegister as? Double,
-           let y = yRegister as? Double,
-           let register2 = storageRegisters["2"] as? Double,
-           let register3 = storageRegisters["3"] as? Double,
-           let register4 = storageRegisters["4"] as? Double,
-           let register5 = storageRegisters["5"] as? Double,
-           let register6 = storageRegisters["6"] as? Double,
-           let register7 = storageRegisters["7"] as? Double
-        {
-            storageRegisters["2"] = register2 - 1
-            storageRegisters["3"] = register3 - x
-            storageRegisters["4"] = register4 - x * x
-            storageRegisters["5"] = register5 - y
-            storageRegisters["6"] = register6 - y * y
-            storageRegisters["7"] = register7 - x * y
+            if isAdd {
+                storageRegisters["2"] = register2 + 1
+                storageRegisters["3"] = register3 + x
+                storageRegisters["4"] = register4 + x * x
+                storageRegisters["5"] = register5 + y
+                storageRegisters["6"] = register6 + y * y
+                storageRegisters["7"] = register7 + x * y
+            } else {
+                storageRegisters["2"] = register2 - 1
+                storageRegisters["3"] = register3 - x
+                storageRegisters["4"] = register4 - x * x
+                storageRegisters["5"] = register5 - y
+                storageRegisters["6"] = register6 - y * y
+                storageRegisters["7"] = register7 - x * y
+            }
             lastXRegister = x
             xRegister = storageRegisters["2"]  // leave number of data points in X register to be displayed
         } else {
