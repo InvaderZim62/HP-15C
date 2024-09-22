@@ -1550,7 +1550,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
             brain.statisticsMean()
-            updateDisplayString()  // show number of data points (stored in X register)
+            updateDisplayString()  // show mean of x data points (stored in X register)
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             liftStack = false
@@ -1570,8 +1570,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             print("TBD: yhat,r")
         case .g:
+            // s (standard deviation)
             prefix = nil
-            print("TBD: S")
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.statisticsStandardDeviation()
+            updateDisplayString()  // show standard deviation of x data points (stored in X register)
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            liftStack = false
+            saveDefaults()
+            brain.printMemory()
         case .STO:
             prefix = .STO_DOT
         case .RCL:
@@ -1626,8 +1634,16 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             saveDefaults()
             brain.printMemory()
         case .f:
+            // L.R. (linear regression) - line fit
             prefix = nil
-            print("TBD: L.R.")
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.statisticsFitLine()
+            updateDisplayString()  // show y-intercept of data points (stored in X register)
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            liftStack = false
+            saveDefaults()
+            brain.printMemory()
         case .g:
             // Σ-
             prefix = nil
@@ -1640,7 +1656,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             saveDefaults()
             brain.printMemory()
         default:
-            break  // TBD
+            break
         }
     }
     

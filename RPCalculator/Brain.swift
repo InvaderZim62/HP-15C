@@ -1012,7 +1012,7 @@ class Brain: Codable {
     func statisticsAddRemovePoint(isAdd: Bool) {
         if let x = xRegister as? Double,
            let y = yRegister as? Double,
-           let numPoints = storageRegisters["2"] as? Double,
+           let n = storageRegisters["2"] as? Double,
            let sumX = storageRegisters["3"] as? Double,
            let sumX2 = storageRegisters["4"] as? Double,
            let sumY = storageRegisters["5"] as? Double,
@@ -1020,14 +1020,14 @@ class Brain: Codable {
            let sumXY = storageRegisters["7"] as? Double
         {
             if isAdd {
-                storageRegisters["2"] = numPoints + 1
+                storageRegisters["2"] = n + 1
                 storageRegisters["3"] = sumX + x
                 storageRegisters["4"] = sumX2 + x * x
                 storageRegisters["5"] = sumY + y
                 storageRegisters["6"] = sumY2 + y * y
                 storageRegisters["7"] = sumXY + x * y
             } else {
-                storageRegisters["2"] = numPoints - 1
+                storageRegisters["2"] = n - 1
                 storageRegisters["3"] = sumX - x
                 storageRegisters["4"] = sumX2 - x * x
                 storageRegisters["5"] = sumY - y
@@ -1037,24 +1037,70 @@ class Brain: Codable {
             lastXRegister = x
             xRegister = storageRegisters["2"]  // leave number of data points in X register to be displayed
         } else {
-            // matrix stored in X or Y register, or one of the statistics registers (bad)
+            // matrix stored in X or Y register, or one of the statistics registers
             error = .code(1)
         }
     }
     
     func statisticsMean() {
-        if let numPoints = storageRegisters["2"] as? Double,
+        if let n = storageRegisters["2"] as? Double,
            let sumX = storageRegisters["3"] as? Double,
            let sumY = storageRegisters["5"] as? Double
         {
-            if numPoints == 0 {
+            if n == 0 {
                 error = .code(2)
             } else {
-                pushOperand(sumY / numPoints)
-                pushOperand(sumX / numPoints)
+                pushOperand(sumY / n)
+                pushOperand(sumX / n)
             }
         } else {
-            // matrix stored in one of the statistics register (bad)
+            // matrix stored in one of the statistics register
+            error = .code(1)
+        }
+    }
+    
+    func statisticsStandardDeviation() {
+        if let n = storageRegisters["2"] as? Double,
+           let sumX = storageRegisters["3"] as? Double,
+           let sumX2 = storageRegisters["4"] as? Double,
+           let sumY = storageRegisters["5"] as? Double,
+           let sumY2 = storageRegisters["6"] as? Double
+        {
+            if n <= 1 {
+                error = .code(2)
+            } else {
+                let M = n * sumX2 - sumX * sumX
+                let N = n * sumY2 - sumY * sumY
+                let den = n * (n - 1)
+                pushOperand(sqrt(N / den))
+                pushOperand(sqrt(M / den))
+            }
+        } else {
+            // matrix stored in one of the statistics register
+            error = .code(1)
+        }
+    }
+    
+    func statisticsFitLine() {
+        if let n = storageRegisters["2"] as? Double,
+           let sumX = storageRegisters["3"] as? Double,
+           let sumX2 = storageRegisters["4"] as? Double,
+           let sumY = storageRegisters["5"] as? Double,
+           let sumY2 = storageRegisters["6"] as? Double,
+            let sumXY = storageRegisters["7"] as? Double
+        {
+            if n <= 1 {
+                error = .code(2)
+            } else {
+                let P = n * sumXY - sumX * sumY
+                let M = n * sumX2 - sumX * sumX
+                let N = n * sumY2 - sumY * sumY
+                let den = n * (n - 1)
+                pushOperand(P / M)  // slope
+                pushOperand((M * sumY - P * sumX) / n / M)  // y-intercept
+            }
+        } else {
+            // matrix stored in one of the statistics register
             error = .code(1)
         }
     }
