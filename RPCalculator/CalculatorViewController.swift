@@ -1545,9 +1545,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // x!
             self.performOperationFor(buttonName)
         }
-        let gAction = {
-            self.prefix = nil
-            print("TBD: xbar")
+        let gAction = { [unowned self] in
+            // xbar (mean)
+            prefix = nil
+            if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
+            brain.statisticsMean()
+            updateDisplayString()  // show number of data points (stored in X register)
+            userIsEnteringDigits = false
+            userIsEnteringExponent = false
+            liftStack = false
+            saveDefaults()
+            brain.printMemory()
         }
         handleNumberedButton(buttonName, fAction: fAction, gAction: gAction)
     }
@@ -1615,8 +1623,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             liftStack = false
-            brain.printMemory()
             saveDefaults()
+            brain.printMemory()
         case .f:
             prefix = nil
             print("TBD: L.R.")
@@ -1629,8 +1637,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userIsEnteringDigits = false
             userIsEnteringExponent = false
             liftStack = false
-            brain.printMemory()
             saveDefaults()
+            brain.printMemory()
         default:
             break  // TBD
         }

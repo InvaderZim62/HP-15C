@@ -1012,32 +1012,49 @@ class Brain: Codable {
     func statisticsAddRemovePoint(isAdd: Bool) {
         if let x = xRegister as? Double,
            let y = yRegister as? Double,
-           let register2 = storageRegisters["2"] as? Double,
-           let register3 = storageRegisters["3"] as? Double,
-           let register4 = storageRegisters["4"] as? Double,
-           let register5 = storageRegisters["5"] as? Double,
-           let register6 = storageRegisters["6"] as? Double,
-           let register7 = storageRegisters["7"] as? Double
+           let numPoints = storageRegisters["2"] as? Double,
+           let sumX = storageRegisters["3"] as? Double,
+           let sumX2 = storageRegisters["4"] as? Double,
+           let sumY = storageRegisters["5"] as? Double,
+           let sumY2 = storageRegisters["6"] as? Double,
+           let sumXY = storageRegisters["7"] as? Double
         {
             if isAdd {
-                storageRegisters["2"] = register2 + 1
-                storageRegisters["3"] = register3 + x
-                storageRegisters["4"] = register4 + x * x
-                storageRegisters["5"] = register5 + y
-                storageRegisters["6"] = register6 + y * y
-                storageRegisters["7"] = register7 + x * y
+                storageRegisters["2"] = numPoints + 1
+                storageRegisters["3"] = sumX + x
+                storageRegisters["4"] = sumX2 + x * x
+                storageRegisters["5"] = sumY + y
+                storageRegisters["6"] = sumY2 + y * y
+                storageRegisters["7"] = sumXY + x * y
             } else {
-                storageRegisters["2"] = register2 - 1
-                storageRegisters["3"] = register3 - x
-                storageRegisters["4"] = register4 - x * x
-                storageRegisters["5"] = register5 - y
-                storageRegisters["6"] = register6 - y * y
-                storageRegisters["7"] = register7 - x * y
+                storageRegisters["2"] = numPoints - 1
+                storageRegisters["3"] = sumX - x
+                storageRegisters["4"] = sumX2 - x * x
+                storageRegisters["5"] = sumY - y
+                storageRegisters["6"] = sumY2 - y * y
+                storageRegisters["7"] = sumXY - x * y
             }
             lastXRegister = x
             xRegister = storageRegisters["2"]  // leave number of data points in X register to be displayed
         } else {
             // matrix stored in X or Y register, or one of the statistics registers (bad)
+            error = .code(1)
+        }
+    }
+    
+    func statisticsMean() {
+        if let numPoints = storageRegisters["2"] as? Double,
+           let sumX = storageRegisters["3"] as? Double,
+           let sumY = storageRegisters["5"] as? Double
+        {
+            if numPoints == 0 {
+                error = .code(2)
+            } else {
+                pushOperand(sumY / numPoints)
+                pushOperand(sumX / numPoints)
+            }
+        } else {
+            // matrix stored in one of the statistics register (bad)
             error = .code(1)
         }
     }
