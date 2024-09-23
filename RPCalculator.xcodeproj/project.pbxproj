@@ -25,6 +25,7 @@
 		4AAA32CE2C8A83F6001640EA /* MatrixUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAA32CD2C8A83F6001640EA /* MatrixUnitTests.swift */; };
 		4ACFC2772CA1E66C008F3D7D /* Integral.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACFC2762CA1E66C008F3D7D /* Integral.swift */; };
 		4ACFC2792CA1E8F5008F3D7D /* Statistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACFC2782CA1E8F5008F3D7D /* Statistics.swift */; };
+		4ACFC27B2CA1F264008F3D7D /* StatisticsUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACFC27A2CA1F264008F3D7D /* StatisticsUnitTests.swift */; };
 		4ADE1D7F2C504D7F00D47C9D /* RPCalculatorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D7E2C504D7F00D47C9D /* RPCalculatorUITests.swift */; };
 		4ADE1D812C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D802C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift */; };
 		4ADE1D9C2C51CBD500D47C9D /* ComplexUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE1D9B2C51CBD500D47C9D /* ComplexUnitTests.swift */; };
@@ -75,6 +76,7 @@
 		4AAA32CD2C8A83F6001640EA /* MatrixUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatrixUnitTests.swift; sourceTree = "<group>"; };
 		4ACFC2762CA1E66C008F3D7D /* Integral.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Integral.swift; sourceTree = "<group>"; };
 		4ACFC2782CA1E8F5008F3D7D /* Statistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Statistics.swift; sourceTree = "<group>"; };
+		4ACFC27A2CA1F264008F3D7D /* StatisticsUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsUnitTests.swift; sourceTree = "<group>"; };
 		4ADE1D7C2C504D7F00D47C9D /* RPCalculatorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RPCalculatorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ADE1D7E2C504D7F00D47C9D /* RPCalculatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPCalculatorUITests.swift; sourceTree = "<group>"; };
 		4ADE1D802C504D7F00D47C9D /* RPCalculatorUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPCalculatorUITestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -187,6 +189,7 @@
 				4ADE1DA52C5306A100D47C9D /* BrainUnitTests.swift */,
 				4ADE1D9B2C51CBD500D47C9D /* ComplexUnitTests.swift */,
 				4AAA32CD2C8A83F6001640EA /* MatrixUnitTests.swift */,
+				4ACFC27A2CA1F264008F3D7D /* StatisticsUnitTests.swift */,
 			);
 			path = RPCalculatorTests;
 			sourceTree = "<group>";
@@ -367,6 +370,7 @@
 			files = (
 				4AF947E42C5C2FF0007EF5F8 /* StackUnitTests.swift in Sources */,
 				4AAA32CE2C8A83F6001640EA /* MatrixUnitTests.swift in Sources */,
+				4ACFC27B2CA1F264008F3D7D /* StatisticsUnitTests.swift in Sources */,
 				4ADE1DA62C5306A100D47C9D /* BrainUnitTests.swift in Sources */,
 				4AF947E82C5F10FC007EF5F8 /* ProgramUnitTests.swift in Sources */,
 				4ADE1DA92C53644E00D47C9D /* CalculatorUnitTests.swift in Sources */,
