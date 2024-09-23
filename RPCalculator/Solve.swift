@@ -5,7 +5,7 @@
 //  Created by Phil Stern on 7/2/24.
 //
 
-import Foundation
+import UIKit
 
 protocol SolveDelegate: AnyObject {
     func setError(_ number: Int)

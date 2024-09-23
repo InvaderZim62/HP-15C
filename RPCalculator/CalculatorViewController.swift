@@ -107,7 +107,7 @@
 //    - RCL f FIX 5 => FIX 5 (ie. forget RCL after entering f)
 //    maybe create prefix = RCL_f; if next button isn't (i), I, MATRIX, or DIM, drop the pre-f part;
 //    also have var prefix's didSet set fLabel.alpha = 1, if prefix.last = "f" (small letter f)
-//  - show matrix row,col when storing and recalling matrix elements
+//
 
 import UIKit
 import AVFoundation  // needed for AVAudioPlayer
@@ -178,11 +178,13 @@ enum TrigUnits: String, Codable {
     case GRAD = "G"  // 100 gradians = 90 degrees
 }
 
-class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate {
+class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate, StatisticsDelegate, IntegralDelegate {
     
     var brain = Brain()
     var program = Program()
     var solve = Solve()
+    var statistics = Statistics()
+    var integral = Integral()
     var clickSoundPlayer: AVAudioPlayer?
     var displayString = "" {
         didSet {
@@ -396,9 +398,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         getDefaults()  // call in viewWillAppear, so displayString can set displayView.displayString after bounds are set
         program.delegate = self  // must be called after getting defaults (overwrites program)
         program.brain = brain
+        statistics.delegate = self
+        statistics.brain = brain
         solve.delegate = self
         solve.program = program
         solve.brain = brain
+        integral.delegate = self
+        integral.program = program
         prepStackForOperation()  // HP-15C completes number entry, if power is cycled
         brain.printMemory()
         logoCircleView.layer.masksToBounds = true
@@ -1559,7 +1565,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // xbar (mean)
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsMean()  // puts mean of x values in X register and mean of y values in Y register
+            statistics.mean()  // puts mean of x values in X register and mean of y values in Y register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1580,7 +1586,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // yhat,r (y-value for input x-value, using line fit)
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsLinearEstimation()  // puts y-value in X register and correlation coefficient in Y register
+            statistics.linearEstimation()  // puts y-value in X register and correlation coefficient in Y register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1591,7 +1597,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // s (standard deviation)
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsStandardDeviation()  // puts standard deviation of x values in X register and deviation of y values in Y register
+            statistics.standardDeviation()  // puts standard deviation of x values in X register and deviation of y values in Y register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1644,7 +1650,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             // Σ+
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsAddRemovePoint(isAdd: true)  // puts number of statistics data points in X register
+            statistics.addRemovePoint(isAdd: true)  // puts number of statistics data points in X register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1655,7 +1661,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // L.R. (linear regression) - line fit
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsLineFit()  // puts y-intercept of line in X register and slope of line in Y register
+            statistics.lineFit()  // puts y-intercept of line in X register and slope of line in Y register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1666,7 +1672,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             // Σ-
             prefix = nil
             if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
-            brain.statisticsAddRemovePoint(isAdd: false)  // puts number of statistics data points in X register
+            statistics.addRemovePoint(isAdd: false)  // puts number of statistics data points in X register
             updateDisplayString()
             userIsEnteringDigits = false
             userIsEnteringExponent = false
@@ -1773,6 +1779,17 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         }
     }
     
+    private func integrateFrom(label: String) {
+        isProgramRunning = true
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in  // delay to show "running"
+            solve.findRootOfEquationAt(label: label) {
+                DispatchQueue.main.async {
+                    self.isProgramRunning = false
+                }
+            }
+        }
+    }
+
     private func setDisplayFormatTo(_ format: DisplayFormat) {
         if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
         displayFormat = format
