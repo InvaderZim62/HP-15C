@@ -62,21 +62,22 @@ struct Complex: Equatable, Stackable {
     
     // factorial of decimal numbers (also integers) is the gamma function:
     // d! = gamma(d + 1) = integral(t^d * e^-t * dt) as t goes from 0 -> inf (ie. area under plot of t^d * e^-t)
+    // since gamma goes to zero as t goes to inf (ie. e^t shrinks faster the t^d grows), quit when gamma falls below some epsilon
     // note: factorials < ~0.4 start to show larger differences with HP-15C
     var factorial: Complex {
         let dt = max(min(0.0001 * self.real, 0.01), 0.000001)  // smaller dt needed for smaller decimal factorials
-        var sum = 0.0
+        var integral = 0.0
         var i = 0
         var gamma = 0.0
         repeat {
             let t = Double(i) * dt
             gamma = pow(t, real) * exp(-t)
-            sum += gamma * dt  // Euler integration for area under curve
+            integral += gamma * dt  // Euler integration for area under curve
             i += 1
             if i > 5000000 { break }
         } while i < 1000 || gamma > 1E-8  // at least 1000 iterations needed, since gamma starts small and grows, before shrinking again
-        print("\n\(self.real) factorial = \(sum) (\(i) iterations), dt: \(dt)\n")
-        return Complex(real: sum, imag: imag)
+        print("\n\(self.real) factorial = \(integral) (\(i) iterations), dt: \(dt)\n")
+        return Complex(real: integral, imag: imag)
     }
 
     //----------------------------

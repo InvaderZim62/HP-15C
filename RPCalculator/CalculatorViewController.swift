@@ -84,7 +84,6 @@
 //      performing an operations:             prepStackForOperation()
 //
 //  Not implemented:
-//  - numerical integration
 //  - matrix inversion greater than 4x4
 //  - matrix LU decomposition
 //  - complex number matrices
@@ -134,6 +133,8 @@ enum Prefix: String {
     case XSWAP_DOT  // ex. XSWAP . 4 (swap X register with register .4)
     case SOLVE  // ex. f SOLVE A (solve for roots of equation starting at label A)
     case SOLVE_DOT  // ex. f SOLVE . 2 (solve for roots of equation starting at label .2)
+    case INTEGRATE  // ex. f ∫xy A (integrate equation starting at label A)
+    case INTEGRATE_DOT  // ex. f ∫xy . 1 (integrate equation starting at label .1)
     case DSE  // ex. DSE 6 (see p.109 User's Handbook - decrement register 6 and skip next line, if <= test value)
     case DSE_DOT  // ex. DSE . 6 (decrement register .6 and skip next line, if <= test value)
     case ISG  // ex. DSE 7 (see p.109 User's Handbook - increment register 7 and skip next line, if > test value)
@@ -405,6 +406,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         solve.brain = brain
         integral.delegate = self
         integral.program = program
+        integral.brain = brain
         prepStackForOperation()  // HP-15C completes number entry, if power is cycled
         brain.printMemory()
         logoCircleView.layer.masksToBounds = true
@@ -706,6 +708,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             break
         case .SOLVE:
             solveFrom(label: buttonName)
+        case .INTEGRATE:
+            integrateFrom(label: buttonName)
         case .GTO:
             if !program.gotoLabel(buttonName) {
                 setError(4)
@@ -1136,8 +1140,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
 
         switch prefix {
         case .f:
-            prefix = nil
-            print("TBD: integral")
+            // ∫xy pressed
+            prefix = .INTEGRATE
         case .g:
             // "x=0" doesn't do anything in run mode (handled by program)
             prefix = nil
@@ -1782,7 +1786,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     private func integrateFrom(label: String) {
         isProgramRunning = true
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in  // delay to show "running"
-            solve.findRootOfEquationAt(label: label) {
+            integral.integrateAt(label: label) {
                 DispatchQueue.main.async {
                     self.isProgramRunning = false
                 }
@@ -1835,6 +1839,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .SOLVE_DOT:
             prefix = nil
             solveFrom(label: "." + buttonName)
+        case .INTEGRATE:
+            prefix = nil
+            integrateFrom(label: buttonName)
+        case .INTEGRATE_DOT:
+            prefix = nil
+            integrateFrom(label: "." + buttonName)
         case .SF:
             prefix = nil
             let number = Int(buttonName)!
