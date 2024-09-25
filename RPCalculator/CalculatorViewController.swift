@@ -1390,10 +1390,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .none:
             // Enter pressed
             if liftStack {
-                //------------------------------------
-                brain.pushOperand(displayStringNumber)
-                brain.pushOperand(displayStringNumber)
-                //------------------------------------
+                //---------------------------------------------------------------
+                brain.pushOperand(displayStringValue)
+                if userIsEnteringDigits { brain.pushOperand(displayStringValue) }  // ex. don't push twice after entering pi, since already on stack
+                //---------------------------------------------------------------
             } else {
                 endDisplayEntry()  // overwrite xRegister
                 brain.pushXRegister()
