@@ -41,30 +41,43 @@ class Solve {
         // assume user entered beta estimate and typed alpha estimate into display, before pressing SOLVE
         program.isAnyButtonPressed = false
         if program.gotoLabel(label) {
-            print(String(format: "\nSolving error (plot resolution: %.2f, plot limits: +/-%.1f)", 1 / errorScale, abs(Double(plotMax) / errorScale)))
-            brain.isSolving = true  // suppress printMemory
-            alpha = delegate!.displayStringNumber
-            alphaPast = alpha
-            beta = brain.xRegister! as! Double
-            // fill all registers with alpha, run program, store results f(alpha)
-            brain.fillRegistersWith(alpha)
-            program.runFrom(label: label) { [unowned self] in  // run first time to get initial falpha; results left in display
-                falpha = delegate!.displayStringNumber
-                initializeBrackets()
-                solveLoopCount = 0
-                // run solve loop recursively, until root found
-                runSolveLoop(label: label) { [unowned self] in
-                    // solve is done - store A, B, and G in X, Y, and Z registers and stop
-                    brain.pushOperand(falpha)
-                    brain.pushOperand(beta)
-                    brain.pushOperand(alpha)
-                    brain.isSolving = false
-                    brain.printMemory()
-                    completion()
+            if let xRegister = brain.xRegister as? Double,
+               let yRegister = brain.yRegister as? Double {
+                print(String(format: "\nSolving error (plot resolution: %.2f, plot limits: +/-%.1f)", 1 / errorScale, abs(Double(plotMax) / errorScale)))
+                brain.isSolving = true  // suppress printMemory
+                alpha = xRegister
+                beta = yRegister
+                alphaPast = alpha
+                // fill all registers with alpha, run program, store results f(alpha)
+                brain.fillRegistersWith(alpha)
+                program.runFrom(label: label) { [unowned self] in  // run first time to get initial falpha; results left in display
+                    falpha = delegate!.displayStringNumber
+                    initializeBrackets()
+                    solveLoopCount = 0
+                    // run solve loop recursively, until root found
+                    runSolveLoop(label: label) { [unowned self] in
+                        // solve is done - store A, B, and G in X, Y, and Z registers and stop
+                        brain.pushOperand(falpha)
+                        brain.pushOperand(beta)
+                        brain.pushOperand(alpha)
+                        brain.isSolving = false
+                        brain.printMemory()
+                        completion()
+                    }
                 }
+            } else {
+                // alpha or beta is a matrix
+                DispatchQueue.main.async {
+                    self.delegate?.setError(1)  // main queue, since setError changes prefix (changes falpha.alpha)
+                }
+                completion()
             }
         } else {
-            delegate?.setError(4)  // label not found
+            // label not found
+            DispatchQueue.main.async {
+                self.delegate?.setError(4)  // main queue, since setError changes prefix (changes falpha.alpha)
+            }
+            completion()
         }
     }
     

@@ -9,6 +9,7 @@ import UIKit
 
 protocol IntegralDelegate: AnyObject {
     func setError(_ number: Int)
+    var displayStringNumber: Double { get }
 }
 
 class Integral {
@@ -18,22 +19,26 @@ class Integral {
     var brain: Brain!
     var program: Program!
     
-    // code is similar to Solve.findRootOfEquationAt, except Solve quits when falpha is small
     // Owner's Handbook p.195
     //   HP-15C: 2.404005
-    //   incr.    my app
-    //   100000  2.403971 (very slow)
-    //   10000   2.404254
-    //   1000    2.407081
-    //   100     2.435355
+    //   incrmt   Euler    Tustin
+    //   ------  --------  --------
+    //   100000  2.403971           (very slow)
+    //   10000   2.404254  2.404254
+    //   1000    2.407081  2.405510
+    //   100     2.435355  2.419647
+    //
     // Owner's Handbook p.197
     //   HP-15C: 1.382460
-    //     dx     my app
-    //   10000   1.382460
-    //   1000    1.382460
-    //   100     1.382460
+    //   incrmt   Euler    Tustin
+    //   ------  --------  --------
+    //   10000   1.382460  1.382617
+    //   1000    1.382460  1.384030
+    //   100     1.382460  1.398168
     
-    // integration only accurate to around three decimal places
+    // this integration is only accurate to around three decimal places
+    // HP-15C integration accuracy (and time to solve) depends on the number
+    // of decimal places selected for the display; this function does not
     func integrateAt(label: String, completion: @escaping () -> Void) {
         program.isAnyButtonPressed = false
         if program.gotoLabel(label) {
@@ -45,8 +50,9 @@ class Integral {
                 let increments = 10000
                 let dx = (upperLimit - lowerLimit) / Double(increments)
                 var integral = 0.0
-                for i in 0...increments {
-                    let x = lowerLimit + Double(i) * dx
+//                for i in 0...increments {
+                for i in 1...increments-1 {  // handbook p.199 says "algorithm normally does not evaluate functions at either limit of integration"
+                    let x = lowerLimit + Double(i) * dx  // = upperLimit, for i = increments
                     brain.fillRegistersWith(x)
                     program.runFrom(label: label) { [unowned self] in
                         let y = brain.xRegister as! Double
@@ -55,9 +61,19 @@ class Integral {
                 }
                 brain.xRegister = integral
                 completion()
+            } else {
+                // integration limits are matrices
+                DispatchQueue.main.async {
+                    self.delegate?.setError(1)  // main queue, since setError changes prefix (changes falpha.alpha)
+                }
+                completion()
             }
         } else {
-            delegate?.setError(4)  // label not found
+            // label not found
+            DispatchQueue.main.async {
+                self.delegate?.setError(4)  // main queue, since setError changes prefix (changes falpha.alpha)
+            }
+            completion()
         }
     }
 

@@ -5,6 +5,7 @@
 //  Created by Phil Stern on 2/4/21.
 //
 //  HP-15C Owner's Handbook: https://www.hp.com/ctg/Manual/c03030589.pdf
+//  Interactive version: https://archived.hpcalc.org/greendyk/hp15c/index.html
 //
 //  click.wav obtained from: https://freesound.org/people/kwahmah_02/sounds/256116
 //  file is in the public domain (CC0 1.0 Universal)
@@ -576,7 +577,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     // overwrite xRegister with display
     private func endDisplayEntry() {
-        brain.xRegister = displayStringNumber
+        brain.xRegister = displayStringNumber  // pws: several uses of this can be with a matrix in the display (ex. f CLEAR PRGM) - fix it
         userIsEnteringDigits = false
         userIsEnteringExponent = false
         brain.printMemory()
@@ -1773,7 +1774,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     private func solveFrom(label: String) {
-        isProgramRunning = true
+        isProgramRunning = true  // show running
+        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in  // delay to show "running"
             solve.findRootOfEquationAt(label: label) {
                 DispatchQueue.main.async {
@@ -1784,7 +1786,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     }
     
     private func integrateFrom(label: String) {
-        isProgramRunning = true
+        isProgramRunning = true  // show running
+        if userIsEnteringDigits { endDisplayEntry() }  // move display to X register
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Pause.running) { [unowned self] in  // delay to show "running"
             integral.integrateAt(label: label) {
                 DispatchQueue.main.async {
