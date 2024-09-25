@@ -2041,8 +2041,10 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.pushOperand(displayStringNumber)
                 updateDisplayString()
                 brain.printMemory()
-            } else {
-                setError(1)  // register contains matrix
+            } else if let matrix = value as? Matrix {
+                prepStackForRecalledValue(matrix)
+                brain.printMemory()
+                print(matrix)
             }
         } else {
             setError(3)  // invalid registerName
