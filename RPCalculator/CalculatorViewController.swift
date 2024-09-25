@@ -714,6 +714,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
         case .GTO:
             if !program.gotoLabel(buttonName) {
                 setError(4)
+                print("label \(buttonName) not found")
             }
         case .DIM:
             // DIM A-E - create matrix with dimensions in X and Y registers (Y rows, X cols)
@@ -725,6 +726,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 print(matrix)
             } else {
                 setError(1)  // can't use matrix as a dimension
+                print("can't use matrix as a dimension")
             }
         case .RCL_DIM:
             // RCL DIM A-E - store number of rows in Y register and columns in X register, for matrix A-E
@@ -980,6 +982,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             } else {
                 prepStackForOperation()
                 setError(3)
+                print("can't show imaginary part of non-complex number")
             }
         case .XSWAP:
             prefix = nil
@@ -1017,6 +1020,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 updateDisplayString()
             } else { 
                 setError(1)
+                print("can't use matrix as imaginary number")
             }
         case .FIX:
             // f-FIX-I (use value in register I to set display format)
@@ -1026,6 +1030,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 setDisplayFormatTo(.fixed(decimalPlaces))
             } else {
                 setError(1)
+                print("can't use matrix as display formatter")
             }
         case .SCI:
             // f-SCI-I (use value in register I to set display format)
@@ -1035,6 +1040,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 setDisplayFormatTo(.scientific(min(decimalPlaces, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
             } else {
                 setError(1)
+                print("can't use matrix as display formatter")
             }
         case .ENG:
             // f-ENG-I (use value in register I to set display format)
@@ -1044,6 +1050,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 setDisplayFormatTo(.engineering(min(additionalDigits, 6)))  // 1 sign + 1 mantissa + 6 decimals + 1 exponent sign + 2 exponents = 11 digits
             } else {
                 setError(1)
+                print("can't use matrix as display formatter")
             }
         case .XSWAP:
             prefix = nil
@@ -1081,6 +1088,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             prepStackForOperation()
             setError(11)
+            print("attempting to store a non-matrix as a RESULT")
         case .STO_DOT, .RCL_DOT:
             // give up on STO/RCL . and re-enter EEX
             prefix = nil
@@ -1406,6 +1414,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 lastRandomNumberGenerated = number
             } else {
                 setError(1)
+                print("can't use matrix as random number seed")
             }
         case .RCL:
             // RCL RAN# pressed (recall current seed, which is based on last random number)
@@ -1833,7 +1842,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // f MATRIX n (4: transpose, 5: Y_transpose * X, 6: residual, 7: row norm, 8: Frobenius norm, 9: determinant)
                 performOperationFor(buttonName)
             default:
-                setError(11)
+                setError(11)  // pws: can't seem to get Error 11 on HP-15C
             }
             prefix = nil
         case .SOLVE:
@@ -1882,11 +1891,13 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             prefix = nil
             if !program.gotoLabel(buttonName) {  // would only be here in non-program mode
                 setError(4)
+                print("label \(buttonName) not found")
             }
         case .GTO_DOT:
             prefix = nil
             if !program.gotoLabel("." + buttonName) {  // would only be here in non-program mode
                 setError(4)
+                print("label \("." + buttonName) not found")
             }
         case .GTO_CHS:
             handleGotoLineNumberDigit(digit: Int(buttonName)!)
@@ -1964,6 +1975,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 // line number past end of program
                 prepStackForOperation()
                 setError(4)
+                print("goto line number \(gotoLineNumber) is past end of program")
             } else {
                 program.currentLineNumber = gotoLineNumber
             }
@@ -2022,6 +2034,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             }
         } else {
             setError(3)  // invalid registerName
+            print("storing to invalid register \(registerName)")
         }
     }
     
@@ -2044,9 +2057,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             } else {
                 setError(1)  // register contains matrix
+                print("can't apply operation to register containing matrix")
             }
         } else {
             setError(3)  // invalid registerName
+            print("operating on invalid register \(registerName)")
         }
     }
     
@@ -2069,9 +2084,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 brain.printMemory()
             } else {
                 setError(1)  // register contains matrix
+                print("can't apply operation with register containing matrix")
             }
         } else {
             setError(3)  // invalid registerName
+            print("operating on invalid register \(registerName)")
         }
     }
     
@@ -2119,9 +2136,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 }
             } else {
                 setError(3)  // trying to set value outside matrix dimensions
+                print("row \(row), col \(col) outside dimensions of matrix \(buttonName)")
             }
         } else {
             setError(1)  // registers 0 or 1 contain matrix
+            print("matrix row or column cannot be a matrix")
         }
     }
     
@@ -2141,9 +2160,11 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                 }
             } else {
                 setError(3)  // trying to recall value outside matrix dimensions
+                print("row \(row), col \(col) outside dimensions of matrix \(buttonName)")
             }
         } else {
             setError(1)  // registers 0 or 1 contain matrix
+            print("matrix row or column cannot be a matrix")
         }
     }
     
@@ -2217,6 +2238,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
                     }
                 } else {
                     setError(1)  // can't save matrix as an element of a matrix
+                    print("can't save matrix as an element of a matrix")
                 }
             }
             brain.printMemory()

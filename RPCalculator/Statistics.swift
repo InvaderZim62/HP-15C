@@ -47,6 +47,7 @@ class Statistics {
         } else {
             // matrix stored in X or Y register, or one of the statistics registers
             delegate?.setError(1)
+            print("statistics can't be performed with matrices")
         }
     }
     
@@ -64,6 +65,7 @@ class Statistics {
         } else {
             // matrix stored in one of the statistics register
             delegate?.setError(1)
+            print("mean can't be performed with matrices")
         }
     }
     
@@ -86,6 +88,7 @@ class Statistics {
         } else {
             // matrix stored in one of the statistics register
             delegate?.setError(1)
+            print("standard deviation can't be performed with matrices")
         }
     }
     
@@ -107,6 +110,7 @@ class Statistics {
         } else {
             // matrix stored in one of the statistics register
             delegate?.setError(1)
+            print("line fit can't be performed with matrices")
         }
     }
     
@@ -131,6 +135,7 @@ class Statistics {
         } else {
             // matrix stored in one of the statistics register
             delegate?.setError(1)
+            print("linear estimation can't be performed with matrices")
         }
     }
 }

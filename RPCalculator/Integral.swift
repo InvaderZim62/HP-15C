@@ -62,9 +62,10 @@ class Integral {
                 brain.xRegister = integral
                 completion()
             } else {
-                // integration limits are matrices
+                // integral limits are matrices
                 DispatchQueue.main.async {
                     self.delegate?.setError(1)  // main queue, since setError changes prefix (changes falpha.alpha)
+                    print("integral limits are matrices")
                 }
                 completion()
             }
@@ -72,6 +73,7 @@ class Integral {
             // label not found
             DispatchQueue.main.async {
                 self.delegate?.setError(4)  // main queue, since setError changes prefix (changes falpha.alpha)
+                print("goto label \(label) not found")
             }
             completion()
         }

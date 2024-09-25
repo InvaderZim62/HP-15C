@@ -157,9 +157,11 @@ class Program: Codable {
                 }
             } else {
                 delegate?.setError(1)
+                print("test number can't be a matrix")
             }
         } else {
             delegate?.setError(1)
+            print("test number can't be a matrix")
         }
         return false
     }
@@ -191,6 +193,7 @@ class Program: Codable {
             return isLoop
         } else {
             delegate?.setError(3)
+            print("attempting to access loop control number from invalid register \(registerName)")
             return false
         }
     }
@@ -469,6 +472,7 @@ class Program: Codable {
                     if gotoLineNumber >= instructions.count {
                         // line number past end of program
                         delegate?.setError(4)  // have CalculatorViewController process the error
+                        print("goto line number \(gotoLineNumber) is past end of program")
                     } else {
                         // line number within program
                         currentLineNumber = gotoLineNumber
@@ -610,6 +614,7 @@ class Program: Codable {
             runFromCurrentLine(completion: completion)
         } else {
             delegate?.setError(4)  // label not found
+            print("goto label \(label) not found")
         }
     }
     
@@ -639,6 +644,7 @@ class Program: Codable {
                 isStopRunning = isAnyButtonPressed
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
+                    print("goto label \(label) not found")
                     break  // exit while, if error
                 }
             } else if let label = labelIfCurrentInstructionIsGoSub {
@@ -647,6 +653,7 @@ class Program: Codable {
                 returnToLineNumbers.append((currentLineNumber + 1) % instructions.count)
                 if !gotoLabel(label) {
                     delegate?.setError(4)  // label not found
+                    print("gosub label \(label) not found")
                     break  // exit while, if error
                 }
             } else if isCurrentInstructionAReturn {
@@ -708,6 +715,7 @@ class Program: Codable {
                 _ = backStep()  // back-step, since SST increments current line number
             } else {
                 delegate?.setError(4)  // label not found
+                print("goto label \(label) not found")
             }
             semaphore.signal()
         } else if let label = labelIfCurrentInstructionIsGoSub {
@@ -718,6 +726,7 @@ class Program: Codable {
                 _ = backStep()  // back-step, since SST increments current line number
             } else {
                 delegate?.setError(4)  // label not found
+                print("gosub label \(label) not found")
             }
             semaphore.signal()
         } else if let testNumber = testNumberIfCurrentInstructionIsTest {

@@ -440,6 +440,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take sine of a matrix")
                     return
                 }
             case "COS":
@@ -449,6 +450,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take cosine of a matrix")
                     return
                 }
             case "TAN":
@@ -458,6 +460,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take tangent of a matrix")
                     return
                 }
             case "√x":
@@ -473,6 +476,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take square root of a matrix")
                     return
                 }
             case "ex":
@@ -482,6 +486,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't raise e to a matrix")
                     return
                 }
             case "10x":
@@ -491,6 +496,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't raise 10 to a matrix")
                     return
                 }
             case "yx":
@@ -501,6 +507,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't raise number to a matrix")
                     return
                 }
             case "1/x":
@@ -532,6 +539,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take decimal portion of a matrix")
                     return
                 }
             case "0":
@@ -542,6 +550,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take factorial of a matrix")
                     return
                 }
             case "1":
@@ -565,12 +574,14 @@ class Brain: Codable {
                         } else {
                             realStack = saveStack  // restore stack to pre-error state
                             error = .code(1)
+                            print("can't convert matrix to rectangular coordinates")
                             return
                         }
                     }
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't convert matrix to rectangular coordinates")
                     return
                 }
             case "2":
@@ -585,6 +596,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't convert matrix to hour-minutes-seconds")
                     return
                 }
             case "3":
@@ -595,6 +607,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't convert matrix to radians")
                     return
                 }
             case "+":
@@ -630,6 +643,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take integer portion of a matrix")
                     return
                 }
             case "SIN":
@@ -646,6 +660,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take arcsin of a matrix")
                     return
                 }
             case "COS":
@@ -662,6 +677,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take arccos of a matrix")
                     return
                 }
             case "TAN":
@@ -672,6 +688,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take arctan of a matrix")
                     return
                 }
             case "√x":
@@ -682,6 +699,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take square of a matrix")
                     return
                 }
             case "ex":
@@ -692,6 +710,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take natural log of a matrix")
                     return
                 }
             case "10x":
@@ -702,6 +721,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take log base 10 of a matrix")
                     return
                 }
             case "yx":
@@ -719,6 +739,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take percent of a matrix")
                     return
                 }
             case "1/x":
@@ -732,6 +753,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take delta percent of a matrix")
                     return
                 }
             case "CHS":
@@ -742,6 +764,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take absolute value of a matrix")
                     return
                 }
             case "1":
@@ -766,12 +789,14 @@ class Brain: Codable {
                         } else {
                             realStack = saveStack  // restore stack to pre-error state
                             error = .code(1)
+                            print("can't convert matrix to polar coordinates")
                             return
                         }
                     }
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't convert matrix to polar coordinates")
                     return
                 }
             case "2":
@@ -787,6 +812,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't convert matrix to decimal hours")
                     return
                 }
             case "3":
@@ -797,6 +823,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't convert matrix to degrees")
                     return
                 }
             case "+":
@@ -835,6 +862,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take hyperbolic sin of a matrix")
                     return
                 }
             case "COS":
@@ -845,6 +873,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take hyperbolic cos of a matrix")
                     return
                 }
             case "TAN":
@@ -855,6 +884,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take hyperbolic tan of a matrix")
                     return
                 }
             default:
@@ -871,6 +901,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take inverse hyperbolic sin of a matrix")
                     return
                 }
             case "COS":
@@ -887,6 +918,7 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
+                    print("can't take inverse hyperbolic cos of a matrix")
                     return
                 }
             case "TAN":
@@ -903,7 +935,8 @@ class Brain: Codable {
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
-                    return
+                    print("can't take inverse hyperbolic tan of a matrix")
+                   return
                 }
             default:
                 result = Complex(real: 0, imag: 0)

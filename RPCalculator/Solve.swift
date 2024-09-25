@@ -69,6 +69,7 @@ class Solve {
                 // alpha or beta is a matrix
                 DispatchQueue.main.async {
                     self.delegate?.setError(1)  // main queue, since setError changes prefix (changes falpha.alpha)
+                    print("bounds of SOLVE can't be a matrix")
                 }
                 completion()
             }
@@ -76,6 +77,7 @@ class Solve {
             // label not found
             DispatchQueue.main.async {
                 self.delegate?.setError(4)  // main queue, since setError changes prefix (changes falpha.alpha)
+                print("goto label \(label) not found")
             }
             completion()
         }
