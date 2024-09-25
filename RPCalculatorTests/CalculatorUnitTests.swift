@@ -51,9 +51,9 @@ class CalculatorUnitTests: XCTestCase {
         continueAfterFailure = false  // stop existing test case from continuing after failure
 
         // use this to set display format to 4 digit fixed width before each test
-//        pressButton(title: "f")
-//        pressButton(title: "7")  // f-7 = FIX
-//        pressButton(title: "4")
+        pressButton(title: "f")
+        pressButton(title: "7")  // f-7 = FIX
+        pressButton(title: "4")
     }
 
     override func tearDownWithError() throws {

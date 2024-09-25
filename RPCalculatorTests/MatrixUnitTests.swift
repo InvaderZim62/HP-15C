@@ -33,7 +33,12 @@ class MatrixUnitTests: XCTestCase {
         cvc.beginAppearanceTransition(true, animated: false)  // run lifecycle, connect outlets
         cvc.endAppearanceTransition()
         continueAfterFailure = false  // stop existing test case from continuing after failure
-        
+
+        // use this to set display format to 4 digit fixed width before each test
+        pressButton(title: "f")
+        pressButton(title: "7")  // f-7 = FIX
+        pressButton(title: "4")
+
         cvc.isUserMode = true  // turn on auto-incrementing of matrix indices
     }
 

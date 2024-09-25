@@ -88,6 +88,7 @@
 //  - matrix inversion greater than 4x4
 //  - matrix LU decomposition
 //  - complex number matrices
+//  - computing integral uncertainty
 //
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
