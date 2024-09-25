@@ -213,16 +213,12 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var useSimButton = true  // true: call simulatePressingButton to play click sound; set false in program before issuing button action
     var gotoLineNumberDigits = [Int]()
     var flags = [Bool](repeating: false, count: 8)
-    
-    // displayString is scientific, if 11 digits and ends in "-nn" or " nn"
-    var isDisplayStringScientific: Bool {
-        let digits = displayString.map { $0 }
-        let length = (digits[0] == "-" || digits[0] == " ") ? 12 : 11
-        if displayString.count == length {
-            let thirdToLastDigit = digits[length - 3]
-            return (thirdToLastDigit == " " || thirdToLastDigit == "-") && digits[length - 2] != " "
+
+    var displayStringValue: Stackable {
+        if let matrix = displayStringMatrix {
+            return matrix
         } else {
-            return false
+            return displayStringNumber
         }
     }
 
@@ -245,6 +241,22 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             return String(displayString.suffix(3))
         } else {
             return " 00"
+        }
+    }
+    
+    var displayStringMatrix: Matrix? {
+        brain.matrices[String(displayString.first!)]
+    }
+
+    // displayString is scientific, if 11 digits and ends in "-nn" or " nn"
+    var isDisplayStringScientific: Bool {
+        let digits = displayString.map { $0 }
+        let length = (digits[0] == "-" || digits[0] == " ") ? 12 : 11
+        if displayString.count == length {
+            let thirdToLastDigit = digits[length - 3]
+            return (thirdToLastDigit == " " || thirdToLastDigit == "-") && digits[length - 2] != " "
+        } else {
+            return false
         }
     }
 
@@ -577,7 +589,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     
     // overwrite xRegister with display
     private func endDisplayEntry() {
-        brain.xRegister = displayStringNumber  // pws: several uses of this can be with a matrix in the display (ex. f CLEAR PRGM) - fix it
+        brain.xRegister = displayStringValue
         userIsEnteringDigits = false
         userIsEnteringExponent = false
         brain.printMemory()

@@ -936,7 +936,7 @@ class Brain: Codable {
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
                     print("can't take inverse hyperbolic tan of a matrix")
-                   return
+                    return
                 }
             default:
                 result = Complex(real: 0, imag: 0)
