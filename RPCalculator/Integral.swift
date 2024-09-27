@@ -10,6 +10,7 @@ import UIKit
 protocol IntegralDelegate: AnyObject {
     func setError(_ number: Int)
     var displayStringNumber: Double { get }
+    var displayFormat: DisplayFormat { get }
 }
 
 class Integral {
@@ -22,16 +23,18 @@ class Integral {
     // mid point integration and error estimate reference: https://math.libretexts.org/Courses/Mount_Royal_University/MATH_2200%3A_Calculus_for_Scientists_II/2%3A_Techniques_of_Integration/2.5%3A_Numerical_Integration_-_Midpoint%2C_Trapezoid%2C_Simpson's_rule
 
     // HP-15C integration accuracy (and time to solve) depends on the number
-    // of decimal places selected for the display; this function does not
+    // of decimal places selected for the display
     func integrateAt(label: String, completion: @escaping () -> Void) {
         program.isAnyButtonPressed = false
         if program.gotoLabel(label) {
             // integrate from lower limit (in Y register) to upper limit (in X register)
-            // leave result in X register
+            // leave result in X register and error estimate in Y register
             if let lowerLimit = brain.yRegister as? Double,
                let upperLimit = brain.xRegister as? Double
             {
-                let increments = 100
+                let decimals = Double(delegate?.displayFormat.decimals ?? 5)  // HP-15C accuracy depends on number of displayed digits
+                let error = 0.5 * exp(-2.303 * decimals)  // determined empirically, using integral exp(x^2) on HP-15C
+                let increments = max(Int(sqrt(6 * exp(1) / 24 / error)), 3)  // equation from reference article
                 let dx = (upperLimit - lowerLimit) / Double(increments)
                 var yPast = 0.0
                 var dyDx = 0.0
@@ -54,11 +57,11 @@ class Integral {
                         dyDxPast = dyDx
                     }
                 }
-                let integrationError = dyDxDxMax * (upperLimit - lowerLimit) / 24 / pow(Double(increments), 2)
+                let errorEstimate = dyDxDxMax * (upperLimit - lowerLimit) / 24 / pow(Double(increments), 2)
                 
                 brain.pushOperand(lowerLimit)
                 brain.pushOperand(upperLimit)
-                brain.pushOperand(integrationError)
+                brain.pushOperand(errorEstimate)
                 brain.pushOperand(integral)
                 completion()
             } else {
