@@ -64,6 +64,10 @@
 //      - RCL A           recall row 1, col 1, then increment value in register 1 (col)
 //      - RCL A           recall row 1, col 2, then increment value in register 1 (col)
 //      - ...             when col = last col, go to next row; return to start after last element
+//    - invert matrix A: RCL MATRIX A 1/x
+//    - transpose matrix A: RCL MATRIX A f MATRIX 4 (results overwrite matrix A)
+//    - row norm of matrix A: RCL MATRIX A f MATRIX 7
+//    - determinant of matrix A: RCL MATRIX A f MATRIX 9
 //  - statistics
 //    - enter/remove data pints
 //      - y1 ENTER x1 Σ+  add data point (x1, y1) - display shows number of data point entered
@@ -88,7 +92,6 @@
 //  - matrix inversion greater than 4x4
 //  - matrix LU decomposition
 //  - complex number matrices
-//  - computing integral uncertainty
 //
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)

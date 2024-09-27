@@ -1025,7 +1025,7 @@ class Brain: Codable {
             realStack = saveStack  // restore stack to pre-error state
             error = .code(11)
         } else if let matrix = result as? Matrix {
-            // TBD: handle error cases with matrix operations
+            // TBD: handle error cases with matrix operations (ex. A x B = Error 11, if RESULT matrix = A or B)
             if let matrixName = overwriteMatrix {
                 matrix.name = matrixName
             } else {
