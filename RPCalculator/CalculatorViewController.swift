@@ -1814,6 +1814,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             integral.integrateAt(label: label) {
                 DispatchQueue.main.async {
                     self.isProgramRunning = false
+                    self.brain.printMemory()
                 }
             }
         }

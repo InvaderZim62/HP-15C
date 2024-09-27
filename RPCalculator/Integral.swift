@@ -20,23 +20,39 @@ class Integral {
     var program: Program!
     
     // Owner's Handbook p.195
-    //   HP-15C: 2.404005
-    //   incrmt   Euler    Tustin
-    //   ------  --------  --------
-    //   100000  2.403971           (very slow)
-    //   10000   2.404254  2.404254
-    //   1000    2.407081  2.405510
-    //   100     2.435355  2.419647
+    //   HP-15C: 2.404005 (+/- fix 4: 1.5708E-4, fix 6: 1.5713E-6
+    //   incrmt   Euler    Trapaz.   Mid Pt.    Error
+    //   ------  --------  --------  --------  ---------
+    //   10000   2.404254  2.404254  2.403939  1.3090E-9
+    //   1000    2.407081  2.405510  2.403939  1.3089E-7
+    //   100     2.435355  2.419647  2.403939  1.3012E-5
     //
     // Owner's Handbook p.197
     //   HP-15C: 1.382460
-    //   incrmt   Euler    Tustin
-    //   ------  --------  --------
-    //   10000   1.382460  1.382617
-    //   1000    1.382460  1.384030
-    //   100     1.382460  1.398168
+    //   incrmt   Euler    Trapaz.   Mid Pt.
+    //   ------  --------  --------  --------
+    //   10000   1.382460  1.382617  1.382460
+    //   1000    1.382460  1.384030  1.382460
+    //   100     1.382460  1.398168  1.382460
+    //
+    // 1 / sqrt(x)
+    //   HP-15C: 1.999999 (s/b 2.0)
+    //   incrmt   Euler    Trapazd.  Mid Pt.
+    //   ------  --------  --------  --------
+    //   10000                       1.993951
+    //   1000                        1.980871
+    //   100                         1.939512
+    //
+    // cos(x) * ln(x)
+    //   HP-15C: -0.946083
+    //   incrmt   Euler    Trapazd.  Mid Pt.
+    //   ------  --------  --------  --------
+    //   10000                      -0.946048
+    //   1000                       -0.945737
+    //   100                        -0.942629
     
-    // this integration is only accurate to around three decimal places
+    // mid point integration and error estimate reference: https://math.libretexts.org/Courses/Mount_Royal_University/MATH_2200%3A_Calculus_for_Scientists_II/2%3A_Techniques_of_Integration/2.5%3A_Numerical_Integration_-_Midpoint%2C_Trapezoid%2C_Simpson's_rule
+
     // HP-15C integration accuracy (and time to solve) depends on the number
     // of decimal places selected for the display; this function does not
     func integrateAt(label: String, completion: @escaping () -> Void) {
@@ -47,19 +63,35 @@ class Integral {
             if let lowerLimit = brain.yRegister as? Double,
                let upperLimit = brain.xRegister as? Double
             {
-                let increments = 10000
+                let increments = 100
                 let dx = (upperLimit - lowerLimit) / Double(increments)
+                var yPast = 0.0
+                var dyDx = 0.0
+                var dyDxPast = 0.0
+                var dyDxDx = 0.0
+                var dyDxDxMax = 0.0
                 var integral = 0.0
-//                for i in 0...increments {
-                for i in 1...increments-1 {  // handbook p.199 says "algorithm normally does not evaluate functions at either limit of integration"
-                    let x = lowerLimit + Double(i) * dx  // = upperLimit, for i = increments
+                for i in 0..<increments {  // handbook p.199 says "algorithm normally does not evaluate functions at either limit of integration"
+                    let x = lowerLimit + (Double(i) + 0.5) * dx  // half-way to next i
                     brain.fillRegistersWith(x)
                     program.runFrom(label: label) { [unowned self] in
+                        
                         let y = brain.xRegister as! Double
                         integral += y * dx  // Euler integration for area under curve
+                        
+                        dyDx = (y - yPast) / dx
+                        dyDxDx = (dyDx - dyDxPast) / dx
+                        if i > 1 && abs(dyDxDx) > dyDxDxMax { dyDxDxMax = abs(dyDxDx) }
+                        yPast = y
+                        dyDxPast = dyDx
                     }
                 }
-                brain.xRegister = integral
+                let integrationError = dyDxDxMax * (upperLimit - lowerLimit) / 24 / pow(Double(increments), 2)
+                
+                brain.pushOperand(lowerLimit)
+                brain.pushOperand(upperLimit)
+                brain.pushOperand(integrationError)
+                brain.pushOperand(integral)
                 completion()
             } else {
                 // integral limits are matrices
