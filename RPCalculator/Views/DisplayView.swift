@@ -76,6 +76,9 @@ class DisplayView: UIView {
             modifiedDisplayString = " " + displayString  // add leading blank, if number is positive
         }
         modifiedDisplayString = modifiedDisplayString.replacingOccurrences(of: "+", with: " ")
+        if modifiedDisplayString.contains("e") && !modifiedDisplayString.contains(".") {
+            modifiedDisplayString = modifiedDisplayString.replacingOccurrences(of: "e", with: ".e")  // " 1e-03" => " 1.e-03"
+        }
         // set data for each digitView
         var displayIndex = 0
         var stringIndex = 0

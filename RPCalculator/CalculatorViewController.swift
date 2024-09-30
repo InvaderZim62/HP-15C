@@ -93,6 +93,12 @@
 //  - matrix LU decomposition
 //  - complex number matrices
 //
+//  Note:
+//  - BEGIN and D.MY display annunciators are not used on the HP-15C (they are on the HP-12C),
+//    even though they appear on the display after running self test:
+//      turn off | press x, then ON | release ON, then x
+//      display shows "running" for ~25 seconds, then turns on all display elements
+//
 //  To do...
 //  - implement RND key (round mantissa to displayed digits)
 //  - some numbers don't allow entering exponent EEX (ex. 12345678 EEX doesn't, 1234567 EEX does, 1.2345678 EEX does)
@@ -195,7 +201,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     var displayString = "" {
         didSet {
             if !isProgramRunning {
-                displayLabel.text = displayString  // used in UI tests
+                displayLabel.text = displayString  // hidden (alpha = 0) label used in UI tests
                 displayView.displayString = displayString
             }
         }
