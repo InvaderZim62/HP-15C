@@ -53,14 +53,14 @@
 //    - store an 8 in matrix A, row 3, col 4: 3 STO 0 (row), 4 STO 1 (col), 8 STO A
 //    - recall value in matrix A, row 3, col 4: 3 STO 0 (row), 4 STO 1 (col), RCL A
 //    - store all values in matrix A, while auto-sequencing columns and rows:
-//      - f MATRIX 1      start with 1 in storage register 0 and 1
-//      - f USER          enable auto-sequence
+//      - f MATRIX 1      start with 1 in storage registers 0 and 1
+//      - f USER          enable auto-sequence of indices
 //      - 1 STO A         store 1 in row 1, col 1, then increment value in register 1 (col)
 //      - 2 STO A         store 1 in row 1, col 2, then increment value in register 1 (col)
 //      - ...             when col = last col, go to next row; return to start after last element
 //    - recall all values in matrix A, while auto-sequencing columns and rows:
-//      - f MATRIX 1      start with 1 in storage register 0 and 1
-//      - f USER          enable auto-sequence
+//      - f MATRIX 1      start with 1 in storage registers 0 and 1
+//      - f USER          enable auto-sequence of indices
 //      - RCL A           recall row 1, col 1, then increment value in register 1 (col)
 //      - RCL A           recall row 1, col 2, then increment value in register 1 (col)
 //      - ...             when col = last col, go to next row; return to start after last element
@@ -77,7 +77,7 @@
 //      - yn ENTER xn Σ-  remove data point (xn, yn)
 //    - compute statistics of entered data points
 //      - g xbar          puts mean of x values in X register and mean of y values in Y register
-//      - g s             puts standard deviation of x values in X register and deviation of y values in Y register
+//      - g s             puts standard deviation of x values in X register and standard deviation of y values in Y register
 //      - f L.R.          puts y-intercept of best-fit line in X register and slope of best-fit line in Y register
 //      - x f yhat,r      puts y-value of line corresponding to input x in X register and correlation coefficient of line in Y register
 //
@@ -89,14 +89,14 @@
 //      performing an operations:             prepStackForOperation()
 //
 //  Not implemented:
-//  - matrix inversion greater than 4x4
+//  - inversions of matrices greater than 4x4
 //  - matrix LU decomposition
-//  - complex number matrices
+//  - matrices containing complex numbers
 //
 //  Note:
 //  - BEGIN and D.MY display annunciators are not used on the HP-15C (they are on the HP-12C),
 //    even though they appear on the display after running self test:
-//      turn off | press x, then ON | release ON, then x
+//      turn off | press and hold x, then ON | release ON, then x
 //      display shows "running" for ~25 seconds, then turns on all display elements
 //
 //  To do...
@@ -126,6 +126,48 @@ struct Pause {
     static let running = 1.2  // delay to show "running"
     static let matrix = 0.2  // delay to show matrix dimensions
 }
+
+// dictionary of button labels going from left to right, top to bottom
+// dictionary key is the primary button label (must agree with storyboard)
+// note: made buttonText global, to find it easier (top of file) during development
+let buttonText = [  // [nText: (fText, gText)]  ie. normal text, f-prefix text, g-prefix text
+    "√x": ("A", "x²"),  // enter √ using option v
+    "ex": ("B", "LN"),
+    "10x": ("C", "LOG"),  // superscripting 10^x occurs in superscriptLastNCharactersOf, below
+    "yx": ("D", "%"),
+    "1/x": ("E", "𝝙%"),
+    "CHS": ("MATRIX", "ABS"),
+    "7": ("FIX", "DEG"),
+    "8": ("SCI", "RAD"),
+    "9": ("ENG", "GRD"),
+    "÷": ("SOLVE", "x≤y"),  // enter ÷ using option /, enter ≤ using option ,
+    "SST": ("LBL", "BST"),
+    "GTO": ("HYP", "HYP-1"),
+    "SIN": ("DIM", "SIN-1"),
+    "COS": ("(i)", "COS-1"),
+    "TAN": ("I", "TAN-1"),
+    "EEX": ("RESULT", "π"),  // enter pi using option p
+    "4": ("x≷", "SF"),
+    "5": ("DSE", "CF"),
+    "6": ("ISG", "F?"),
+    "×": ("∫xy", "x=0"),  // enter ∫ using option b
+    "R/S": ("PSE", "P/R"),
+    "GSB": ("∑", "RTN"),  // enter ∑ using option w
+    "R↓": ("PRGM", "R↑"),
+    "x≷y": ("REG", "RND"),
+    "←": ("PREFIX", "CL x"),
+    "1": ("→R", "→P"),
+    "2": ("→H.MS", "→H"),
+    "3": ("→RAD", "→DEG"),
+    "–": ("Re≷Im", "TEST"),  // minus sign is an "EN DASH" (U+2013)
+    "STO": ("FRAC", "INT"),
+    "RCL": ("USER", "MEM"),
+    "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
+    "·": ("y\u{0302},r", "s"),  // \u{0302} puts ^ above y
+    "Σ+": ("L.R.", "Σ-"),
+    "+": ("Py,x", "Cy,x"),
+    "E\nN\nT\nE\nR": ("RAN #", "LST x")  // ENTER (written vertically)
+]
 
 enum Prefix: String {
     case f  // function above button (orange)
@@ -351,47 +393,6 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             userLabel.alpha = isUserMode ? 1 : 0
         }
     }
-    
-    // dictionary of button labels going from left to right, top to bottom
-    // dictionary key is the primary button label (must agree with storyboard)
-    var buttonText = [  // [nText: (fText, gText)]  ie. normal text, f-prefix text, g-prefix text
-        "√x": ("A", "x²"),  // enter √ using option v
-        "ex": ("B", "LN"),
-        "10x": ("C", "LOG"),  // superscripting 10^x occurs in superscriptLastNCharactersOf, below
-        "yx": ("D", "%"),
-        "1/x": ("E", "𝝙%"),
-        "CHS": ("MATRIX", "ABS"),
-        "7": ("FIX", "DEG"),
-        "8": ("SCI", "RAD"),
-        "9": ("ENG", "GRD"),
-        "÷": ("SOLVE", "x≤y"),  // enter ÷ using option /, enter ≤ using option ,
-        "SST": ("LBL", "BST"),
-        "GTO": ("HYP", "HYP-1"),
-        "SIN": ("DIM", "SIN-1"),
-        "COS": ("(i)", "COS-1"),
-        "TAN": ("I", "TAN-1"),
-        "EEX": ("RESULT", "π"),  // enter pi using option p
-        "4": ("x≷", "SF"),
-        "5": ("DSE", "CF"),
-        "6": ("ISG", "F?"),
-        "×": ("∫xy", "x=0"),  // enter ∫ using option b
-        "R/S": ("PSE", "P/R"),
-        "GSB": ("∑", "RTN"),  // enter ∑ using option w
-        "R↓": ("PRGM", "R↑"),
-        "x≷y": ("REG", "RND"),
-        "←": ("PREFIX", "CL x"),
-        "1": ("→R", "→P"),
-        "2": ("→H.MS", "→H"),
-        "3": ("→RAD", "→DEG"),
-        "–": ("Re≷Im", "TEST"),  // minus sign is an "EN DASH" (U+2013)
-        "STO": ("FRAC", "INT"),
-        "RCL": ("USER", "MEM"),
-        "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
-        "·": ("y\u{0302},r", "s"),  // \u{0302} puts ^ above y
-        "Σ+": ("L.R.", "Σ-"),
-        "+": ("Py,x", "Cy,x"),
-        "E\nN\nT\nE\nR": ("RAN #", "LST x")  // ENTER (written vertically)
-    ]
 
     @IBOutlet weak var displayView: DisplayView!
     @IBOutlet var buttons: [UIButton]!  // all buttons, except ON
