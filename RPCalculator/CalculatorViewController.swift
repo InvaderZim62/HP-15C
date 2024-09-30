@@ -261,7 +261,8 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     // displayString is scientific, if 11 digits and ends in "-nn" or " nn"
     var isDisplayStringScientific: Bool {
         let digits = displayString.map { $0 }
-        let length = (digits[0] == "-" || digits[0] == " ") ? 12 : 11
+        var length = (digits[0] == "-" || digits[0] == " ") ? 12 : 11
+        if !displayString.contains(".") { length -= 1 }
         if displayString.count == length {
             let thirdToLastDigit = digits[length - 3]
             return (thirdToLastDigit == " " || thirdToLastDigit == "-") && digits[length - 2] != " "
