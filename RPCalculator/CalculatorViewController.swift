@@ -4,6 +4,9 @@
 //
 //  Created by Phil Stern on 2/4/21.
 //
+
+//  Collapse comment block using: command + option + left-arrow (double-click ellipsis to expand)
+//
 //  HP-15C Owner's Handbook: https://www.hp.com/ctg/Manual/c03030589.pdf
 //  Interactive version: https://archived.hpcalc.org/greendyk/hp15c/index.html
 //
@@ -127,47 +130,49 @@ struct Pause {
     static let matrix = 0.2  // delay to show matrix dimensions
 }
 
-// dictionary of button labels going from left to right, top to bottom
-// dictionary key is the primary button label (must agree with storyboard)
-// note: made buttonText global, to find it easier (top of file) during development
-let buttonText = [  // [nText: (fText, gText)]  ie. normal text, f-prefix text, g-prefix text
-    "√x": ("A", "x²"),  // enter √ using option v
-    "ex": ("B", "LN"),
-    "10x": ("C", "LOG"),  // superscripting 10^x occurs in superscriptLastNCharactersOf, below
-    "yx": ("D", "%"),
-    "1/x": ("E", "𝝙%"),
-    "CHS": ("MATRIX", "ABS"),
-    "7": ("FIX", "DEG"),
-    "8": ("SCI", "RAD"),
-    "9": ("ENG", "GRD"),
-    "÷": ("SOLVE", "x≤y"),  // enter ÷ using option /, enter ≤ using option ,
-    "SST": ("LBL", "BST"),
-    "GTO": ("HYP", "HYP-1"),
-    "SIN": ("DIM", "SIN-1"),
-    "COS": ("(i)", "COS-1"),
-    "TAN": ("I", "TAN-1"),
-    "EEX": ("RESULT", "π"),  // enter pi using option p
-    "4": ("x≷", "SF"),
-    "5": ("DSE", "CF"),
-    "6": ("ISG", "F?"),
-    "×": ("∫xy", "x=0"),  // enter ∫ using option b
-    "R/S": ("PSE", "P/R"),
-    "GSB": ("∑", "RTN"),  // enter ∑ using option w
-    "R↓": ("PRGM", "R↑"),
-    "x≷y": ("REG", "RND"),
-    "←": ("PREFIX", "CL x"),
-    "1": ("→R", "→P"),
-    "2": ("→H.MS", "→H"),
-    "3": ("→RAD", "→DEG"),
-    "–": ("Re≷Im", "TEST"),  // minus sign is an "EN DASH" (U+2013)
-    "STO": ("FRAC", "INT"),
-    "RCL": ("USER", "MEM"),
-    "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
-    "·": ("y\u{0302},r", "s"),  // \u{0302} puts ^ above y
-    "Σ+": ("L.R.", "Σ-"),
-    "+": ("Py,x", "Cy,x"),
-    "E\nN\nT\nE\nR": ("RAN #", "LST x")  // ENTER (written vertically)
-]
+extension CalculatorViewController {
+    // dictionary of button labels going from left to right, top to bottom
+    // dictionary key is the primary button label (must agree with storyboard)
+    // note: put buttonText in extension, to find it easier (top of file) during development
+    static let buttonText = [  // [nText: (fText, gText)]  ie. normal text, f-prefix text, g-prefix text
+        "√x": ("A", "x²"),  // enter √ using option v
+        "ex": ("B", "LN"),
+        "10x": ("C", "LOG"),  // superscripting 10^x occurs in superscriptLastNCharactersOf, below
+        "yx": ("D", "%"),
+        "1/x": ("E", "𝝙%"),
+        "CHS": ("MATRIX", "ABS"),
+        "7": ("FIX", "DEG"),
+        "8": ("SCI", "RAD"),
+        "9": ("ENG", "GRD"),
+        "÷": ("SOLVE", "x≤y"),  // enter ÷ using option /, enter ≤ using option ,
+        "SST": ("LBL", "BST"),
+        "GTO": ("HYP", "HYP-1"),
+        "SIN": ("DIM", "SIN-1"),
+        "COS": ("(i)", "COS-1"),
+        "TAN": ("I", "TAN-1"),
+        "EEX": ("RESULT", "π"),  // enter pi using option p
+        "4": ("x≷", "SF"),
+        "5": ("DSE", "CF"),
+        "6": ("ISG", "F?"),
+        "×": ("∫xy", "x=0"),  // enter ∫ using option b
+        "R/S": ("PSE", "P/R"),
+        "GSB": ("∑", "RTN"),  // enter ∑ using option w
+        "R↓": ("PRGM", "R↑"),
+        "x≷y": ("REG", "RND"),
+        "←": ("PREFIX", "CL x"),
+        "1": ("→R", "→P"),
+        "2": ("→H.MS", "→H"),
+        "3": ("→RAD", "→DEG"),
+        "–": ("Re≷Im", "TEST"),  // minus sign is an "EN DASH" (U+2013)
+        "STO": ("FRAC", "INT"),
+        "RCL": ("USER", "MEM"),
+        "0": ("x!", "x\u{0305}"),  // \u{0305} puts - above x
+        "·": ("y\u{0302},r", "s"),  // \u{0302} puts ^ above y
+        "Σ+": ("L.R.", "Σ-"),
+        "+": ("Py,x", "Cy,x"),
+        "E\nN\nT\nE\nR": ("RAN #", "LST x")  // ENTER (written vertically)
+    ]
+}
 
 enum Prefix: String {
     case f  // function above button (orange)
@@ -511,7 +516,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
     // create all text for the buttons using ButtonCoverViews, placed over button locations from Autolayout
     private func createButtonCovers() {
         for button in buttons {
-            if let nText = button.currentTitle, let (fText, gText) = buttonText[nText] {
+            if let nText = button.currentTitle, let (fText, gText) = CalculatorViewController.buttonText[nText] {
                 createCoverForButton(button, fText: fText, nText: nText, gText: gText)
             }
         }
