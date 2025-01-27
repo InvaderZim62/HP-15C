@@ -2338,6 +2338,7 @@ class CalculatorViewController: UIViewController, ProgramDelegate, SolveDelegate
             try AVAudioSession.sharedInstance().setActive(true)
             
             clickSoundPlayer = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.wav.rawValue)
+            clickSoundPlayer?.prepareToPlay()  // pre-load buffer to avoid delay on first use
 //            clickSoundPlayer?.delegate = self  // to receive call to audioPlayerDidFinishPlaying
         } catch let error {
             print(error.localizedDescription)
