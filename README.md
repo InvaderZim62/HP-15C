@@ -21,9 +21,10 @@ As described in the handbook, this app includes the following capabilities:
 - Numerical integration
 
 The following capabilities are not implemented:
-- Inversion of mtrices greater than 4x4
+- Inversion of matrices greater than 4x4
 - Matrix LU decomposition
 - Matrices containing complex numbers
+
 
 ![HP-15C real](https://github.com/InvaderZim62/HP-15C/assets/34785252/735b87c2-83e4-4166-8e8f-c491a5797939)
 &nbsp;&nbsp;&nbsp;
