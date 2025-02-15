@@ -2,7 +2,7 @@
 
 The HP-15C is my favorite calculator.  I got it for college and continued using it through my entire
 career as an engineer.  The HP-15C uses Reverse Polish Notation (RPN).  In RPN, if you want to add 5 + 3,
-you type: 5 ENTER 3 +.  There used to be a HP-15C calculator in the App Store, but it disappeared, so
+you type: 5 ENTER 3 +.  There used to be an HP-15C calculator in the App Store, but it disappeared, so
 I created this one for myself.
 
 Here's a link to the original [HP-15C Owner's Handbook](https://www.hp.com/ctg/Manual/c03030589.pdf).
