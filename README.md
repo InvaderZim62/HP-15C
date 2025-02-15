@@ -4,8 +4,10 @@ My favorite calculator (got me through college).  The HP-15C uses Reverse Polish
 In RPN, if you want to add 5 + 3, you type: 5 ENTER 3 +.
 
 There used to be a complete HP-15C calculator in the App Store, but it stopped being supported,
-so I created this one for myself.  It only includes the basics (no programming, matrix calculations,
-or complex numbers).
+so I created this one for myself.  It includes everything except:
+- Inversion of mtrices greater than 4x4
+- Matrix LU decomposition
+- Matrices containing complex numbers
 
 ![HP-15C real](https://github.com/InvaderZim62/HP-15C/assets/34785252/735b87c2-83e4-4166-8e8f-c491a5797939)
 &nbsp;&nbsp;&nbsp;
