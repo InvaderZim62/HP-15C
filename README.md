@@ -1,10 +1,26 @@
 # HP-15C
 
 My favorite calculator (got me through college).  The HP-15C uses Reverse Polish Notation (RPN).
-In RPN, if you want to add 5 + 3, you type: 5 ENTER 3 +.
+In RPN, if you want to add 5 + 3, you type: 5 ENTER 3 +.  There used to be a complete HP-15C
+calculator in the App Store, but it stopped being supported, so I created this one for myself.  
 
-There used to be a complete HP-15C calculator in the App Store, but it stopped being supported,
-so I created this one for myself.  It includes everything except:
+Here's a link to the original [HP-15C Owner's Handbook](https://www.hp.com/ctg/Manual/c03030589.pdf).
+It describes all the capabilities and how to use them.
+
+As described in the handbook, this app includes the following capabilities:
+- Basic math and trigonometric functions
+- Logarithmic and hyperbolic functions
+- Time and angle conversions
+- Degree/radian conversions
+- Polar and rectangular coordinate conversions
+- Statistics functions
+- Programming
+- Calculating with complex numbers
+- Calculating with matrices
+- Finding the roots of an equation
+- Numerical integration
+
+The following capabilities are not implemented:
 - Inversion of mtrices greater than 4x4
 - Matrix LU decomposition
 - Matrices containing complex numbers
