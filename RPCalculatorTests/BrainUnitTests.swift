@@ -45,9 +45,9 @@ final class BrainUnitTests: XCTestCase {
     //   cos(π)   = -1.0000
     //   tan(π/4) =  1.0000
     // verify (degrees):
-    //   sin(30)  =  0.5000
-    //   cos(30)  =  0.8660
-    //   tan(45)  =  1.0000
+    //   sin(30)  =  0.5000 and sin-1() = 30.0
+    //   cos(30)  =  0.8660 and cos-1() = 30.0
+    //   tan(45)  =  1.0000 and tan-1() = 45.0
     // note: argument for brain.performOperation is "pKEY"  // first letter is prefix (n: no prefix)
     func test01Trig() {
         brain.isComplexMode = false
@@ -55,7 +55,7 @@ final class BrainUnitTests: XCTestCase {
 
         // sin(π/2) = 1.0000
         xRegister = .pi / 2
-        brain.performOperation("nSIN")
+        brain.performOperation("nSIN")  // n: no prefix
         difference = xRegister - 1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Sine of number in radians is not correct")
         // cos(π) = -1.0000
@@ -76,16 +76,28 @@ final class BrainUnitTests: XCTestCase {
         brain.performOperation("nSIN")
         difference = xRegister - 0.5000
         XCTAssertLessThan(abs(difference), Test.threshold, "Sine of number in degrees is not correct")
+        // sin-1(0.5) = 30.0
+        brain.performOperation("gSIN")
+        difference = xRegister - 30.000
+        XCTAssertLessThan(abs(difference), Test.threshold, "Inverse sine of number in degrees is not correct")
         // cos(30) = 0.8660
         xRegister = 30
         brain.performOperation("nCOS")
         difference = xRegister - 0.8660
         XCTAssertLessThan(abs(difference), Test.threshold, "Cosine of number in degrees is not correct")
+        // cos-1(0.8660) = 30.0
+        brain.performOperation("gCOS")
+        difference = xRegister - 30.000
+        XCTAssertLessThan(abs(difference), Test.threshold, "Inverse cosine of number in degrees is not correct")
         // tan(45) = 1.0000
         xRegister = 45
         brain.performOperation("nTAN")
         difference = xRegister - 1.0000
         XCTAssertLessThan(abs(difference), Test.threshold, "Tangent of number in degrees is not correct")
+        // tan-1(1.0) = 45.0
+        brain.performOperation("gTAN")
+        difference = xRegister - 45.000
+        XCTAssertLessThan(abs(difference), Test.threshold, "Inverse tangent of number in degrees is not correct")
     }
     
     // test hyperbolic and inverse hyperbolic trig functions in radians and degrees

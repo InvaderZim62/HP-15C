@@ -133,7 +133,7 @@ struct Pause {
 extension CalculatorViewController {
     // dictionary of button labels going from left to right, top to bottom
     // dictionary key is the primary button label (must agree with storyboard)
-    // note: put buttonText in extension, to find it easier (top of file) during development
+    // note: I put buttonText in an extension, to find it easier (top of file) during development
     static let buttonText = [  // [nText: (fText, gText)]  ie. normal text, f-prefix text, g-prefix text
         "√x": ("A", "x²"),  // enter √ using option v
         "ex": ("B", "LN"),
@@ -174,6 +174,7 @@ extension CalculatorViewController {
     ]
 }
 
+// a prefix is the start or continuation of a multi-key input
 enum Prefix: String {
     case f  // function above button (orange)
     case g  // function below button (blue)

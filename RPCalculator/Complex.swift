@@ -233,6 +233,7 @@ struct Complex: Equatable, Stackable {
     }
 
     static func /(lhs: Double, rhs: Complex) -> Complex {
-        Complex(real: lhs / rhs.real, imag: lhs / rhs.imag)
+        let den = pow(rhs.real, 2) + pow(rhs.imag, 2)
+        return lhs * Complex(real: rhs.real / den, imag: -rhs.imag / den)
     }
 }

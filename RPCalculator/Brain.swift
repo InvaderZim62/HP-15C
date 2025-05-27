@@ -684,7 +684,7 @@ class Brain: Codable {
                 // TAN-1 (arctan)
                 let operand = popOperand()
                 if let term = operand as? Complex {
-                    result = (term / angleConversion).arctan
+                    result = term.arctan / angleConversion
                 } else {  // operand is Matrix
                     realStack = saveStack  // restore stack to pre-error state
                     error = .code(1)
